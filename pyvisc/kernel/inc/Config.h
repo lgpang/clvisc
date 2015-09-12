@@ -1,0 +1,6 @@
+#define BSZ 7
+
+#define DUMPDATA_FROM_GPU $DUMPDATA_FROM_GPU$
+/* #undef USE_DEVICE_GPU */
+/* #undef USE_SINGLE_PRECISION */
+/* #undef CL_USE_DEPRECATED_OPENCL_1_1_APIS */

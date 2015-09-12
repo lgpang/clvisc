@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+from time import time
+import sys
+
+sys.path.append('..')
+
+import unittest
+
+from pyvisc.tests.test_reduction import TestReductionMethod
+from pyvisc.tests.test_eos import TestEos
+
+unittest.main()

@@ -1,0 +1,19 @@
+#!/bin/sh
+#SBATCH --constraint=dual
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --error=log/%a_%j.err
+#SBATCH --output=log/%a_%j.out
+#SBATCH --job-name=CLHydro
+#SBATCH --mem-per-cpu=2048
+#SBATCH --mail-type=ALL
+##SBATCH --partition=parallel
+#SBATCH --time=01:00:00
+
+unset DISPLAY
+module load python/2.7.8
+module load amdappsdk/2.9
+
+#python ideal.py
+python visc.py
+#python runSqueezing.py

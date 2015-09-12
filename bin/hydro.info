@@ -1,0 +1,84 @@
+# comments start with '#'
+[path]
+
+fPathIni = /Users/lgpang/CLVisc/event0/edv0.txt
+fPathOut = /Users/lgpang/CLVisc/event0/
+
+[glauber]
+########### Params for Glauber initial condition 
+## the maximum energy density for most central collisions
+Edmax =  225.0          
+#Edmax = 55.0          # the maximum energy density for most central collisions
+#A = 197               # for Au 
+## for Pb
+A = 208                
+# with which the woodsaxon integrate = 197
+NucleonDensity = 0.17 
+## radius of the Au nucleus
+#Ra = 6.38             
+## radius of the Pb nucleus
+Ra = 6.62             
+## woodsaxon tail parameter for Au
+#Eta = 0.535           
+## woodsaxon tail parameter for Pb
+## inelastic scattering cross section
+Eta = 0.546           
+#Si0 = 4.0             
+## inelastic scattering cross section for PbPb 30TeV
+Si0 = 6.4             
+
+## impact parameter
+b = 10.0              
+# dNdY \prop Hwn*Npart+(1-Hwn)*Nbinary 
+Hwn = 0.95            
+# the width of the plateu in the initial energy density distribution along eta_s
+Eta_flat = 2.95          
+# the width of the gaussian falloff at fabs( eta_s ) > Eta_flat/2
+Eta_gw = 0.5          
+
+[geometry]
+############# Params for hydro grid setting 
+# x range [ -NX/2, NX/2] * dx
+NX = 205              
+# y range [ -NY/2, NY/2] * dy
+NY = 205              
+# etas range [ -NZ/2, NZ/2] * dz
+NZ = 85              
+# time step
+dt = 0.02             
+dx = 0.16            
+dy = 0.16
+dz = 0.3
+# do output every 0.4 fm
+ntskip = 20           
+# DX = 0.4 in output file
+nxskip = 3           
+# DY = 0.4 in output file
+nyskip = 3           
+# DZ = 0.3 in output file
+nzskip = 1            
+
+#BSZ = LSZ + 4 is used as the local size
+BSZ = 7
+
+############## Params for hydro evolution setting
+
+[intrinsic]
+## starting proper time for hydro in units fm
+#tau0 = 1.0            
+## starting proper time for hydro in units fm
+tau0 = 0.2            
+
+IEOS = 1              
+# IEOS = 0 for p = e/3
+# IEOS = 1 for s95p_v1 CE lattice QCD EOS
+# IEOS = 2 for s95p_PCE_v0 lattice QCD EOS
+
+#in units GeV
+TFRZ = 0.137          
+
+# eta/s
+ETAOS = 0.08          
+
+# \hat{ \lambda_1 }
+LAM1H = 0.001           

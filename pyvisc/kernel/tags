@@ -1,0 +1,25 @@
+DEVICE_ID	cl_visc.cpp	15
+Mmain.cpp	main.cpp	/^int main(int argc, char **argv)$/
+ReadRandomSeed	cl_visc.cpp	/^int ReadRandomSeed(){$/
+VISCOUSON	cl_visc.cpp	13
+Visc::AddProgram	cl_visc.cpp	/^void Visc::AddProgram( const char * fname)$/
+Visc::BuildPrograms	cl_visc.cpp	/^void Visc::BuildPrograms( const char * compile_opt/
+Visc::CreateContext	cl_visc.cpp	/^cl::Context Visc::CreateContext( const cl_int & de/
+Visc::ReadConfigs	cl_visc.cpp	/^void Visc::ReadConfigs( const int & ieos, const in/
+Visc::ReadIniCond	cl_visc.cpp	/^void Visc::ReadIniCond( const char * fInicond0, co/
+Visc::SetEos	cl_visc.cpp	/^void Visc::SetEos( const int & ieos ){$/
+Visc::SetTfrz	cl_visc.cpp	/^void Visc::SetTfrz( const cl_real & Tfrz ){$/
+Visc::Visc	cl_visc.cpp	/^Visc::Visc()$/
+Visc::bulkInfo	cl_visc.cpp	/^inline void Visc::bulkInfo( const cl_real & tau, c/
+Visc::clean	cl_visc.cpp	/^void Visc::clean()$/
+Visc::getEdMax	cl_visc.cpp	/^cl_real Visc::getEdMax()$/
+Visc::initializeCL	cl_visc.cpp	/^void Visc::initializeCL()$/
+Visc::output	cl_visc.cpp	/^void Visc::output( const cl_real & tau, const int /
+Visc::runKernelEvolve	cl_visc.cpp	/^void Visc::runKernelEvolve()$/
+Visc::runKernelIdeal	cl_visc.cpp	/^void Visc::runKernelIdeal( const cl_real & tau, co/
+Visc::runKernelInit	cl_visc.cpp	/^void Visc::runKernelInit()$/
+Visc::runKernelVisc	cl_visc.cpp	/^void Visc::runKernelVisc( const cl_real & tau, con/
+Visc::testResults	cl_visc.cpp	/^void Visc::testResults()$/
+Visc::updateGlobMem	cl_visc.cpp	/^void Visc::updateGlobMem( const cl_real & tau, con/
+Visc::~Visc	cl_visc.cpp	/^Visc::~Visc()$/
+reduceCPU	cl_visc.cpp	/^T reduceCPU(T *data, int size)$/
