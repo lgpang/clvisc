@@ -87,7 +87,7 @@ class EosWB(object):
 
         #plt.plot(ed_table, cs2_table*ed_table)
         tck = interpolate.splrep(ed_table, T_table, s=0)
-        ed_new = np.linspace(0.01, 2000, 200000)
+        ed_new = np.linspace(0.01, 2000, 199999)
         T_new = interpolate.splev(ed_new, tck, der=0)
         tck = interpolate.splrep(ed_table, cs2_table, s=0)
         cs2_new = interpolate.splev(ed_new, tck, der=0)

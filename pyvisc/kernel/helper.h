@@ -90,7 +90,8 @@ inline real4 Tmu(real4 edv, real pr, int mu) {
     return (ed+pr)*u4[mu]*u4 - gmn[mu]*pr;
 }
 
-real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2, real tau, int along) {
+real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
+           real4 ev_ip2, real tau, int along) {
    real pr_im1 = P(ev_im1.s0);
    real pr_i = P(ev_i.s0);
    real pr_ip1 = P(ev_ip1.s0);
