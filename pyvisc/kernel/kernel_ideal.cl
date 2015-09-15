@@ -2,67 +2,44 @@
 
 //////////////////////////////////////////////////////////
 /*! */
-__kernel void initIdeal(  
-	__global real4 * d_Hm0,            
-	__global real4 * d_Tm0,            
-	__global real4 * d_Umu1,            
-	__global real4 * d_Src,            
-	__global real  * d_Ed ,           
-    const real tau0,
-	const int  Size)
-{   //In this kernel, globalsize=NDRange( Size )
-
-    int idx = get_global_id(0);
-
-    real Ed = d_Ed[idx];
-    real4 Umu  = d_Umu1[ idx ];
-    real Pr = P( Ed );
-    
-    real4 gMu0 = (real4) ( 1.0, 0.0, 0.0, 0.0 );
-    real4 Tm0 =  tau0* ( (Ed+Pr)*Umu.s0*Umu - Pr*gMu0 );
-
-    d_Hm0[ idx ] = Tm0;
-    d_Tm0[ idx ] = Tm0;
-
-    d_Src[ idx ] = 0.0;
-}
-
-// Read global data to local memory for Tm0 , Umu and Ed
-inline void loadDataIdeal( __global real4 * d_Tm00, 
-               __global real4 * d_Umu1,
-               __global real  * d_Ed,
-               __local real T00[BSZ][BSZ][BSZ], 
-               __local real T01[BSZ][BSZ][BSZ], 
-               __local real T02[BSZ][BSZ][BSZ], 
-               __local real T03[BSZ][BSZ][BSZ], 
-               __local real4 Umu[BSZ][BSZ][BSZ], 
-               __local real  Ed[BSZ][BSZ][BSZ], 
-               __local real  Pr[BSZ][BSZ][BSZ], 
-               __local real CS2[BSZ][BSZ][BSZ], 
-               int i, int j, int k, int IND)
-{
-    real4  Tm00 = d_Tm00[IND];
-    T00[i][j][k] = Tm00.s0;
-    T01[i][j][k] = Tm00.s1;
-    T02[i][j][k] = Tm00.s2;
-    T03[i][j][k] = Tm00.s3;
-    Umu[i][j][k] =  d_Umu1[IND];
-     Ed[i][j][k] =   d_Ed[IND];
-     Pr[i][j][k] = P( Ed[i][j][k] );
-    CS2[i][j][k] = Pr[i][j][k] / max( Ed[i][j][k], acu );
-}
-
 inline real gammav( real4 * v , real * tau );
 
-inline void CalcSources( real4 * src, __local real Pr[BSZ][BSZ][BSZ], __local real4 Umu[BSZ][BSZ][BSZ] , \
-     real F00, real F03, real time, int i, int j, int k, int I, int J, int K );
-
-inline real KT3D( local real AB[BSZ][BSZ][BSZ],  local real4 Umu[BSZ][BSZ][BSZ], \
+inline real KT1D(local real AB[BSZ][BSZ][BSZ],  local real4 Umu[BSZ][BSZ][BSZ], \
                     local real  CS2[BSZ][BSZ][BSZ], real tau, int i, int j, int k, int I, int J, int K );
+
 /** solve energy density from T00 and K=sqrt(T01**2 + T02**2 + T03**2)
  * */
 
-__kernel void stepUpdate(  
+__kernel void kt_src_alongx(
+                     __global real4 * d_Src,     // out put
+		     __global real4 * d_ev,
+		     const real time,
+		     const int step) {
+    // store one line of data in local memory
+    __local real4 ev[NX+4];
+    int I = get_global_id(0);
+    int J = get_global_id(1);
+    int K = get_global_id(2);
+
+    int i = get_local_id(0) + 2;
+
+    int IND = I*NY*NZ + J*NZ + K;
+    // load 1D data to local memory
+    ev[i] = d_ev[IND];
+    if ( i == 2 ) {
+       ev[0] = d_ev[J*NZ+K];
+       ev[1] = ev[0];
+       ev[NX+3] = d_ev[NX*NY*NZ+J*NZ+K];
+       ev[NX+2] = ev[NX+3];
+    }
+    barrier( CLK_LOCAL_MEM_FENCE );
+
+    if ( step == 1 ) d_Src[IND] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
+    
+    // update d_Src according to kt_1d_alongx
+}
+
+__kernel void stepUpdate(
 	__global real4 * d_Tm00,            
 	__global real4 * d_Tm01,            
 	__global real4 * d_Umu1,  /**< Umu at time   */          
@@ -190,7 +167,7 @@ __kernel void stepUpdate(
     real PR = P( EdFind );
 
     //Why this is much faster than max(acu, M) ?
-    real EPV = max( acu, TH00 + PR );
+    real EPV = max(acu, TH00 + PR);
 
     real4 vi = (real4) ( 1.0, TH01/EPV, TH02/EPV, TH03/EPV/time );
 
@@ -198,7 +175,7 @@ __kernel void stepUpdate(
 
     //if( K > NX/2  && umu.s3 < 0 ) umu.s3 = fabs( umu.s3 );
 
-    real epp = EdFind + PR ;
+    real epp = EdFind + PR;
 
     d_NewEd[IND] = EdFind;
     d_NewUmu[IND] = umu;

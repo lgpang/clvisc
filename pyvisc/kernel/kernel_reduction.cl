@@ -6,7 +6,7 @@
 
 __kernel __attribute__((work_group_size_hint(REDUCTION_BSZ, 1, 1))) 
 void reduction_stage1( 
-     __global real * x,   //input array
+     __global real4 * x,   //input array
      __global real * semi_result, //store the results for first stage reduction
      int size)
 {
@@ -16,11 +16,12 @@ int lid = get_local_id(0);
 
 __local real xmax[ REDUCTION_BSZ ];  // REDUCTION_BSZ=Block size
 
-if( gid < size ) xmax[lid] = x[ gid ];
+if ( gid < size ) xmax[lid] = x[gid].s0;
 
 while ( (int)(gid+get_global_size(0)) < size ) {
   gid += get_global_size(0);
-  if( x[ gid ] > xmax[lid] ) xmax[lid] = x[ gid ];
+  real new_x = x[gid].s0;
+  if ( new_x > xmax[lid] ) xmax[lid] = new_x;
 }
 
 barrier( CLK_LOCAL_MEM_FENCE );

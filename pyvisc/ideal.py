@@ -36,51 +36,40 @@ class CLIdeal(object):
             dat1 = np.loadtxt(fIni1).astype(cfg.real)
         except IOError, e:
             print e
-        self.h_Ed1 = np.empty( self.size, cfg.real )
-        self.h_um1 = np.empty( self.size, cfg.real4 )
-        for i in range(len(self.h_Ed1)):
-            self.h_Ed1[ i ] = dat1[ i ]
-            self.h_um1[ i ] = (1.0, 0.0, 0.0, 0.0)
-            #self.h_um1[ i ] = ( dat1[i,5], dat1[i,6], dat1[i,7], 0.0 )
-        #define buffer on device side, umu1=real4, 
-        #Tm0=(T00, T01, T02, T03) at time step n
-        #Tm1=(T00, T01, T02, T03) at time step n+1
+        self.h_ev1 = np.empty(self.size, cfg.real4)
+        for i in range(self.size):
+            self.h_ev1[ i ] = (dat1[i], 0.0, 0.0, 0.0) 
+
+        #define buffer on device side,
         mf = cl.mem_flags
-        self.d_Ed1 = cl.Buffer( self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, 
-                hostbuf=self.h_Ed1 )
-        self.d_Um1 = cl.Buffer( self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, 
-                hostbuf=self.h_um1 )
+        self.d_ev1 = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, 
+                hostbuf=self.h_ev1)
+        self.d_ev2 = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_ev1.nbytes )
+        self.d_Src = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_ev1.nbytes )
 
-        self.d_Tm0 = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_um1.nbytes )
-        self.d_Tm1 = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_um1.nbytes )
-        self.d_Src = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_um1.nbytes )
-
-        self.d_NewTm00 = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_um1.nbytes )
-        self.d_NewUmu = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_um1.nbytes )
-        self.d_NewEd = cl.Buffer( self.ctx, mf.READ_WRITE, self.h_Ed1.nbytes )
-
-        self.submax = np.empty( 64, cfg.real )
-        self.d_submax = cl.Buffer( self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes )
+        self.submax = np.empty(64, cfg.real)
+        self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
         
-    def __loadAndBuildCLPrg( self ):
+    def __loadAndBuildCLPrg(self):
         optlist = [ 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
         self.gpu_defines = [ '-D %s=((real)%s)'%(key, value) for (key,value)
                 in cfg.__dict__.items() if key in optlist ]
         self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=cfg.NX))
         self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=cfg.NY))
         self.gpu_defines.append('-D {key}={value}'.format(key='NZ', value=cfg.NZ))
+        self.gpu_defines.append('-D {key}={value}'.format(key='SIZE', value=cfg.NX*cfg.NY*cfg.NZ))
 
         #local memory size along x,y,z direction with 4 boundary cells
         self.gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=cfg.BSZ))
         self.gpu_defines.append('-D {key}={value}'.format(key='VSZ', value=cfg.BSZ-2))
         #determine float32 or double data type in *.cl file
-        if cfg.use_float32 :
+        if cfg.use_float32:
             self.gpu_defines.append( '-D USE_SINGLE_PRECISION' )
         #choose EOS by ifdef in *.cl file
         if cfg.IEOS==0:
             self.gpu_defines.append( '-D EOSI' )
         elif cfg.IEOS==1:
-            self.gpu_defines.append( '-D EOSLCE' )
+            self.gpu_defines.append( '-D EOSLWB' )
         elif cfg.IEOS==2:
             self.gpu_defines.append( '-D EOSLPCE' )
         #set the include path for the header file
@@ -92,75 +81,88 @@ class CLIdeal(object):
         self.kernel_ideal = cl.Program( self.ctx, prg_src ).build(options=self.gpu_defines)
 
         src_maxEd = open(os.path.join(cwd, 'kernel', 'kernel_reduction.cl'), 'r').read()
-        self.kernel_reduction = cl.Program( self.ctx, src_maxEd ).build(options=self.gpu_defines)
+        self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(options=self.gpu_defines)
 
-    def initHydro( self ):
+    def initHydro(self):
         '''Calc initial T^{tau mu} from initial Ed and Umu '''
         fname = cfg.fPathIni
         self.__loadAndBuildCLPrg()
         self.__readIniCondition( fname )
 
-        self.kernel_ideal.initIdeal( self.queue, (cfg.NX*cfg.NY*cfg.NZ, ), None, \
-                            self.d_Tm0, self.d_Tm1, self.d_Um1, self.d_Src, \
-                            self.d_Ed1, self.tau, self.size ).wait()
+        #self.kernel_ideal.initIdeal( self.queue, (cfg.NX*cfg.NY*cfg.NZ, ), None, \
+        #                    self.d_Tm0, self.d_Tm1, self.d_Um1, self.d_Src, \
+        #                    self.d_Ed1, self.tau, self.size ).wait()
        
         # submax and d_submax is used to calc the maximum energy density
 
 
-    def __stepUpdate( self, halfStep=np.int32(1) ):
+    def __stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
-        This function is for one time step'''
-        NX,NY,NZ = cfg.NX, cfg.NY, cfg.NZ
-        BSZ = cfg.BSZ
-        LSZ = BSZ - 4
-
+            Args:
+                gpu_ev_old: self.d_ev1 for the 1st step,
+			    self.d_ev2 for the 2nd step
+                step: the 1st or the 2nd step in runge-kutta
+                      if ( step=1 and along_axis=1 ):
+			 Initialize d_Src={0.0f}
+                      else:
+                         d_Src += src_from_kt1d
+        '''
+        NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
         mf = cl.mem_flags
-        if halfStep==1 :
-            self.kernel_ideal.stepUpdate( self.queue, (NX,NY,NZ), (LSZ, LSZ, LSZ), \
-                self.d_Tm0, self.d_Tm1, self.d_Um1, self.d_Src, self.d_Ed1, \
-                self.d_NewTm00, self.d_NewUmu, self.d_NewEd, self.tau, halfStep, self.size ).wait()
-        else:
-            self.kernel_ideal.stepUpdate( self.queue, (NX,NY,NZ), (LSZ, LSZ, LSZ), \
-                self.d_NewTm00, self.d_Tm0, self.d_NewUmu, self.d_Src, self.d_Ed1, \
-                self.d_Tm0, self.d_Um1, self.d_Ed1, self.tau, halfStep, self.size ).wait()
+        if step == 1: gpu_ev_old = self.d_ev1
+        elif step == 2: gpu_ev_old = self.d_ev2
+        # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
+        # input: gpu_ev_old, tau, size, along_axis
+        # output: self.d_Src
+        along_x, along_y, along_z = 1, 2, 3       # split along x, y, z
+        self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (NX, 1, 1), self.d_Src,
+		       gpu_ev_old, self.tau, along_x, np.int32(step))
 
+        self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, NY, 1), self.d_Src,
+                       gpu_ev_old, self.tau, np.int32(step))
 
-    def __updateGlobalMem( self, halfStep=np.int32(1)):
-        ''' A->A*; A*->A**;   Anew = 0.5*(A+A**); update d_Tm01, Ed, Umu at 
-        last step of RungeKuta method'''
-        self.kernel_ideal.updateGlobalMem( self.queue, (cfg.NX*cfg.NY*cfg.NZ,), None, \
-                self.d_Tm0, self.d_Tm1, self.d_Um1, self.d_Ed1, self.d_NewTm00, \
-                self.d_NewUmu, self.d_NewEd, self.tau, halfStep, self.size ).wait()
+        self.kernel_ideal.kt_src_alongz(self.queue, (NX,NY,NZ), (1, 1, NZ), self.d_Src,
+                       gpu_ev_old, self.tau, np.int32(step))
 
+        # if step=1, T0m' = T0m + d_Src*dt, update d_ev2
+        # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev1
+        # Notice that d_Src=f(t,x) at step1 and 
+        # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
+        # input: gpu_ev_old to get T0m, d_Src, tau, size
+        # output: T0m'->ed,v for 1st step and T0m->ed,v for 2nd step
+        if step == 1:
+	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ), None, self.d_ev2,
+		 self.d_ev1, self.d_Src, self.tau, self.size)
+        elif step == 2:
+	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ), None, self.d_ev1,
+		self.d_ev1, self.d_Src, self.tau, self.size)
 
-    def __edMax( self ):
+    def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
-        self.kernel_reduction.reduction_stage1( self.queue, (256*64,), (256,), 
-                self.d_Ed1, self.d_submax, self.size ).wait()
-
-        cl.enqueue_copy( self.queue, self.submax, self.d_submax ).wait()
+        self.kernel_reduction.reduction_stage1(self.queue, (256*64,), (256,), 
+                self.d_ev1, self.d_submax, self.size ).wait()
+        cl.enqueue_copy(self.queue, self.submax, self.d_submax).wait()
         return self.submax.max()
 
 
     def __output(self, nstep):
         if nstep%cfg.ntskip == 0:
-            cl.enqueue_copy( self.queue, self.h_Ed1, self.d_Ed1 ).wait()
+            cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev1).wait()
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=cfg.fPathOut, nstep=nstep)
 
-            np.savetxt( fout, self.h_Ed1.reshape(cfg.NX, cfg.NY, cfg.NZ)\
-                    [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed' )
+            np.savetxt(fout, self.h_ev1.reshape(cfg.NX, cfg.NY, cfg.NZ)\
+                    [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed')
 
             print nstep, ' finished'
 
 
-    def evolve( self, ntskip=10 ):
+    def evolve(self, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
         for n in xrange(1000):
             self.__output(n)
-            self.__stepUpdate(halfStep=np.int32(1))
-            self.__stepUpdate(halfStep=np.int32(0))
-            self.__updateGlobalMem()
+            self.__stepUpdate(step=1)
+            self.__stepUpdate(step=2)
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
             print 'EdMax= ',self.__edMax()
  
