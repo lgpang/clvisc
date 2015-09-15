@@ -132,10 +132,10 @@ class CLIdeal(object):
         # output: T0m'->ed,v for 1st step and T0m->ed,v for 2nd step
         if step == 1:
 	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ), None, self.d_ev2,
-		 self.d_ev1, self.d_Src, self.tau, self.size)
+		 self.d_ev1, self.d_Src, self.tau, self.size, step)
         elif step == 2:
 	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ), None, self.d_ev1,
-		self.d_ev1, self.d_Src, self.tau, self.size)
+		 self.d_ev1, self.d_Src, self.tau, self.size, step)
 
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
@@ -162,8 +162,8 @@ class CLIdeal(object):
         for n in xrange(1000):
             self.__output(n)
             self.__stepUpdate(step=1)
-            self.__stepUpdate(step=2)
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
+            self.__stepUpdate(step=2)
             print 'EdMax= ',self.__edMax()
  
 

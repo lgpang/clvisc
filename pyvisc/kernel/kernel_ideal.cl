@@ -1,15 +1,5 @@
 #include<helper.h>
 
-//////////////////////////////////////////////////////////
-/*! */
-inline real gammav( real4 * v , real * tau );
-
-inline real KT1D(local real AB[BSZ][BSZ][BSZ],  local real4 Umu[BSZ][BSZ][BSZ], \
-                    local real  CS2[BSZ][BSZ][BSZ], real tau, int i, int j, int k, int I, int J, int K );
-
-/** solve energy density from T00 and K=sqrt(T01**2 + T02**2 + T03**2)
- * */
-
 __kernel void kt_src_alongx(
                      __global real4 * d_Src,     // out put
 		     __global real4 * d_ev,
@@ -24,19 +14,121 @@ __kernel void kt_src_alongx(
     int i = get_local_id(0) + 2;
 
     int IND = I*NY*NZ + J*NZ + K;
+
     // load 1D data to local memory
     ev[i] = d_ev[IND];
+    barrier( CLK_LOCAL_MEM_FENCE );
+
+    // set boundary condition
     if ( i == 2 ) {
-       ev[0] = d_ev[J*NZ+K];
-       ev[1] = ev[0];
-       ev[NX+3] = d_ev[NX*NY*NZ+J*NZ+K];
-       ev[NX+2] = ev[NX+3];
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[NX+3] = ev[NX+1];
+       ev[NX+2] = ev[NX+1];
     }
     barrier( CLK_LOCAL_MEM_FENCE );
 
     if ( step == 1 ) d_Src[IND] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     
-    // update d_Src according to kt_1d_alongx
+    real4 e_v = ev[i];
+    real ed = e_v.s0;
+    real vx = e_v.s1;
+    real vy = e_v.s2;
+    real vz = e_v.s3;
+    real pressure = P(ed);
+    real u0 = gamma(vx, vy, vz);
+
+    // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
+    real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
+    real Ttz_tilde = (ed + pressure)*u0*u0*vz;
+    real4 src4_christoeffel = {Tzz_tilde, 0.0f, 0.0f, Ttz_tilde};
+
+    real4 d_Src[IND] = d_Src[IND] - src4_christoeffel 
+             + kt1d(ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, 1)/DX;
+
+}
+
+__kernel void kt_src_alongy(
+                     __global real4 * d_Src,     // out put
+		     __global real4 * d_ev,
+		     const real time,
+		     const int step) {
+    // store one line of data in local memory
+    __local real4 ev[NY+4];
+    int I = get_global_id(0);
+    int J = get_global_id(1);
+    int K = get_global_id(2);
+
+    int i = get_local_id(0) + 2;
+
+    int IND = I*NY*NZ + J*NZ + K;
+
+    // load 1D data to local memory
+    ev[i] = d_ev[IND];
+    barrier( CLK_LOCAL_MEM_FENCE );
+
+    // set boundary condition
+    if ( i == 2 ) {
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[NY+3] = ev[NY+1];
+       ev[NY+2] = ev[NY+1];
+    }
+    barrier( CLK_LOCAL_MEM_FENCE );
+
+    real4 e_v = ev[i];
+    real ed = e_v.s0;
+    real vx = e_v.s1;
+    real vy = e_v.s2;
+    real vz = e_v.s3;
+    real pressure = P(ed);
+    real u0 = gamma(vx, vy, vz);
+
+    real4 d_Src[IND] = d_Src[IND]
+             + kt1d(ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, 2)/DY;
+
+}
+
+
+__kernel void kt_src_alongz(
+                     __global real4 * d_Src,     // out put
+		     __global real4 * d_ev,
+		     const real time,
+		     const int step) {
+    // store one line of data in local memory
+    __local real4 ev[NZ+4];
+    int I = get_global_id(0);
+    int J = get_global_id(1);
+    int K = get_global_id(2);
+
+    int i = get_local_id(0) + 2;
+
+    int IND = I*NY*NZ + J*NZ + K;
+
+    // load 1D data to local memory
+    ev[i] = d_ev[IND];
+    barrier( CLK_LOCAL_MEM_FENCE );
+
+    // set boundary condition
+    if ( i == 2 ) {
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[NY+3] = ev[NY+1];
+       ev[NY+2] = ev[NY+1];
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    real4 e_v = ev[i];
+    real ed = e_v.s0;
+    real vx = e_v.s1;
+    real vy = e_v.s2;
+    real vz = e_v.s3;
+    real pressure = P(ed);
+    real u0 = gamma(vx, vy, vz);
+
+    real4 d_Src[IND] = d_Src[IND]
+             + kt1d(ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, 2)/DY;
+
 }
 
 __kernel void stepUpdate(
@@ -247,77 +339,3 @@ __kernel void updateGlobalMem(
 
     /** Set up boundary condition here */
 }
-
-
-inline real gammav( real4 * v , real * tau ){
-    //return 1.0/sqrt(max(1.0E-4, 1.0 - (*v).s1*(*v).s1 - (*v).s2*(*v).s2 - (*tau)*(*tau)*(*v).s3*(*v).s3 ));
-    return (real)1.0/sqrt(max(acu*acu, (real)1.0 - (*v).s1*(*v).s1 - (*v).s2*(*v).s2 - (*tau)*(*tau)*(*v).s3*(*v).s3 ));
-}
-
-
-inline void CalcSources( real4 * Src, __local real Pr[BSZ][BSZ][BSZ], __local real4 Umu[BSZ][BSZ][BSZ] , \
-     real F00, real F03, real time, int i, int j, int k, int I, int J, int K )
-{
-/** \bug Notice the extropolation will make the program crash soon */
-//   if( I==0 ){ 
-//     Pr[1][j][k] = poly3_int( 2.0, 3.0, 4.0, Pr[2][j][k], Pr[3][j][k], Pr[4][j][k], 1.0 );
-//     Pr[0][j][k] = poly3_int( 1.0, 2.0, 3.0, Pr[1][j][k], Pr[2][j][k], Pr[3][j][k], 0.0 );
-//   }
-//   if( I==NX-1 ){
-//     Pr[BSZ-2][j][k] = poly3_int( BSZ-3.0,BSZ-4.0, BSZ-5.0, Pr[BSZ-3][j][k], Pr[BSZ-4][j][k], Pr[BSZ-5][j][k], BSZ-2.0 );
-//     Pr[BSZ-1][j][k] = poly3_int( BSZ-2.0,BSZ-3.0, BSZ-4.0, Pr[BSZ-2][j][k], Pr[BSZ-3][j][k], Pr[BSZ-4][j][k], BSZ-1.0 );
-//   }
-//   if( J==0 ){ 
-//     Pr[i][1][k] = poly3_int( 2.0, 3.0, 4.0, Pr[j][2][k], Pr[i][3][k], Pr[i][4][k], 1.0 );
-//     Pr[i][0][k] = poly3_int( 1.0, 2.0, 3.0, Pr[j][1][k], Pr[i][2][k], Pr[i][3][k], 0.0 );
-//   }
-//   if( J==NY-1 ){
-//     Pr[i][BSZ-2][k] = poly3_int( BSZ-3.0,BSZ-4.0, BSZ-5.0, Pr[i][BSZ-3][k], Pr[i][BSZ-4][k], Pr[i][BSZ-5][k], BSZ-2.0 );
-//     Pr[i][BSZ-1][k] = poly3_int( BSZ-2.0,BSZ-3.0, BSZ-4.0, Pr[i][BSZ-2][k], Pr[i][BSZ-3][k], Pr[i][BSZ-4][k], BSZ-1.0 );
-//   }
-//
-    real px, py, pz, pvx, pvy, pvz;
-    /** pressure at i,j,k will be used many times */
-    real pr   = Pr[i][j][k] ;
-    real pip1 = Pr[i+1][j][k];
-    real pjp1 = Pr[i][j+1][k];
-    real pkp1 = Pr[i][j][k+1];
-
-    real pim1 = Pr[i-1][j][k];
-    real pjm1 = Pr[i][j-1][k];
-    real pkm1 = Pr[i][j][k-1];
-
-    px = minmod( theta*( pip1-pr ), 0.5*( pip1 - pim1 ), theta*( pr-pim1 ) ) / DX;
-    py = minmod( theta*( pjp1-pr ), 0.5*( pjp1 - pjm1 ), theta*( pr-pjm1 ) ) / DY;
-    pz = minmod( theta*( pkp1-pr ), 0.5*( pkp1 - pkm1 ), theta*( pr-pkm1 ) ) / DZ;
-
-    //real time0 = time - 0.5*DT;  // source term at (time step n and n+1/2 )
-    real time0 = time ;  // source term at (time step n and n+1 )
-    /** Release px, py, pz and F03 earlier in each threads */
-    (*Src).s1 += time0 * px;
-    (*Src).s2 += time0 * py;
-    (*Src).s3 += ( pz + 2.0*F03 ) / time0;
-
-    real vx   = Umu[i][j][k].s1/Umu[i][j][k].s0 ; 
-    real vxm1 = Umu[i-1][j][k].s1/Umu[i-1][j][k].s0 ;
-    real vxp1 = Umu[i+1][j][k].s1/Umu[i+1][j][k].s0 ;
-
-    pvx = minmod( theta*( pip1 * vxp1 - pr*vx ), 0.5*( pip1*vxp1 - pim1*vxm1 ),  theta*( pr*vx - pim1*vxm1 ) ) / DX;
-
-    real vy   = Umu[i][j][k].s2/Umu[i][j][k].s0 ; 
-    real vym1 = Umu[i][j-1][k].s2/Umu[i][j-1][k].s0 ;
-    real vyp1 = Umu[i][j+1][k].s2/Umu[i][j+1][k].s0 ;
-    pvy = minmod( theta*( pjp1 * vyp1 - pr*vy ), 0.5*( pjp1 * vyp1 - pjm1*vym1 ),  theta*( pr*vy - pjm1*vym1 ) ) /DY ;
-
-
-    real vz   = Umu[i][j][k].s3/Umu[i][j][k].s0 ; 
-    real vzm1 = Umu[i][j][k-1].s3/Umu[i][j][k-1].s0 ;
-    real vzp1 = Umu[i][j][k+1].s3/Umu[i][j][k+1].s0 ;
-    pvz = minmod( theta*( pkp1 * vzp1 - pr*vz ), 0.5*( pkp1 * vzp1 - pkm1 * vzm1 ),  theta*( pr*vz - pkm1*vzm1 ) ) /DZ;
-
-
-    (*Src).s0 += pr + pown( vz, 2 ) * time0 * ( F00 + pr*time0 ) + time0*(pvx+pvy+pvz) ;
-
-}
-
-

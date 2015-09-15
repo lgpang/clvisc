@@ -1,4 +1,5 @@
 import pyopencl as cl
+from pyopencl import array
 import numpy as np
 from time import time
 import os
@@ -12,19 +13,23 @@ class TestReductionMethod(unittest.TestCase):
     queue = cl.CommandQueue( ctx )
     mf = cl.mem_flags
     N = 50000
-    x = np.random.rand(N).astype( np.float32 )
+    xr = np.random.rand(N).astype( np.float32 )
     t1 = time()
-    xmax = x.max()
+    xmax = xr.max()
     t2 = time()
     print 'cpu spend:', t2-t1
+    x = np.empty(N, array.vec.float4)
+    for i in range(N):
+        x[i] = (xr[i], 0.0, 0.0, 0.0)
 
-    x_gpu = cl.Buffer( ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=x )
+    x_gpu = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=x)
 
     cwd, cwf = os.path.split(__file__)
 
     kernel_src = open(os.path.join(cwd, '..', 'kernel', 'kernel_reduction.cl'), 'r').read()
 
     compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
+    compile_options.append('-D USE_SINGLE_PRECISION' )
 
     prg = cl.Program(ctx, kernel_src ).build(compile_options)
 
@@ -50,3 +55,6 @@ class TestReductionMethod(unittest.TestCase):
     print 'gpu spend:', t3 - t2
     print 'gpu finished'
     self.assertAlmostEqual(xmax, final)
+
+if __name__ == '__main__':
+    unittest.main()
