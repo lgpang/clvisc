@@ -18,7 +18,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2, r
 
 
 // g^{tau mu}, g^{x mu}, g^{y mu}, g^{eta mu} without tau*tau
-constant real4 gmn[4] = 
+constant real4 gm[4] = 
 {(real4)(1.0f, 0.0f, 0.0f, 0.0f),
 (real4)(0.0f, -1.0f, 0.0f, 0.0f),
 (real4)(0.0f, 0.0f, -1.0f, 0.0f),
@@ -87,7 +87,7 @@ inline real4 Tmu(real4 edv, real pr, int mu) {
     real u0 = gamma(edv.s1, edv.s2, edv.s3);
     real ed = edv.s0;
     real4 u4 = (real4)(1.0f, edv.s1, edv.s2, edv.s3)*u0;
-    return (ed+pr)*u4[mu]*u4 - gmn[mu]*pr;
+    return (ed+pr)*u4[mu]*u4 - gm[mu]*pr;
 }
 
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
@@ -121,8 +121,8 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real pr_half = lin_int(0.0f, 1.0f, pr_i, pr_ip1, 0.5f) * tau;
    // Flux Jp = (T0m + pr*g^{tau mu})*v^x + pr*g^{x mu}
    real vi_half = lin_int(0.0f, 1.0f, vi[along], vip1[along], 0.5f);
-   real4 Jp = (AR + pr_half*gmn[0])*vi_half + pr_half*gmn[along];
-   real4 Jm = (AL + pr_half*gmn[0])*vi_half + pr_half*gmn[along];
+   real4 Jp = (AR + pr_half*gm[0])*vi_half + pr_half*gm[along];
+   real4 Jm = (AL + pr_half*gm[0])*vi_half + pr_half*gm[along];
 
    // first part of kt1d; the final results = src[i]-src[i-1]
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
@@ -140,8 +140,8 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    pr_half = lin_int(0.0f, 1.0f, pr_im1, pr_i, 0.5f)*tau;
    // Flux Jp = (T0m + pr*g^{tau mu})*v^x + pr*g^{x mu}
    vi_half = lin_int(0.0f, 1.0f, vim1[along], vi[along], 0.5f);
-   Jp = (AR + pr_half*gmn[0])*vi_half + pr_half*gmn[along];
-   Jm = (AL + pr_half*gmn[0])*vi_half + pr_half*gmn[along];
+   Jp = (AR + pr_half*gm[0])*vi_half + pr_half*gm[along];
+   Jm = (AL + pr_half*gm[0])*vi_half + pr_half*gm[along];
 
    // second part of kt1d; final results = src[i] - src[i-1]
    src -= 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
