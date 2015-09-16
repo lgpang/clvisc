@@ -25,7 +25,7 @@ class CLIdeal(object):
         self.ctx = cl.Context(devices=devices, properties=[
             (cl.context_properties.PLATFORM, platform)])
 
-        self.queue = cl.CommandQueue( self.ctx )
+        self.queue = cl.CommandQueue(self.ctx)
 
         self.size= np.int32(cfg.NX*cfg.NY*cfg.NZ)
         self.tau = cfg.real(cfg.TAU0)
@@ -107,13 +107,13 @@ class CLIdeal(object):
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
-        self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (NX, 1, 1), self.d_Src,
-		       gpu_ev_old, self.tau, np.int32(step))
+        self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (5, 1, 1), self.d_Src,
+		               gpu_ev_old, self.tau, np.int32(step))
 
-        self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, NY, 1), self.d_Src,
+        self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, 5, 1), self.d_Src,
                        gpu_ev_old, self.tau, np.int32(step))
 
-        self.kernel_ideal.kt_src_alongz(self.queue, (NX,NY,NZ), (1, 1, NZ), self.d_Src,
+        self.kernel_ideal.kt_src_alongz(self.queue, (NX,NY,NZ), (1, 1, 5), self.d_Src,
                        gpu_ev_old, self.tau, np.int32(step))
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev2
@@ -123,11 +123,11 @@ class CLIdeal(object):
         # input: gpu_ev_old to get T0m, d_Src, tau, size
         # output: T0m'->ed,v for 1st step and T0m->ed,v for 2nd step
         if step == 1:
-	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev2,
-		 self.d_ev1, self.d_Src, self.tau, self.size, np.int32(step))
+	        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev2,
+		 self.d_ev1, self.d_Src, self.tau, np.int32(step))
         elif step == 2:
-	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev1,
-		 self.d_ev1, self.d_Src, self.tau, self.size, np.int32(step))
+	        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev1,
+		 self.d_ev1, self.d_Src, self.tau, np.int32(step))
 
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
@@ -142,11 +142,10 @@ class CLIdeal(object):
             cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev1).wait()
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=cfg.fPathOut, nstep=nstep)
-
+	    edxy = self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)[:,:,cfg.NZ/2]
 	    np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)\
                     [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed')
 
-            print nstep, ' finished'
 
 
     def evolve(self, ntskip=10):
@@ -163,7 +162,7 @@ class CLIdeal(object):
 def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
-    os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
+    #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
     print >>sys.stdout, 'start ...'
     t0 = time()
     ideal = CLIdeal()

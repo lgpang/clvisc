@@ -5,7 +5,7 @@
 #define ALONG_Z 3
 // output: d_Src; all the others are input
 __kernel void kt_src_alongx(
-                     __global real4 * d_Src,     
+             __global real4 * d_Src,
 		     __global real4 * d_ev,
 		     const real tau,
 		     const int step) {
@@ -54,7 +54,7 @@ __kernel void kt_src_alongx(
 }
 
 __kernel void kt_src_alongy(
-                     __global real4 * d_Src,     // out put
+             __global real4 * d_Src,     // out put
 		     __global real4 * d_ev,
 		     const real tau,
 		     const int step) {
@@ -89,7 +89,7 @@ __kernel void kt_src_alongy(
 
 
 __kernel void kt_src_alongz(
-                     __global real4 * d_Src,     // out put
+             __global real4 * d_Src,     // out put
 		     __global real4 * d_ev,
 		     const real tau,
 		     const int step) {
@@ -122,13 +122,12 @@ __kernel void kt_src_alongz(
 				   ev[i+2], tau, ALONG_Z)/(tau*DZ);
 }
 
-/** update d_evnew */
+/** update d_evnew with d_ev1 and d_Src*/
 __kernel void update_ev(
 	__global real4 * d_evnew,
 	__global real4 * d_ev1,
 	__global real4 * d_Src,
 	const real tau,
-        const int  Size,
 	const int  step)
 {
     int I = get_global_id(0);

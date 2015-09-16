@@ -60,8 +60,9 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
     real ut2 = ut*ut;
     real uk2 = uk*uk;
     real cs2 = pr/edv.s0;
-    return (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
+    real lam = (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
        /(ut2 - (ut2-1.0f)*cs2);
+    return max(lam, 1.33f);
 }
 
 
@@ -75,7 +76,7 @@ inline void rootFinding( real* EdFind, real * T00, real *K2 ){
         E0 = E1;
         E1 = *T00 - (*K2)/( *T00 + P(E1)) ; 
         i ++ ;
-        if( i>20 || fabs(E1-E0)/max( fabs(E1), (real)acu)<acu ) break;
+        if( i>20 || fabs(E1-E0)/max(fabs(E1), (real)acu)<acu ) break;
     }
 
     * EdFind = E1;
@@ -132,8 +133,8 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod4(0.5f*(T0m_i-T0m_im2),
            minmod4(theta*(T0m_i-T0m_im1), theta*(T0m_im1-T0m_im2)));
-   lam = maxPropagationSpeed( ev_im1, ev_im1.s1, pr_im1);
-   AL = T0m_im1   + 0.5f * DA0;
+   lam = maxPropagationSpeed(ev_im1, vim1[along], pr_im1);
+   AL = T0m_im1 + 0.5f * DA0;
    AR = T0m_i - 0.5f * DA1;
 
    // pr_half = tau*pr(i+1/2)

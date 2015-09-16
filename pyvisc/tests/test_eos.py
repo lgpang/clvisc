@@ -38,7 +38,8 @@ class TestEos(unittest.TestCase):
     cwd, cwf = os.path.split(__file__)
 
     compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
-    compile_options.append('-D EOSLPCE')
+    #compile_options.append('-D EOSLPCE')
+    compile_options.append('-D EOSLCE')
     compile_options.append('-D USE_SINGLE_PRECISION')
 
     prg = cl.Program(ctx, kernel_src).build(compile_options)
