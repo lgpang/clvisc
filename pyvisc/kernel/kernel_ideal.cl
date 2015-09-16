@@ -1,26 +1,31 @@
 #include<helper.h>
 
+#define ALONG_X 1
+#define ALONG_Y 2
+#define ALONG_Z 3
+// output: d_Src; all the others are input
 __kernel void kt_src_alongx(
-                     __global real4 * d_Src,     // out put
+                     __global real4 * d_Src,     
 		     __global real4 * d_ev,
 		     const real time,
 		     const int step) {
-    // store one line of data in local memory
-    __local real4 ev[NX+4];
     int I = get_global_id(0);
     int J = get_global_id(1);
     int K = get_global_id(2);
 
-    int i = get_local_id(0) + 2;
+    if ( I >= NX || J >= NY || K >= NZ ) return;
 
     int IND = I*NY*NZ + J*NZ + K;
-
+    // store one line of data in local memory
+    __local real4 ev[NX+4];
     // load 1D data to local memory
-    ev[i] = d_ev[IND];
+    for ( int i=get_local_id(0); i < NX; i += get_local_size(0) ) {
+        ev[i+2] = d_ev[IND];
+    }
     barrier( CLK_LOCAL_MEM_FENCE );
 
     // set boundary condition
-    if ( i == 2 ) {
+    if ( (int)get_local_id(0) == 0 ) {
        ev[0] = ev[2];
        ev[1] = ev[2];
        ev[NX+3] = ev[NX+1];
@@ -30,6 +35,7 @@ __kernel void kt_src_alongx(
 
     if ( step == 1 ) d_Src[IND] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     
+    int i = get_local_id(0) + 2;
     real4 e_v = ev[i];
     real ed = e_v.s0;
     real vx = e_v.s1;
@@ -43,9 +49,8 @@ __kernel void kt_src_alongx(
     real Ttz_tilde = (ed + pressure)*u0*u0*vz;
     real4 src4_christoeffel = {Tzz_tilde, 0.0f, 0.0f, Ttz_tilde};
 
-    real4 d_Src[IND] = d_Src[IND] - src4_christoeffel 
-             + kt1d(ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, 1)/DX;
-
+    d_Src[IND] = d_Src[IND] - src4_christoeffel + kt1d(
+           ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, ALONG_X)/DX;
 }
 
 __kernel void kt_src_alongy(
@@ -53,40 +58,33 @@ __kernel void kt_src_alongy(
 		     __global real4 * d_ev,
 		     const real time,
 		     const int step) {
-    // store one line of data in local memory
-    __local real4 ev[NY+4];
     int I = get_global_id(0);
     int J = get_global_id(1);
     int K = get_global_id(2);
-
-    int i = get_local_id(0) + 2;
+    if ( I >= NX || J >= NY || K >= NZ ) return;
 
     int IND = I*NY*NZ + J*NZ + K;
+    // store one line of data in local memory
+    __local real4 ev[NY+4];
 
     // load 1D data to local memory
-    ev[i] = d_ev[IND];
+    for ( int i = get_local_id(1); i < NY; i += get_local_size(1) ) {
+        ev[i+2] = d_ev[IND];
+    }
     barrier( CLK_LOCAL_MEM_FENCE );
 
     // set boundary condition
-    if ( i == 2 ) {
+    if ( get_local_id(1) == 0 ) {
        ev[0] = ev[2];
        ev[1] = ev[2];
        ev[NY+3] = ev[NY+1];
        ev[NY+2] = ev[NY+1];
     }
-    barrier( CLK_LOCAL_MEM_FENCE );
+    barrier(CLK_LOCAL_MEM_FENCE);
 
-    real4 e_v = ev[i];
-    real ed = e_v.s0;
-    real vx = e_v.s1;
-    real vy = e_v.s2;
-    real vz = e_v.s3;
-    real pressure = P(ed);
-    real u0 = gamma(vx, vy, vz);
-
-    real4 d_Src[IND] = d_Src[IND]
-             + kt1d(ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, 2)/DY;
-
+    int i = get_local_id(1) + 2;
+    d_Src[IND] = d_Src[IND] + kt1d(ev[i-2], ev[i-1],
+	  e_v[i], ev[i+1], ev[i+2], time, ALONG_Y)/DY;
 }
 
 
@@ -95,40 +93,33 @@ __kernel void kt_src_alongz(
 		     __global real4 * d_ev,
 		     const real time,
 		     const int step) {
-    // store one line of data in local memory
-    __local real4 ev[NZ+4];
     int I = get_global_id(0);
     int J = get_global_id(1);
     int K = get_global_id(2);
-
-    int i = get_local_id(0) + 2;
-
+    if ( I >= NX || J >= NY || K >= NZ ) return;
     int IND = I*NY*NZ + J*NZ + K;
 
+    // store one line of data in local memory
+    __local real4 ev[NZ+4];
+
     // load 1D data to local memory
-    ev[i] = d_ev[IND];
+    for ( int i = get_local_id(2); i < NZ; i += get_local_size(2) ) {
+        ev[i+2] = d_ev[IND];
+    }
     barrier( CLK_LOCAL_MEM_FENCE );
 
     // set boundary condition
-    if ( i == 2 ) {
+    if ( get_local_id(2) == 0 ) {
        ev[0] = ev[2];
        ev[1] = ev[2];
-       ev[NY+3] = ev[NY+1];
-       ev[NY+2] = ev[NY+1];
+       ev[NZ+3] = ev[NZ+1];
+       ev[NZ+2] = ev[NZ+1];
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 
-    real4 e_v = ev[i];
-    real ed = e_v.s0;
-    real vx = e_v.s1;
-    real vy = e_v.s2;
-    real vz = e_v.s3;
-    real pressure = P(ed);
-    real u0 = gamma(vx, vy, vz);
-
-    real4 d_Src[IND] = d_Src[IND]
-             + kt1d(ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, 2)/DY;
-
+    int i = get_local_id(2) + 2;
+    d_Src[IND] = d_Src[IND] + kt1d(ev[i-2], ev[i-1], e_v[i], ev[i+1], ev[i+2],
+		                   time, ALONG_Z)/(time*DZ);
 }
 
 __kernel void stepUpdate(
