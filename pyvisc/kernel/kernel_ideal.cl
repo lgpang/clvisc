@@ -7,7 +7,7 @@
 __kernel void kt_src_alongx(
                      __global real4 * d_Src,     
 		     __global real4 * d_ev,
-		     const real time,
+		     const real tau,
 		     const int step) {
     int I = get_global_id(0);
     int J = get_global_id(1);
@@ -49,14 +49,14 @@ __kernel void kt_src_alongx(
     real Ttz_tilde = (ed + pressure)*u0*u0*vz;
     real4 src4_christoeffel = {Tzz_tilde, 0.0f, 0.0f, Ttz_tilde};
 
-    d_Src[IND] = d_Src[IND] - src4_christoeffel + kt1d(
+    d_Src[IND] = d_Src[IND] - src4_christoeffel - kt1d(
            ev[i-2], ev[i-1], e_v, ev[i+1], ev[i+2], tau, ALONG_X)/DX;
 }
 
 __kernel void kt_src_alongy(
                      __global real4 * d_Src,     // out put
 		     __global real4 * d_ev,
-		     const real time,
+		     const real tau,
 		     const int step) {
     int I = get_global_id(0);
     int J = get_global_id(1);
@@ -83,15 +83,15 @@ __kernel void kt_src_alongy(
     barrier(CLK_LOCAL_MEM_FENCE);
 
     int i = get_local_id(1) + 2;
-    d_Src[IND] = d_Src[IND] + kt1d(ev[i-2], ev[i-1],
-	  e_v[i], ev[i+1], ev[i+2], time, ALONG_Y)/DY;
+    d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1],
+	  ev[i], ev[i+1], ev[i+2], tau, ALONG_Y)/DY;
 }
 
 
 __kernel void kt_src_alongz(
                      __global real4 * d_Src,     // out put
 		     __global real4 * d_ev,
-		     const real time,
+		     const real tau,
 		     const int step) {
     int I = get_global_id(0);
     int J = get_global_id(1);
@@ -118,13 +118,13 @@ __kernel void kt_src_alongz(
     barrier(CLK_LOCAL_MEM_FENCE);
 
     int i = get_local_id(2) + 2;
-    d_Src[IND] = d_Src[IND] + kt1d(ev[i-2], ev[i-1], e_v[i], ev[i+1], ev[i+2],
-		                   time, ALONG_Z)/(time*DZ);
+    d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1], ev[i], ev[i+1],
+				   ev[i+2], tau, ALONG_Z)/(tau*DZ);
 }
 
-/** update d_ev2 */
+/** update d_evnew */
 __kernel void update_ev(
-	__global real4 * d_ev2,
+	__global real4 * d_evnew,
 	__global real4 * d_ev1,
 	__global real4 * d_Src,
 	const real tau,
@@ -143,10 +143,10 @@ __kernel void update_ev(
 
     real4 T0m = ((ed + pressure)*u0*umu - pressure*gm[0])*tau;
 
-    /** step==1: Q' = Q0 - Src*DT
-        step==2: Q  = Q0 - (Src(Q0)+Src(Q'))*DT/2
+    /** step==1: Q' = Q0 + Src*DT
+        step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
     */
-    T0m = T0m - d_Src[I]*DT/step;
+    T0m = T0m + d_Src[I]*DT/step;
 
     real T00 = max(acu, T0m.s0)/tau;
     real T01 = (fabs(T0m.s1) < acu) ? 0.0f : T0m.s1/tau;
@@ -154,7 +154,7 @@ __kernel void update_ev(
     real T03 = (fabs(T0m.s3) < acu) ? 0.0f : T0m.s3/tau;
 
     real M = sqrt(T01*T01 + T02*T02 + T03*T03);
-    if ( M > T00 ) T00 = 1.0001 * M;
+    if ( M > T00 ) T00 = 1.0001f * M;
 
     real ed_find;
     real K2 = M*M;
@@ -165,5 +165,5 @@ __kernel void update_ev(
 
     // vi = T0i/(T00+pr) = (e+p)u0*u0*vi/((e+p)*u0*u0)
     real epv = max(acu, T00 + pr);
-    d_ev2[I] = (real4)(ed_find, T01/epv, T02/epv, T03/epv);
+    d_evnew[I] = (real4)(ed_find, T01/epv, T02/epv, T03/epv);
 }

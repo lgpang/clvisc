@@ -30,15 +30,15 @@ class CLIdeal(object):
         self.size= np.int32(cfg.NX*cfg.NY*cfg.NZ)
         self.tau = cfg.real(cfg.TAU0)
 
-    def __readIniCondition( self, fIni1 ):
+    def __readIniCondition(self, fIni1):
         '''load initial condition (Ed, Umu ) from dat file '''
         try :
             dat1 = np.loadtxt(fIni1).astype(cfg.real)
         except IOError, e:
             print e
-        self.h_ev1 = np.empty(self.size, cfg.real4)
-        for i in range(self.size):
-            self.h_ev1[ i ] = (dat1[i], 0.0, 0.0, 0.0) 
+        self.h_ev1 = dat1
+        #for i in range(self.size):
+        #    self.h_ev1[i] = (dat1[i], 0.0, 0.0, 0.0) 
 
         #define buffer on device side,
         mf = cl.mem_flags
@@ -52,7 +52,7 @@ class CLIdeal(object):
         
     def __loadAndBuildCLPrg(self):
         optlist = [ 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
-        self.gpu_defines = [ '-D %s=((real)%s)'%(key, value) for (key,value)
+        self.gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
                 in cfg.__dict__.items() if key in optlist ]
         self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=cfg.NX))
         self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=cfg.NY))
@@ -61,7 +61,6 @@ class CLIdeal(object):
 
         #local memory size along x,y,z direction with 4 boundary cells
         self.gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=cfg.BSZ))
-        self.gpu_defines.append('-D {key}={value}'.format(key='VSZ', value=cfg.BSZ-2))
         #determine float32 or double data type in *.cl file
         if cfg.use_float32:
             self.gpu_defines.append( '-D USE_SINGLE_PRECISION' )
@@ -69,7 +68,7 @@ class CLIdeal(object):
         if cfg.IEOS==0:
             self.gpu_defines.append( '-D EOSI' )
         elif cfg.IEOS==1:
-            self.gpu_defines.append( '-D EOSLWB' )
+            self.gpu_defines.append( '-D EOSLCE' )
         elif cfg.IEOS==2:
             self.gpu_defines.append( '-D EOSLPCE' )
         #set the include path for the header file
@@ -88,12 +87,6 @@ class CLIdeal(object):
         fname = cfg.fPathIni
         self.__loadAndBuildCLPrg()
         self.__readIniCondition( fname )
-
-        #self.kernel_ideal.initIdeal( self.queue, (cfg.NX*cfg.NY*cfg.NZ, ), None, \
-        #                    self.d_Tm0, self.d_Tm1, self.d_Um1, self.d_Src, \
-        #                    self.d_Ed1, self.tau, self.size ).wait()
-       
-        # submax and d_submax is used to calc the maximum energy density
 
 
     def __stepUpdate(self, step):
@@ -114,9 +107,8 @@ class CLIdeal(object):
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
-        along_x, along_y, along_z = 1, 2, 3       # split along x, y, z
         self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (NX, 1, 1), self.d_Src,
-		       gpu_ev_old, self.tau, along_x, np.int32(step))
+		       gpu_ev_old, self.tau, np.int32(step))
 
         self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, NY, 1), self.d_Src,
                        gpu_ev_old, self.tau, np.int32(step))
@@ -131,11 +123,11 @@ class CLIdeal(object):
         # input: gpu_ev_old to get T0m, d_Src, tau, size
         # output: T0m'->ed,v for 1st step and T0m->ed,v for 2nd step
         if step == 1:
-	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ), None, self.d_ev2,
-		 self.d_ev1, self.d_Src, self.tau, self.size, step)
+	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev2,
+		 self.d_ev1, self.d_Src, self.tau, self.size, np.int32(step))
         elif step == 2:
-	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ), None, self.d_ev1,
-		 self.d_ev1, self.d_Src, self.tau, self.size, step)
+	    self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev1,
+		 self.d_ev1, self.d_Src, self.tau, self.size, np.int32(step))
 
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
@@ -151,7 +143,7 @@ class CLIdeal(object):
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=cfg.fPathOut, nstep=nstep)
 
-            np.savetxt(fout, self.h_ev1.reshape(cfg.NX, cfg.NY, cfg.NZ)\
+	    np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)\
                     [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed')
 
             print nstep, ' finished'
@@ -164,13 +156,14 @@ class CLIdeal(object):
             self.__stepUpdate(step=1)
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
             self.__stepUpdate(step=2)
-            print 'EdMax= ',self.__edMax()
+            print 'tau=', self.tau, ' EdMax= ',self.__edMax()
  
 
 
 def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
+    os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
     print >>sys.stdout, 'start ...'
     t0 = time()
     ideal = CLIdeal()
