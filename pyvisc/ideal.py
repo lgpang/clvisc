@@ -31,7 +31,7 @@ class CLIdeal(object):
         devices = platform.get_devices(device_type=cl.device_type.GPU)
         devices = [devices[0]]
 
-	get_device_info(devices)
+        get_device_info(devices)
 
         self.ctx = cl.Context(devices=devices, properties=[
             (cl.context_properties.PLATFORM, platform)])
@@ -44,7 +44,7 @@ class CLIdeal(object):
 
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
-	self.h_ev1 = np.zeros((self.size, 4), cfg.real)
+        self.h_ev1 = np.zeros((self.size, 4), cfg.real)
         self.d_ev1 = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
         self.d_ev2 = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
         self.d_Src = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
@@ -52,20 +52,20 @@ class CLIdeal(object):
         self.submax = np.empty(64, cfg.real)
         self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
 
-	self.history = []
+        self.history = []
  
     def read_ini(self, fIni1):
         '''load initial condition (Ed, vx, vy, vz) from dat file
-	   initial condition stored in 4 columns
-	   num_of_rows = NX*NY*NZ'''
-	print 'start to load ini data'
+           initial condition stored in 4 columns
+           num_of_rows = NX*NY*NZ'''
+        print 'start to load ini data'
         try :
             dat1 = np.loadtxt(fIni1).astype(cfg.real)
         except IOError, e:
             print e
         self.h_ev1 = dat1
-	cl.enqueue_copy(self.queue, self.d_ev1, self.h_ev1).wait()
-	print 'end of loading ini data'
+        cl.enqueue_copy(self.queue, self.d_ev1, self.h_ev1).wait()
+        print 'end of loading ini data'
 
        
     def __loadAndBuildCLPrg(self):
@@ -102,44 +102,44 @@ class CLIdeal(object):
 
     @classmethod
     def roundUp(cls, value, multiple):
-	'''This function rounds one integer up to the nearest multiple of another integer,
-	to get the global work size (which are multiples of local work size) from NX, NY, NZ.
-	'''
-	remainder = value % multiple
-	if remainder != 0:
+        '''This function rounds one integer up to the nearest multiple of another integer,
+        to get the global work size (which are multiples of local work size) from NX, NY, NZ.
+        '''
+        remainder = value % multiple
+        if remainder != 0:
             value += multiple - remainder
-	return value
+        return value
 
     def __stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
             Args:
                 gpu_ev_old: self.d_ev1 for the 1st step,
-			    self.d_ev2 for the 2nd step
+                            self.d_ev2 for the 2nd step
                 step: the 1st or the 2nd step in runge-kutta
                       if ( step=1 and along_axis=1 ):
-			 Initialize d_Src={0.0f}
+                         Initialize d_Src={0.0f}
                       else:
                          d_Src += src_from_kt1d
         '''
-	#NX = self.roundUp(cfg.NX, cfg.BSZ)
-	#NY = self.roundUp(cfg.NY, cfg.BSZ)
-	#NZ = self.roundUp(cfg.NZ, cfg.BSZ)
-	NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
+        #NX = self.roundUp(cfg.NX, cfg.BSZ)
+        #NY = self.roundUp(cfg.NY, cfg.BSZ)
+        #NZ = self.roundUp(cfg.NZ, cfg.BSZ)
+        NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
         mf = cl.mem_flags
         if step == 1: gpu_ev_old = self.d_ev1
         elif step == 2: gpu_ev_old = self.d_ev2
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
-	#self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
+        #self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
         self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (NX, 1, 1),
-			self.d_Src, gpu_ev_old, self.tau, np.int32(step))
+                        self.d_Src, gpu_ev_old, self.tau, np.int32(step))
 
         self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, NY, 1),
-			self.d_Src, gpu_ev_old, self.tau, np.int32(step))
+                        self.d_Src, gpu_ev_old, self.tau, np.int32(step))
 
         self.kernel_ideal.kt_src_alongz(self.queue, (NX,NY,NZ), (1, 1, NZ),
-			self.d_Src, gpu_ev_old, self.tau, np.int32(step))
+                        self.d_Src, gpu_ev_old, self.tau, np.int32(step))
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev2
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev1
@@ -148,11 +148,11 @@ class CLIdeal(object):
         # input: gpu_ev_old to get T0m, d_Src, tau, size
         # output: T0m'->ed,v for 1st step and T0m->ed,v for 2nd step
         if step == 1:
-	        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev2,
-		 self.d_ev1, self.d_Src, self.tau, np.int32(step))
+                self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev2,
+                 self.d_ev1, self.d_Src, self.tau, np.int32(step))
         elif step == 2:
-	        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev1,
-		 self.d_ev1, self.d_Src, self.tau, np.int32(step))
+                self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev1,
+                 self.d_ev1, self.d_Src, self.tau, np.int32(step))
 
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
@@ -167,8 +167,8 @@ class CLIdeal(object):
             cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev1).wait()
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=cfg.fPathOut, nstep=nstep)
-	    edxy = self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)[:,:,cfg.NZ/2]
-	    np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)\
+            edxy = self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)[:,:,cfg.NZ/2]
+            np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)\
                     [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed')
 
 
@@ -178,11 +178,11 @@ class CLIdeal(object):
         for n in xrange(max_loops):
             self.__output(n)
             self.__stepUpdate(step=1)
-	    # update tau=tau+dtau for the 2nd step in RungeKutta
+            # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
             self.__stepUpdate(step=2)
-	    self.edmax = self.__edMax()
-	    self.history.append([self.tau, self.edmax])
+            self.edmax = self.__edMax()
+            self.history.append([self.tau, self.edmax])
             print 'tau=', self.tau, ' EdMax= ',self.__edMax()
  
 

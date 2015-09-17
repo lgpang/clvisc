@@ -25,9 +25,9 @@ class TestHelper(unittest.TestCase):
     __kernel void minmod_test(global real4 * result) {
       int gid = (int) get_global_id(0);
       if ( gid == 0 ) {
-      	   real4 a = (real4)(1.0f, -2.0f, -1.0f, 4.0f);
-      	   real4 b = (real4)(2.0f, 0.0f, -2.0f, 4.0f);
-      	   real4 c = (real4)(3.0f, 2.0f, -3.0f, 4.0f);
+           real4 a = (real4)(1.0f, -2.0f, -1.0f, 4.0f);
+           real4 b = (real4)(2.0f, 0.0f, -2.0f, 4.0f);
+           real4 c = (real4)(3.0f, 2.0f, -3.0f, 4.0f);
            real4 d = minmod4(minmod4(a, b), c);
            result[0] = d;
       }
@@ -62,7 +62,7 @@ class TestHelper(unittest.TestCase):
     __kernel void rootfinding_test(
              global real4 * d_edv,
              global real * result,
-	     const int size) {
+             const int size) {
       int gid = (int) get_global_id(0);
       if ( gid < size ) {
            real4 edv = d_edv[gid];

@@ -69,8 +69,8 @@ class EosWB(object):
 
     def cs2_T(self, T):
         ''' speed of sound square '''
-	pot4 = eos.P_over_T4(T)
-	eot4 = 3*pot4 + self.trace_anomaly(T)
+        pot4 = eos.P_over_T4(T)
+        eot4 = 3*pot4 + self.trace_anomaly(T)
         return pot4/eot4
 
     def energy_density(self, T):
@@ -83,7 +83,7 @@ class EosWB(object):
         cs2_table = np.empty_like(T_table)
         for i, T in enumerate(T_table):
             ed_table[i] = self.energy_density(T)
-    	    cs2_table[i] = self.cs2_T(T)
+            cs2_table[i] = self.cs2_T(T)
 
         #plt.plot(ed_table, cs2_table*ed_table)
         tck = interpolate.splrep(ed_table, T_table, s=0)
