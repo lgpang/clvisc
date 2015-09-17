@@ -2,7 +2,7 @@
 #author: lgpang
 #email: lgpang@qq.com
 #createTime: Sat 25 Oct 2014 04:40:15 PM CST
-from __future__ import print_function
+
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
@@ -37,7 +37,7 @@ class CLIdeal(object):
 
         self.queue = cl.CommandQueue(self.ctx)
 
-        self.size= np.int32(cfg.NX*cfg.NY*cfg.NZ)
+        self.size= cfg.NX*cfg.NY*cfg.NZ
         self.tau = cfg.real(cfg.TAU0)
         self.__loadAndBuildCLPrg()
 
@@ -67,7 +67,7 @@ class CLIdeal(object):
     def __loadAndBuildCLPrg(self):
         optlist = [ 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
         self.gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
-                in cfg.__dict__.items() if key in optlist ]
+                in list(cfg.__dict__.items()) if key in optlist ]
         self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=cfg.NX))
         self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=cfg.NY))
         self.gpu_defines.append('-D {key}={value}'.format(key='NZ', value=cfg.NZ))
@@ -153,7 +153,7 @@ class CLIdeal(object):
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
         self.kernel_reduction.reduction_stage1(self.queue, (256*64,), (256,), 
-                self.d_ev1, self.d_submax, self.size ).wait()
+                self.d_ev1, self.d_submax, np.int32(self.size) ).wait()
         cl.enqueue_copy(self.queue, self.submax, self.d_submax).wait()
         return self.submax.max()
 
@@ -171,8 +171,8 @@ class CLIdeal(object):
 
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
-        for n in xrange(max_loops):
-            self.__output(n)
+        for n in range(max_loops):
+            #self.__output(n)
             self.__stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)

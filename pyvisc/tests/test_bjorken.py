@@ -42,7 +42,7 @@ class TestBjorken(unittest.TestCase):
         compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
         compile_options.append('-D USE_SINGLE_PRECISION')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
-        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev1, self.ideal.size)
+        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev1, np.int32(self.ideal.size))
 
         self.ideal.evolve(max_loops=400)
         history = np.array(self.ideal.history)

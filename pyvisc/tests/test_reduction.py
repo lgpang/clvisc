@@ -50,7 +50,7 @@ class TestReductionMethod(unittest.TestCase):
     cl.enqueue_read_buffer( queue, final_gpu, final ).wait()
     t3 = time()
     self.assertAlmostEqual(xmax, final)
-    print "reduction test passed"
+    print("reduction test passed")
 
 if __name__ == '__main__':
     unittest.main()

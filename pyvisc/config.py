@@ -1,7 +1,7 @@
 ##Read default configeration from hydro.info
 ##Update it with input from command line options
 import numpy as np
-import ConfigParser
+import configparser
 from pyopencl import array
 import argparse
 import os
@@ -9,7 +9,7 @@ import os
 def read_config():
     '''read configeration from file, then update the value 
     with command line input if there is any'''
-    _parser = ConfigParser.ConfigParser()
+    _parser = configparser.ConfigParser()
     
     cwd, cwf = os.path.split(__file__)
     _parser.read(os.path.join(cwd, 'hydro.info'))
@@ -73,7 +73,7 @@ def read_config():
     parser = argparse.ArgumentParser(description=\
         'Input parameters for hydrodynamic simulations')
     
-    for key, value in config.items():
+    for key, value in list(config.items()):
         parser.add_argument('--{key}'.format(key=key), nargs='?', const=1, 
                 type=type(value[0]), default=value[0], help=value[1] )
 

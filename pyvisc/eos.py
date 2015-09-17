@@ -111,9 +111,9 @@ if __name__ == '__main__':
 
     T_test = T[1001]
     ed_test = ed[1001]
-    print 'ed=', ed_test, 'T=', T_test, 'cs2=', cs2[1001]
-    print 'ed_=', eos.energy_density(T_test)
-    print 'cs2_=', eos.cs2_T(T_test)
+    print('ed=', ed_test, 'T=', T_test, 'cs2=', cs2[1001])
+    print('ed_=', eos.energy_density(T_test))
+    print('cs2_=', eos.cs2_T(T_test))
 
     #plt.plot(ed[:100], cs2[:100])
     #plt.xlim(0, 1)
