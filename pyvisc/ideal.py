@@ -2,8 +2,7 @@
 #author: lgpang
 #email: lgpang@qq.com
 #createTime: Sat 25 Oct 2014 04:40:15 PM CST
-
-import matplotlib.pyplot as plt
+from __future__ import print_function
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
@@ -14,11 +13,11 @@ from time import time
 from config import cfg
 
 def get_device_info(devices):
-    print 'image2d_max_width=', devices[0].image2d_max_width
-    print 'local_mem_size=',    devices[0].local_mem_size
-    print 'max_work_item_dimensions=', devices[0].max_work_item_dimensions
-    print 'max_work_group_size=', devices[0].max_work_group_size
-    print 'max_work_item_sizes=', devices[0].max_work_item_sizes
+    print('image2d_max_width=', devices[0].image2d_max_width)
+    print('local_mem_size=',    devices[0].local_mem_size)
+    print('max_work_item_dimensions=', devices[0].max_work_item_dimensions)
+    print('max_work_group_size=', devices[0].max_work_group_size)
+    print('max_work_item_sizes=', devices[0].max_work_item_sizes)
 
 
 class CLIdeal(object):
@@ -58,14 +57,11 @@ class CLIdeal(object):
         '''load initial condition (Ed, vx, vy, vz) from dat file
            initial condition stored in 4 columns
            num_of_rows = NX*NY*NZ'''
-        print 'start to load ini data'
-        try :
-            dat1 = np.loadtxt(fIni1).astype(cfg.real)
-        except IOError, e:
-            print e
+        print('start to load ini data')
+        dat1 = np.loadtxt(fIni1).astype(cfg.real)
         self.h_ev1 = dat1
         cl.enqueue_copy(self.queue, self.d_ev1, self.h_ev1).wait()
-        print 'end of loading ini data'
+        print('end of loading ini data')
 
        
     def __loadAndBuildCLPrg(self):
@@ -92,7 +88,7 @@ class CLIdeal(object):
         #set the include path for the header file
         cwd, cwf = os.path.split(__file__)
         self.gpu_defines.append('-I '+os.path.join(cwd, 'kernel/'))
-        print self.gpu_defines
+        print(self.gpu_defines)
         #load and build *.cl programs with compile self.gpu_defines
         prg_src = open( os.path.join(cwd, 'kernel', 'kernel_ideal.cl'), 'r').read()
         self.kernel_ideal = cl.Program( self.ctx, prg_src ).build(options=self.gpu_defines)
@@ -183,7 +179,7 @@ class CLIdeal(object):
             self.__stepUpdate(step=2)
             self.edmax = self.__edMax()
             self.history.append([self.tau, self.edmax])
-            print 'tau=', self.tau, ' EdMax= ',self.__edMax()
+            print('tau=', self.tau, ' EdMax= ',self.__edMax())
  
 
 
@@ -191,14 +187,14 @@ def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
-    print >>sys.stdout, 'start ...'
+    print('start ...')
     t0 = time()
     ideal = CLIdeal()
     fname = cfg.fPathIni
     ideal.read_ini(fname)
     ideal.evolve()
     t1 = time()
-    print >>sys.stdout, 'finished. Total time: {dtime}'.format( dtime = t1-t0 )
+    print('finished. Total time: {dtime}'.format( dtime = t1-t0 ))
 
 if __name__ == '__main__':
     main()
