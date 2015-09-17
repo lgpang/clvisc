@@ -5,9 +5,10 @@
 
 import pyopencl as cl
 from pyopencl import array
-import os
-import sys
+import os, sys
 from time import time
+
+import numpy as np
 
 import unittest
 
@@ -21,6 +22,11 @@ class TestBjorken(unittest.TestCase):
 	self.queue = self.ideal.queue
 
     def test_bjorken(self):
+	''' initialize with uniform energy density in (tau, x, y, eta) coordinates
+	to test the Bjorken expansion:
+	   eps/eps0 = (tau/tau0)**(-4.0/3.0)
+	'''
+
         kernel_src = """
 	# include "real_type.h"
         __kernel void init_ev(global real4 * d_ev1,
@@ -38,9 +44,13 @@ class TestBjorken(unittest.TestCase):
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
 	prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev1, self.ideal.size)
 
-	self.ideal.evolve()
+	self.ideal.evolve(max_loops=400)
+	history = np.array(self.ideal.history)
+	tau, edmax = history[:,0], history[:,1]
+	a = (tau/tau[0])**(-4.0/3.0)
+	b = edmax/edmax[0]
+	np.testing.assert_almost_equal(a, b, 2)
     
 
 if __name__ == '__main__':
   unittest.main()
-
