@@ -25,7 +25,8 @@ class TestReductionMethod(unittest.TestCase):
 
     cwd, cwf = os.path.split(__file__)
 
-    kernel_src = open(os.path.join(cwd, '..', 'kernel', 'kernel_reduction.cl'), 'r').read()
+    with open(os.path.join(cwd, '..', 'kernel', 'kernel_reduction.cl'), 'r') as f:
+        kernel_src = f.read()
 
     compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
     compile_options.append('-D USE_SINGLE_PRECISION' )
@@ -47,7 +48,7 @@ class TestReductionMethod(unittest.TestCase):
     
     prg.reduction_stage2( queue, (64,), (64,), y_gpu, final_gpu )
     
-    cl.enqueue_read_buffer( queue, final_gpu, final ).wait()
+    cl.enqueue_copy(queue, final, final_gpu).wait()
     t3 = time()
     self.assertAlmostEqual(xmax, final)
     print("reduction test passed")
