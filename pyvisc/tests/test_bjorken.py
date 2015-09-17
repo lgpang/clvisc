@@ -42,14 +42,15 @@ class TestBjorken(unittest.TestCase):
         compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
         compile_options.append('-D USE_SINGLE_PRECISION')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
-        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev1, np.int32(self.ideal.size))
+        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev[1],
+                    np.int32(self.ideal.size))
 
         self.ideal.evolve(max_loops=400)
         history = np.array(self.ideal.history)
         tau, edmax = history[:,0], history[:,1]
         a = (tau/tau[0])**(-4.0/3.0)
         b = edmax/edmax[0]
-        np.testing.assert_almost_equal(a, b, 2)
+        np.testing.assert_almost_equal(a, b, 4)
     
 
 if __name__ == '__main__':

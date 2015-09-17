@@ -44,8 +44,12 @@ class CLIdeal(object):
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
         self.h_ev1 = np.zeros((self.size, 4), cfg.real)
-        self.d_ev1 = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
-        self.d_ev2 = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
+
+        # d_ev[0/1/2]: old/current/new value at time step n-1/n/n+1
+        self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
+                     cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
+                     cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)]
+
         self.d_Src = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
 
         self.submax = np.empty(64, cfg.real)
@@ -60,7 +64,7 @@ class CLIdeal(object):
         print('start to load ini data')
         dat1 = np.loadtxt(fIni1).astype(cfg.real)
         self.h_ev1 = dat1
-        cl.enqueue_copy(self.queue, self.d_ev1, self.h_ev1).wait()
+        cl.enqueue_copy(self.queue, self.d_ev[1], self.h_ev1).wait()
         print('end of loading ini data')
 
        
@@ -90,11 +94,15 @@ class CLIdeal(object):
         self.gpu_defines.append('-I '+os.path.join(cwd, 'kernel/'))
         print(self.gpu_defines)
         #load and build *.cl programs with compile self.gpu_defines
-        prg_src = open( os.path.join(cwd, 'kernel', 'kernel_ideal.cl'), 'r').read()
-        self.kernel_ideal = cl.Program( self.ctx, prg_src ).build(options=self.gpu_defines)
+        with open(os.path.join(cwd, 'kernel', 'kernel_ideal.cl'), 'r') as f:
+            prg_src = f.read()
+            self.kernel_ideal = cl.Program(self.ctx, prg_src).build(
+                                            options=self.gpu_defines)
 
-        src_maxEd = open(os.path.join(cwd, 'kernel', 'kernel_reduction.cl'), 'r').read()
-        self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(options=self.gpu_defines)
+        with open(os.path.join(cwd, 'kernel', 'kernel_reduction.cl'), 'r') as f:
+            src_maxEd = f.read()
+            self.kernel_reduction = cl.Program(self.ctx, src_maxEd
+                                     ).build(options=self.gpu_defines)
 
     @classmethod
     def roundUp(cls, value, multiple):
@@ -109,58 +117,49 @@ class CLIdeal(object):
     def __stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
             Args:
-                gpu_ev_old: self.d_ev1 for the 1st step,
-                            self.d_ev2 for the 2nd step
+                gpu_ev_old: self.d_ev[1] for the 1st step,
+                            self.d_ev[2] for the 2nd step
                 step: the 1st or the 2nd step in runge-kutta
-                      if ( step=1 and along_axis=1 ):
-                         Initialize d_Src={0.0f}
-                      else:
-                         d_Src += src_from_kt1d
         '''
         #NX = self.roundUp(cfg.NX, cfg.BSZ)
         #NY = self.roundUp(cfg.NY, cfg.BSZ)
         #NZ = self.roundUp(cfg.NZ, cfg.BSZ)
         NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
         mf = cl.mem_flags
-        if step == 1: gpu_ev_old = self.d_ev1
-        elif step == 2: gpu_ev_old = self.d_ev2
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
         #self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
         self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (NX, 1, 1),
-                        self.d_Src, gpu_ev_old, self.tau, np.int32(step))
+                        self.d_Src, self.d_ev[step], self.tau, np.int32(step))
 
         self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, NY, 1),
-                        self.d_Src, gpu_ev_old, self.tau, np.int32(step))
+                        self.d_Src, self.d_ev[step], self.tau, np.int32(step))
 
         self.kernel_ideal.kt_src_alongz(self.queue, (NX,NY,NZ), (1, 1, NZ),
-                        self.d_Src, gpu_ev_old, self.tau, np.int32(step))
+                        self.d_Src, self.d_ev[step], self.tau, np.int32(step))
 
-        # if step=1, T0m' = T0m + d_Src*dt, update d_ev2
-        # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev1
+        # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
+        # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
         # Notice that d_Src=f(t,x) at step1 and 
         # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
-        # input: gpu_ev_old to get T0m, d_Src, tau, size
-        # output: T0m'->ed,v for 1st step and T0m->ed,v for 2nd step
-        if step == 1:
-                self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev2,
-                 self.d_ev1, self.d_Src, self.tau, np.int32(step))
-        elif step == 2:
-                self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None, self.d_ev1,
-                 self.d_ev1, self.d_Src, self.tau, np.int32(step))
+        # output: d_ev[need_update] where need_update=2 for step 1 and 1 for step 2
+        need_update = 3 - step
+        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None,
+                              self.d_ev[need_update], self.d_ev[1], self.d_Src,
+                              self.tau, np.int32(step))
 
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
         self.kernel_reduction.reduction_stage1(self.queue, (256*64,), (256,), 
-                self.d_ev1, self.d_submax, np.int32(self.size) ).wait()
+                self.d_ev[1], self.d_submax, np.int32(self.size) ).wait()
         cl.enqueue_copy(self.queue, self.submax, self.d_submax).wait()
         return self.submax.max()
 
 
     def __output(self, nstep):
         if nstep%cfg.ntskip == 0:
-            cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev1).wait()
+            cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev[1]).wait()
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=cfg.fPathOut, nstep=nstep)
             edxy = self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)[:,:,cfg.NZ/2]
@@ -172,14 +171,15 @@ class CLIdeal(object):
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
+            self.edmax = self.__edMax()
+            self.history.append([self.tau, self.edmax])
+            print('tau=', self.tau, ' EdMax= ',self.edmax)
             #self.__output(n)
+
             self.__stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
             self.__stepUpdate(step=2)
-            self.edmax = self.__edMax()
-            self.history.append([self.tau, self.edmax])
-            print('tau=', self.tau, ' EdMax= ',self.__edMax())
  
 
 
