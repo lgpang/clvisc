@@ -133,12 +133,12 @@ inline void rootFinding_newton(real* ed_find, real T00, real M){
 
 
 
-/** construct \tilde{T}^{mu *} */
-inline real4 Tmu(real4 edv, real pr, int mu) {
+/** construct T^{tau mu} 4 vector*/
+inline real4 t0m(real4 edv, real pr) {
     real u0 = gamma(edv.s1, edv.s2, edv.s3);
     real ed = edv.s0;
     real4 u4 = (real4)(1.0f, edv.s1, edv.s2, edv.s3)*u0;
-    return (ed+pr)*u4[mu]*u4 - gm[mu]*pr;
+    return (ed+pr)*u0*u4 - gm[0]*pr;
 }
 
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
@@ -148,10 +148,10 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real pr_ip1 = P(ev_ip1.s0);
    real pr_ip2 = P(ev_ip2.s0);
 
-   real4 T0m_im1 = tau*Tmu(ev_im1, pr_im1, 0);
-   real4 T0m_i = tau*Tmu(ev_i, pr_i, 0);
-   real4 T0m_ip1 = tau*Tmu(ev_ip1, pr_ip1, 0);
-   real4 T0m_ip2 = tau*Tmu(ev_ip2, pr_ip2, 0);
+   real4 T0m_im1 = tau*t0m(ev_im1, pr_im1);
+   real4 T0m_i = tau*t0m(ev_i, pr_i);
+   real4 T0m_ip1 = tau*t0m(ev_ip1, pr_ip1);
+   real4 T0m_ip2 = tau*t0m(ev_ip2, pr_ip2);
 
    real4 DA0, DA1;
    DA0 = minmod4(0.5f*(T0m_ip1-T0m_im1),
@@ -179,7 +179,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
 
    real pr_im2 = P(ev_im2.s0);
-   real4 T0m_im2 = tau*Tmu(ev_im2, pr_im2, 0);
+   real4 T0m_im2 = tau*t0m(ev_im2, pr_im2);
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod4(0.5f*(T0m_i-T0m_im2),
            minmod4(theta*(T0m_i-T0m_im1), theta*(T0m_im1-T0m_im2)));
