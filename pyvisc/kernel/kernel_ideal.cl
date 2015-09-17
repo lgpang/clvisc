@@ -140,7 +140,10 @@ __kernel void update_ev(
     real u0 = gamma(vx, vy, vz);
     real4 umu = u0*(real4)(1.0f, vx, vy, vz);
 
-    real4 T0m = ((ed + pressure)*u0*umu - pressure*gm[0])*tau;
+    // when step=2, tau=(n+1)*DT, while T0m need tau=n*DT
+    real old_time = tau - (step-1)*DT;
+    real4 T0m = ((ed + pressure)*u0*umu - pressure*gm[0])
+                * old_time;
 
     /** step==1: Q' = Q0 + Src*DT
         step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
