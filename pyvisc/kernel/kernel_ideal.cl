@@ -22,7 +22,7 @@ __kernel void kt_src_alongx(
     for ( int i=get_local_id(0); i < NX; i += get_local_size(0) ) {
         ev[i+2] = d_ev[IND];
     }
-    barrier( CLK_LOCAL_MEM_FENCE );
+    barrier(CLK_LOCAL_MEM_FENCE);
 
     // set boundary condition
     if ( (int)get_local_id(0) == 0 ) {
@@ -31,7 +31,7 @@ __kernel void kt_src_alongx(
        ev[NX+3] = ev[NX+1];
        ev[NX+2] = ev[NX+1];
     }
-    barrier( CLK_LOCAL_MEM_FENCE );
+    barrier(CLK_LOCAL_MEM_FENCE);
 
     if ( step == 1 ) d_Src[IND] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     
@@ -158,9 +158,9 @@ __kernel void update_ev(
     real M = sqrt(T01*T01 + T02*T02 + T03*T03);
     real SCALE_COEF = 0.99f;
     if ( M > T00 ) {
-	T01 *= SCALE_COEF * T00 / M;
-	T02 *= SCALE_COEF * T00 / M;
-	T03 *= SCALE_COEF * T00 / M;
+	    T01 *= SCALE_COEF * T00 / M;
+	    T02 *= SCALE_COEF * T00 / M;
+	    T03 *= SCALE_COEF * T00 / M;
         M = SCALE_COEF * T00;
     }
 
