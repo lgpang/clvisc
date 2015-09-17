@@ -45,7 +45,7 @@ class TestHelper(unittest.TestCase):
     
     prg.minmod_test(self.queue, (1,), None, final_gpu)
     
-    cl.enqueue_read_buffer(self.queue, final_gpu, final).wait()
+    cl.enqueue_copy(self.queue, final, final_gpu).wait()
 
     self.assertAlmostEqual(final[0][0], 1.0)
     self.assertAlmostEqual(final[0][1], 0.0)
@@ -105,7 +105,7 @@ class TestHelper(unittest.TestCase):
     
     prg.rootfinding_test(self.queue, (size,), None, edv_gpu, final_gpu, np.int32(size))
     
-    cl.enqueue_read_buffer(self.queue, final_gpu, final).wait()
+    cl.enqueue_copy(self.queue, final, final_gpu).wait()
 
     np.testing.assert_almost_equal(final, edv[:,0], 4)
 
