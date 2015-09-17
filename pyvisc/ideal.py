@@ -176,6 +176,7 @@ class CLIdeal(object):
         for n in xrange(1000):
             self.__output(n)
             self.__stepUpdate(step=1)
+	    # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
             self.__stepUpdate(step=2)
             print 'tau=', self.tau, ' EdMax= ',self.__edMax()

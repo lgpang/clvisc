@@ -26,7 +26,7 @@ constant real4 gm[4] =
 //////////////////////////////////////////////////////////
 /*!Cacl gamma from vx, vy, vz where vz=veta in Milne space */
 inline real gamma(real vx, real vy, real vz){
-    return 1.0f/sqrt(1.0f-vx*vx-vy*vy-vz*vz);
+    return 1.0f/sqrt(max(1.0f-vx*vx-vy*vy-vz*vz, acu));
 }
 
 /** 1D linear interpolation */
@@ -53,7 +53,10 @@ inline real4 minmod4(real4 x, real4 y) {
     return res*(sign(x)+sign(y))*0.5f;
 }
 
-/** Calc maximum local propagation speed along k direction*/
+/** Calc maximum propagation speed along k direction
+ * The maximum lam can not be bigger than 1.0f, in relativity
+ * if fluid velocity is v=1, maximum cs2=1/3, the signal speed
+ * in computing frame is cs2' = (cs2+v)/(1+cs2*v) = 1.0 */
 inline real maxPropagationSpeed(real4 edv, real vk, real pr){
     real ut = gamma(edv.s1, edv.s2, edv.s3);
     real uk = ut*vk;
@@ -62,25 +65,71 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
     real cs2 = pr/edv.s0;
     real lam = (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
        /(ut2 - (ut2-1.0f)*cs2);
-    return max(lam, 1.33f);
+    return max(lam, 0.999f);
 }
 
 
 /** solve energy density from T00 and K=sqrt(T01**2 + T02**2 + T03**2)
+ * The rootfinding can not pass tests for many events
+ * 74% fail if absolute error < 1.0E-6
+ * 20% fail if absolute error < 1.0E-3
+ * 0.001% fail if absolute error < 0.01
+ * What happens to these testing events?
  * */
-inline void rootFinding( real* EdFind, real * T00, real *K2 ){
+inline void rootFinding(real* EdFind, real T00, real K2){
     real E0, E1;
-    E1 = *T00;   /*predict */
+    E1 = T00;   /*predict */
     int i = 0;
     while ( true ) {
         E0 = E1;
-        E1 = *T00 - (*K2)/( *T00 + P(E1)) ; 
+        E1 = T00 - K2/(T00 + P(E1)) ; 
         i ++ ;
-        if( i>20 || fabs(E1-E0)/max(fabs(E1), (real)acu)<acu ) break;
+        if( i>100 || fabs(E1-E0)/max(fabs(E1), (real)acu)<acu ) break;
     }
 
     * EdFind = E1;
 }
+
+// bisection and newton method for the root finding
+inline void rootFinding_newton(real* ed_find, real T00, real M){
+    real vl = 0.0f;
+    real vh = 1.0f;
+    real dpe = 1.0f/3.0f;
+    real v = 0.5f*(vl+vh);
+    real ed = T00 - M*v;
+    real pr = P(ed);
+    real f = (T00 + pr)*v - M;
+    real df = (T00+pr) - M*v*dpe;
+    real dvold = vh-vl;
+    real dv = dvold;
+    int i = 0;
+    while ( true ) {
+        if ((f + df * (vh - v)) * (f + df * (vl - v)) > 0.0f ||
+            fabs(2.f * f) > fabs(dvold * df)) {  // bisection
+          dvold = dv;
+          dv = 0.5f * (vh - vl);
+          v = vl + dv;
+        } else {  // Newton
+          dvold = dv;
+          dv = f / df;
+          v -= dv;
+        }
+	i ++;
+        if ( fabs(dv) < 0.00001f || i > 100 ) break;
+
+        ed = T00 - M*v;
+	pr = P(ed);
+        f = (T00 + pr)*v - M;
+        df = (T00+pr) - M*v*dpe;
+        if ( f > 0.0f ) {
+             vh = v;
+        } else { 
+             vl = v;
+        }
+    }
+    * ed_find = T00 - M*v;
+}
+
 
 
 /** construct \tilde{T}^{mu *} */

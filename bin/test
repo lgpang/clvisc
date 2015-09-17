@@ -10,5 +10,6 @@ import unittest
 from pyvisc.tests.test_reduction import TestReductionMethod
 from pyvisc.tests.test_eos import TestEos
 from pyvisc.tests.test_kernel_helper import TestHelper
+from pyvisc.tests.test_bjorken import TestBjorken
 
 unittest.main()
