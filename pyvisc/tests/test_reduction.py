@@ -17,7 +17,6 @@ class TestReductionMethod(unittest.TestCase):
     t1 = time()
     xmax = xr.max()
     t2 = time()
-    print 'cpu spend:', t2-t1
     x = np.empty(N, array.vec.float4)
     for i in range(N):
         x[i] = (xr[i], 0.0, 0.0, 0.0)
@@ -49,12 +48,9 @@ class TestReductionMethod(unittest.TestCase):
     prg.reduction_stage2( queue, (64,), (64,), y_gpu, final_gpu )
     
     cl.enqueue_read_buffer( queue, final_gpu, final ).wait()
-    print 'cpu results:', xmax
-    print 'gpu results = ',  final
     t3 = time()
-    print 'gpu spend:', t3 - t2
-    print 'gpu finished'
     self.assertAlmostEqual(xmax, final)
+    print "reduction test passed"
 
 if __name__ == '__main__':
     unittest.main()

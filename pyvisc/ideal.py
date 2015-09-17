@@ -51,6 +51,8 @@ class CLIdeal(object):
 
         self.submax = np.empty(64, cfg.real)
         self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
+
+	self.history = []
  
     def read_ini(self, fIni1):
         '''load initial condition (Ed, vx, vy, vz) from dat file
@@ -171,14 +173,16 @@ class CLIdeal(object):
 
 
 
-    def evolve(self, ntskip=10):
+    def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
-        for n in xrange(1000):
+        for n in xrange(max_loops):
             self.__output(n)
             self.__stepUpdate(step=1)
 	    # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
             self.__stepUpdate(step=2)
+	    self.edmax = self.__edMax()
+	    self.history.append([self.tau, self.edmax])
             print 'tau=', self.tau, ' EdMax= ',self.__edMax()
  
 
