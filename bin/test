@@ -3,7 +3,8 @@
 from time import time
 import sys
 
-sys.path.append('..')
+sys.path.append('/Users/lgpang/PyVisc/')
+sys.path.append('/Users/lgpang/PyVisc/pyvisc')
 
 import unittest
 

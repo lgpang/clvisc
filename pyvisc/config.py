@@ -4,13 +4,15 @@ import numpy as np
 import ConfigParser
 from pyopencl import array
 import argparse
+import os
 
 def read_config():
     '''read configeration from file, then update the value 
     with command line input if there is any'''
     _parser = ConfigParser.ConfigParser()
     
-    _parser.read( 'hydro.info' )
+    cwd, cwf = os.path.split(__file__)
+    _parser.read(os.path.join(cwd, 'hydro.info'))
     
     config = {}
     

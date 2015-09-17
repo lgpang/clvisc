@@ -89,14 +89,13 @@ class TestHelper(unittest.TestCase):
     size = np.int32(205*205*85)
     edv = np.empty((size, 4), cfg.real)
 
-    edv[:,0] = np.random.uniform(0.0001, 100.0, size)
+    edv[:,0] = np.random.uniform(0.0, 100.0, size)
     v_mag = np.random.uniform(0.0, 0.999, size)
-    theta = np.random.uniform(-np.pi, np.pi, size)
+    theta = np.random.uniform(0.0, np.pi, size)
     phi = np.random.uniform(-np.pi, np.pi, size)
     edv[:,1] = v_mag * np.cos(theta) * np.cos(phi)
     edv[:,2] = v_mag * np.cos(theta) * np.sin(phi)
     edv[:,3] = v_mag * np.sin(theta)
-    print edv
 
     final = np.empty(size).astype(np.float32)
     mf = cl.mem_flags
@@ -104,12 +103,12 @@ class TestHelper(unittest.TestCase):
 
     edv_gpu = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = edv)
     
-    prg.rootfinding_test(self.queue, (size,), None,
-		    edv_gpu,final_gpu, size)
+    prg.rootfinding_test(self.queue, (size,), None, edv_gpu, final_gpu, size)
     
     cl.enqueue_read_buffer(self.queue, final_gpu, final).wait()
 
     np.testing.assert_almost_equal(final, edv[:,0], 4)
+
     print 'rootfinding test pass'
 
 

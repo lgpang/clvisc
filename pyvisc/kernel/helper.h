@@ -62,7 +62,7 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
     real uk = ut*vk;
     real ut2 = ut*ut;
     real uk2 = uk*uk;
-    real cs2 = pr/edv.s0;
+    real cs2 = pr/max(edv.s0, acu);
     real lam = (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
        /(ut2 - (ut2-1.0f)*cs2);
     return max(lam, 0.999f);
@@ -76,9 +76,10 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
  * 0.001% fail if absolute error < 0.01
  * What happens to these testing events?
  * */
-inline void rootFinding(real* EdFind, real T00, real K2){
+inline void rootFinding(real* EdFind, real T00, real M){
     real E0, E1;
     E1 = T00;   /*predict */
+    real K2 = M*M;
     int i = 0;
     while ( true ) {
         E0 = E1;
