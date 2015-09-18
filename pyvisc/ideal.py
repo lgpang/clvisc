@@ -42,6 +42,11 @@ class CLIdeal(object):
         self.tau = cfg.real(cfg.TAU0)
         self.__loadAndBuildCLPrg()
 
+        # GX, GY, GZ are used as global_work_size which are multiples of BSZ
+        self.GX = self.roundUp(cfg.NX, cfg.BSZ)
+        self.GY = self.roundUp(cfg.NY, cfg.BSZ)
+        self.GZ = self.roundUp(cfg.NZ, cfg.BSZ)
+
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
         self.h_ev1 = np.zeros((self.size, 4), cfg.real)
@@ -124,14 +129,11 @@ class CLIdeal(object):
                             self.d_ev[2] for the 2nd step
                 step: the 1st or the 2nd step in runge-kutta
         '''
-        NX = self.roundUp(cfg.NX, cfg.BSZ)
-        NY = self.roundUp(cfg.NY, cfg.BSZ)
-        NZ = self.roundUp(cfg.NZ, cfg.BSZ)
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
         #self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
-
+        NX, NY, NZ = self.GX, self.GY, self.GZ
         along_x, along_y, along_z = 0, 1, 2
         self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (cfg.BSZ, 1, 1),
                         self.d_Src, self.d_ev[step], self.tau, np.int32(step),
@@ -167,7 +169,7 @@ class CLIdeal(object):
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=cfg.fPathOut, nstep=nstep)
             edxy = self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)[:,:,cfg.NZ/2]
-            np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)\
+            np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)
                     [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed')
 
 

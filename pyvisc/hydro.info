@@ -66,7 +66,7 @@ BSZ = 32
 ## starting proper time for hydro in units fm
 #tau0 = 1.0            
 ## starting proper time for hydro in units fm
-tau0 = 0.2            
+tau0 = 0.6            
 
 IEOS = 0              
 # IEOS = 0 for p = e/3
