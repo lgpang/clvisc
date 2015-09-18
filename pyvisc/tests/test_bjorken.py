@@ -50,7 +50,7 @@ class TestBjorken(unittest.TestCase):
         tau, edmax = history[:,0], history[:,1]
         a = (tau/tau[0])**(-4.0/3.0)
         b = edmax/edmax[0]
-        np.testing.assert_almost_equal(a, b, 4)
+        np.testing.assert_almost_equal(a, b, 2)
     
 
 if __name__ == '__main__':

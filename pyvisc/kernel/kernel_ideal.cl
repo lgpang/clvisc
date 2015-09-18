@@ -16,11 +16,11 @@ __kernel void kt_src(
     int J = get_global_id(1);
     int K = get_global_id(2);
 
+    __local real4 ev[BSZ+4];
+
     if ( I < NX && J < NY && K < NZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         // store part of 1D data in local memory
-        __local real4 ev[BSZ+4];
-
         int i = get_local_id(direction) + 2;
         ev[i] = d_ev[IND];
         barrier(CLK_LOCAL_MEM_FENCE);
@@ -34,9 +34,11 @@ __kernel void kt_src(
         }
         barrier(CLK_LOCAL_MEM_FENCE);
 
-        if ( step == 1 && direction == ALONG_X ) {
-            // num_of_threads = get_local_size(along),
-            // num_of_jobs = get_local_size(along)
+        real4 christoffel_src = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
+        if ( direction == ALONG_X ) {
+            if ( step == 1 ) {
+               d_Src[IND] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
+            }
             real4 e_v = ev[i];
             real ed = e_v.s0;
             real vx = e_v.s1;
@@ -48,12 +50,12 @@ __kernel void kt_src(
             // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
             real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
             real Ttz_tilde = (ed + pressure)*u0*u0*vz;
-            d_Src[IND] = - (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
+            christoffel_src = (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
         }
 
         real DW[3] = {DX, DY, DZ*tau};
-        d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2],
-                                        tau, direction)/DW[direction];
+        d_Src[IND] = d_Src[IND] - christoffel_src - kt1d(ev[i-2], ev[i-1],
+                     ev[i], ev[i+1], ev[i+2], tau, direction)/DW[direction];
     } // end I<NX, J<NY, K<NZ check
 }
 
