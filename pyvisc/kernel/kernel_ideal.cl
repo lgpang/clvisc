@@ -16,7 +16,7 @@ __kernel void kt_src(
     int J = get_global_id(1);
     int K = get_global_id(2);
 
-    __local real4 ev[36];
+    __local real4 ev[BSZ+4];
 
     if ( I < NX && J < NY && K < NZ ) {
         int IND = I*NY*NZ + J*NZ + K;
