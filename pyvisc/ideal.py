@@ -174,7 +174,7 @@ class CLIdeal(object):
             self.edmax = self.__edMax()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            #self.__output(n)
+            self.__output(n)
 
             self.__stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta

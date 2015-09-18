@@ -1,10 +1,7 @@
 # comments start with '#'
 [path]
-
-fPathIni = /Users/lgpang/CLVisc/event0/edv0.txt
-fPathOut = /Users/lgpang/CLVisc/event0/
-#fPathIni = /scratch/hyihp/pang/results/event5/EdVxyz_PbPb_2760GeV_nz6.dat
-#fPathOut = /scratch/hyihp/pang/results/event6/
+fPathIni = /home/hyihp/pang/PyVisc/results/event0/edv0.txt
+fPathOut = /home/hyihp/pang/PyVisc/results/event0
 
 [glauber]
 ########### Params for Glauber initial condition 
@@ -71,7 +68,7 @@ BSZ = 7
 ## starting proper time for hydro in units fm
 tau0 = 0.2            
 
-IEOS = 2              
+IEOS = 0              
 # IEOS = 0 for p = e/3
 # IEOS = 1 for s95p_v1 CE lattice QCD EOS
 # IEOS = 2 for s95p_PCE_v0 lattice QCD EOS
