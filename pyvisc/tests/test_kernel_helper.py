@@ -89,7 +89,7 @@ class TestHelper(unittest.TestCase):
     size = 205*205*85
     edv = np.empty((size, 4), cfg.real)
 
-    edv[:,0] = np.random.uniform(0.0, 100.0, size)
+    edv[:,0] = np.random.uniform(1.0, 10.0, size)
     v_mag = np.random.uniform(0.0, 0.999, size)
     theta = np.random.uniform(0.0, np.pi, size)
     phi = np.random.uniform(-np.pi, np.pi, size)
@@ -107,7 +107,7 @@ class TestHelper(unittest.TestCase):
     
     cl.enqueue_copy(self.queue, final, final_gpu).wait()
 
-    np.testing.assert_almost_equal(final, edv[:,0], 4)
+    np.testing.assert_almost_equal(final, edv[:,0], 3)
 
     print('rootfinding test pass')
 

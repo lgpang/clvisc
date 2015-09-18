@@ -57,8 +57,8 @@ nyskip = 3
 # DZ = 0.3 in output file
 nzskip = 1            
 
-#BSZ = LSZ + 4 is used as the local size
-BSZ = 7
+#BSZ + 4 is used as the size for local 1d array
+BSZ = 32
 
 ############## Params for hydro evolution setting
 

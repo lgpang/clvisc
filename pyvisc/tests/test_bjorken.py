@@ -45,7 +45,7 @@ class TestBjorken(unittest.TestCase):
         prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev[1],
                     np.int32(self.ideal.size))
 
-        self.ideal.evolve(max_loops=400)
+        self.ideal.evolve(max_loops=200)
         history = np.array(self.ideal.history)
         tau, edmax = history[:,0], history[:,1]
         a = (tau/tau[0])**(-4.0/3.0)
@@ -54,4 +54,4 @@ class TestBjorken(unittest.TestCase):
     
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

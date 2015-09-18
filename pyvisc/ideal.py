@@ -31,6 +31,7 @@ class CLIdeal(object):
         devices = [devices[0]]
 
         get_device_info(devices)
+        self.max_work_item_sizes = devices[0].max_work_item_sizes
 
         self.ctx = cl.Context(devices=devices, properties=[
             (cl.context_properties.PLATFORM, platform)])
@@ -75,10 +76,12 @@ class CLIdeal(object):
         self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=cfg.NX))
         self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=cfg.NY))
         self.gpu_defines.append('-D {key}={value}'.format(key='NZ', value=cfg.NZ))
-        self.gpu_defines.append('-D {key}={value}'.format(key='SIZE', value=cfg.NX*cfg.NY*cfg.NZ))
+        self.gpu_defines.append('-D {key}={value}'.format(key='SIZE',
+                                                      value=cfg.NX*cfg.NY*cfg.NZ))
 
         #local memory size along x,y,z direction with 4 boundary cells
         self.gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=cfg.BSZ))
+        self.gpu_defines.append('-D {key}={value}'.format(key='LocalMemorySize', value=(cfg.BSZ+4)))
         #determine float32 or double data type in *.cl file
         if cfg.use_float32:
             self.gpu_defines.append( '-D USE_SINGLE_PRECISION' )
@@ -121,33 +124,34 @@ class CLIdeal(object):
                             self.d_ev[2] for the 2nd step
                 step: the 1st or the 2nd step in runge-kutta
         '''
-        #NX = self.roundUp(cfg.NX, cfg.BSZ)
-        #NY = self.roundUp(cfg.NY, cfg.BSZ)
-        #NZ = self.roundUp(cfg.NZ, cfg.BSZ)
-        NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
-        mf = cl.mem_flags
+        NX = self.roundUp(cfg.NX, cfg.BSZ)
+        NY = self.roundUp(cfg.NY, cfg.BSZ)
+        NZ = self.roundUp(cfg.NZ, cfg.BSZ)
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
         #self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
-        self.kernel_ideal.kt_src_alongx(self.queue, (NX,NY,NZ), (NX, 1, 1),
-                        self.d_Src, self.d_ev[step], self.tau, np.int32(step))
 
-        self.kernel_ideal.kt_src_alongy(self.queue, (NX,NY,NZ), (1, NY, 1),
-                        self.d_Src, self.d_ev[step], self.tau, np.int32(step))
-
-        self.kernel_ideal.kt_src_alongz(self.queue, (NX,NY,NZ), (1, 1, NZ),
-                        self.d_Src, self.d_ev[step], self.tau, np.int32(step))
+        along_x, along_y, along_z = 0, 1, 2
+        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (cfg.BSZ, 1, 1),
+                        self.d_Src, self.d_ev[step], self.tau, np.int32(step),
+                        np.int32(along_x)).wait()
+        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, cfg.BSZ, 1),
+                        self.d_Src, self.d_ev[step], self.tau, np.int32(step),
+                        np.int32(along_y)).wait()
+        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, 1, cfg.BSZ),
+                        self.d_Src, self.d_ev[step], self.tau, np.int32(step),
+                        np.int32(along_z)).wait()
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
         # Notice that d_Src=f(t,x) at step1 and 
         # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
-        # output: d_ev[need_update] where need_update=2 for step 1 and 1 for step 2
-        need_update = 3 - step
-        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ,), None,
-                              self.d_ev[need_update], self.d_ev[1], self.d_Src,
-                              self.tau, np.int32(step))
+        # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
+        need_update = self.d_ev[3 - step]
+        self.kernel_ideal.update_ev(self.queue, (cfg.NX*cfg.NY*cfg.NZ,), None,
+                              need_update, self.d_ev[1], self.d_Src,
+                              self.tau, np.int32(step)).wait()
 
     def __edMax(self):
         '''Calc the maximum energy density on GPU and output the value '''
@@ -174,7 +178,7 @@ class CLIdeal(object):
             self.edmax = self.__edMax()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.__output(n)
+            #self.__output(n)
 
             self.__stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
