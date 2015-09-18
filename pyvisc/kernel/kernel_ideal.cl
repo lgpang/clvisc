@@ -15,25 +15,28 @@ __kernel void kt_src(
     int I = get_global_id(0);
     int J = get_global_id(1);
     int K = get_global_id(2);
-
+    int IND = I*NY*NZ + J*NZ + K;
+    int i = get_local_id(direction) + 2;
     __local real4 ev[BSZ+4];
 
-    if ( I < NX && J < NY && K < NZ ) {
-        int IND = I*NY*NZ + J*NZ + K;
-        // store part of 1D data in local memory
-        int i = get_local_id(direction) + 2;
-        ev[i] = d_ev[IND];
-        barrier(CLK_LOCAL_MEM_FENCE);
+    bool in_range = (I < NX && J < NY && K < NZ);
 
-        // set boundary condition
-        if ( i == 2 ) {
-           ev[0] = ev[2];
-           ev[1] = ev[2];
-           ev[BSZ+3] = ev[BSZ+1];
-           ev[BSZ+2] = ev[BSZ+1];
-        }
-        barrier(CLK_LOCAL_MEM_FENCE);
+    if ( in_range ) { ev[i] = d_ev[IND]; }
 
+    // barrier can not be in the if( in_range ) because threads with I>NX
+    // will never reach this point and deadlock is created
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    // set boundary condition
+    if ( i == 2 ) {
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[BSZ+3] = ev[BSZ+1];
+       ev[BSZ+2] = ev[BSZ+1];
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    if ( in_range ) {
         real4 christoffel_src = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
         if ( direction == ALONG_X ) {
             if ( step == 1 ) {
@@ -56,7 +59,7 @@ __kernel void kt_src(
         real DW[3] = {DX, DY, DZ*tau};
         d_Src[IND] = d_Src[IND] - christoffel_src - kt1d(ev[i-2], ev[i-1],
                      ev[i], ev[i+1], ev[i+2], tau, direction)/DW[direction];
-    } // end I<NX, J<NY, K<NZ check
+    }
 }
 
 

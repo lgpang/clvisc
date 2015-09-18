@@ -133,7 +133,7 @@ class CLIdeal(object):
         # output: self.d_Src
         #self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
         NX, NY, NZ = self.GX, self.GY, self.GZ
-        print('GlobalWorkSizes=', NX, NY, NZ)
+        #print('GlobalWorkSizes=', NX, NY, NZ)
         along_x, along_y, along_z = 0, 1, 2
         self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (cfg.BSZ, 1, 1),
                         self.d_Src, self.d_ev[step], self.tau, np.int32(step),
