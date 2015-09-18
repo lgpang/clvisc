@@ -2,7 +2,7 @@
 #author: lgpang
 #email: lgpang@qq.com
 #createTime: Sat 25 Oct 2014 04:40:15 PM CST
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
@@ -26,7 +26,7 @@ class CLIdeal(object):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
         #self.ctx = cl.create_some_context()
-        platform = cl.get_platforms()[0]
+        platform = cl.get_platforms()[1]
         devices = platform.get_devices(device_type=cl.device_type.GPU)
         devices = [devices[0]]
 

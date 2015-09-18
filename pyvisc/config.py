@@ -1,10 +1,14 @@
 ##Read default configeration from hydro.info
 ##Update it with input from command line options
 import numpy as np
-import configparser
 from pyopencl import array
 import argparse
-import os
+import os, sys
+
+if sys.version_info <= (3, 0):
+    import ConfigParser as configparser
+else:
+    import configparser
 
 def read_config():
     '''read configeration from file, then update the value 
