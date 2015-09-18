@@ -45,13 +45,13 @@ class TestHelper(unittest.TestCase):
     
     prg.minmod_test(self.queue, (1,), None, final_gpu)
     
-    cl.enqueue_read_buffer(self.queue, final_gpu, final).wait()
+    cl.enqueue_copy(self.queue, final, final_gpu).wait()
 
     self.assertAlmostEqual(final[0][0], 1.0)
     self.assertAlmostEqual(final[0][1], 0.0)
     self.assertAlmostEqual(final[0][2], -1.0)
     self.assertAlmostEqual(final[0][3], 4.0)
-    print 'minmod4 test pass'
+    print('minmod4 test pass')
 
   def test_rootfinding(self):
     cwd, cwf = os.path.split(__file__)
@@ -71,7 +71,7 @@ class TestHelper(unittest.TestCase):
            real4 umu = (real4)(1.0f, edv.s1, edv.s2, edv.s3);
            real u0 = gamma(umu.s1, umu.s2, umu.s3);
            umu = u0*umu;
-           real4 T0m = (eps+pre)*umu[0]*umu - pre*gm[0];
+           real4 T0m = (eps+pre)*u0*umu - pre*gm[0];
            real M = sqrt(T0m.s1*T0m.s1 + T0m.s2*T0m.s2 + T0m.s3*T0m.s3);
            real T00 = T0m.s0;
            real ed_found;
@@ -86,10 +86,10 @@ class TestHelper(unittest.TestCase):
 
     prg = cl.Program(self.ctx, kernel_src ).build(compile_options)
    
-    size = np.int32(205*205*85)
+    size = 205*205*85
     edv = np.empty((size, 4), cfg.real)
 
-    edv[:,0] = np.random.uniform(0.0, 100.0, size)
+    edv[:,0] = np.random.uniform(1.0, 10.0, size)
     v_mag = np.random.uniform(0.0, 0.999, size)
     theta = np.random.uniform(0.0, np.pi, size)
     phi = np.random.uniform(-np.pi, np.pi, size)
@@ -103,13 +103,13 @@ class TestHelper(unittest.TestCase):
 
     edv_gpu = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = edv)
     
-    prg.rootfinding_test(self.queue, (size,), None, edv_gpu, final_gpu, size)
+    prg.rootfinding_test(self.queue, (size,), None, edv_gpu, final_gpu, np.int32(size))
     
-    cl.enqueue_read_buffer(self.queue, final_gpu, final).wait()
+    cl.enqueue_copy(self.queue, final, final_gpu).wait()
 
-    np.testing.assert_almost_equal(final, edv[:,0], 4)
+    np.testing.assert_almost_equal(final, edv[:,0], 3)
 
-    print 'rootfinding test pass'
+    print('rootfinding test pass')
 
 
 
