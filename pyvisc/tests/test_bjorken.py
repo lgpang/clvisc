@@ -7,12 +7,12 @@ import pyopencl as cl
 from pyopencl import array
 import os, sys
 from time import time
-
 import numpy as np
-
 import unittest
 
-sys.path.append('..')
+cwd, cwf = os.path.split(__file__)
+sys.path.append(os.path.join(cwd, '..'))
+
 from ideal import CLIdeal
 
 class TestBjorken(unittest.TestCase):
@@ -42,9 +42,10 @@ class TestBjorken(unittest.TestCase):
         compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
         compile_options.append('-D USE_SINGLE_PRECISION')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
-        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev1, self.ideal.size)
+        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev[1],
+                    np.int32(self.ideal.size))
 
-        self.ideal.evolve(max_loops=400)
+        self.ideal.evolve(max_loops=200)
         history = np.array(self.ideal.history)
         tau, edmax = history[:,0], history[:,1]
         a = (tau/tau[0])**(-4.0/3.0)
@@ -53,4 +54,4 @@ class TestBjorken(unittest.TestCase):
     
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

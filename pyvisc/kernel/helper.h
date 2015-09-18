@@ -1,8 +1,5 @@
 #ifndef __HELPERH__
 #define __HELPERH__
-#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
-
-//#pragma OPENCL EXTENSION cl_amd_printf: enable
 
 #include"real_type.h"
 #include"EosPCEv0.cl"
@@ -13,9 +10,8 @@
 
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
-// kt1d to calc H(i+1/2)-H(i-1/2), along=1,2,3 for x, y, z
+// kt1d to calc H(i+1/2)-H(i-1/2), along=0,1,2 for x, y, z
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2, real tau, int along);
-
 
 // g^{tau mu}, g^{x mu}, g^{y mu}, g^{eta mu} without tau*tau
 constant real4 gm[4] = 
@@ -65,7 +61,7 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
     real cs2 = pr/max(edv.s0, acu);
     real lam = (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
        /(ut2 - (ut2-1.0f)*cs2);
-    return max(lam, 0.999f);
+    return max(lam, 1.0f);
 }
 
 
@@ -115,11 +111,11 @@ inline void rootFinding_newton(real* ed_find, real T00, real M){
           dv = f / df;
           v -= dv;
         }
-	i ++;
+        i ++;
         if ( fabs(dv) < 0.00001f || i > 100 ) break;
 
         ed = T00 - M*v;
-	pr = P(ed);
+        pr = P(ed);
         f = (T00 + pr)*v - M;
         df = (T00+pr) - M*v*dpe;
         if ( f > 0.0f ) {
@@ -160,20 +156,22 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    DA1 = minmod4(0.5f*(T0m_ip2-T0m_i),
          minmod4(theta*(T0m_ip2-T0m_ip1), theta*(T0m_ip1-T0m_i)));
   
-   real vim1[4] = {1.0f, ev_im1.s1, ev_im1.s2, ev_im1.s3};
-   real vi[4] = {1.0f, ev_i.s1, ev_i.s2, ev_i.s3};
-   real vip1[4] = {1.0f, ev_ip1.s1, ev_ip1.s2, ev_ip1.s3};
-
-   real lam = maxPropagationSpeed(ev_i, vi[along], pr_i);
+   real vim1[3] = {ev_im1.s1, ev_im1.s2, ev_im1.s3};
+   real vi[3] = {ev_i.s1, ev_i.s2, ev_i.s3};
+   real vip1[3] = {ev_ip1.s1, ev_ip1.s2, ev_ip1.s3};
 
    real4  AL = T0m_i   + 0.5f * DA0;
    real4  AR = T0m_ip1 - 0.5f * DA1;
 
-   real pr_half = lin_int(0.0f, 1.0f, pr_i, pr_ip1, 0.5f) * tau;
-   // Flux Jp = (T0m + pr*g^{tau mu})*v^x + pr*g^{x mu}
-   real vi_half = lin_int(0.0f, 1.0f, vi[along], vip1[along], 0.5f);
-   real4 Jp = (AR + pr_half*gm[0])*vi_half + pr_half*gm[along];
-   real4 Jm = (AL + pr_half*gm[0])*vi_half + pr_half*gm[along];
+   real pr_half = 0.5f*(pr_ip1 + pr_i);
+   real vi_half = 0.5f*(vi[along] + vip1[along]);
+   // Flux Jp = (T0m + pr*g^{tau mu})*v^x - pr*g^{x mu}
+   real4 Jp = (AR + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
+   real4 Jm = (AL + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
+
+   real4 ev_half = 0.5f*(ev_i+ev_ip1);
+   // maximum local propagation speed at i+1/2
+   real lam = maxPropagationSpeed(ev_half, vi_half, pr_half);
 
    // first part of kt1d; the final results = src[i]-src[i-1]
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
@@ -183,17 +181,20 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod4(0.5f*(T0m_i-T0m_im2),
            minmod4(theta*(T0m_i-T0m_im1), theta*(T0m_im1-T0m_im2)));
-   lam = maxPropagationSpeed(ev_im1, vim1[along], pr_im1);
+
    AL = T0m_im1 + 0.5f * DA0;
    AR = T0m_i - 0.5f * DA1;
 
    // pr_half = tau*pr(i+1/2)
-   pr_half = lin_int(0.0f, 1.0f, pr_im1, pr_i, 0.5f)*tau;
-   // Flux Jp = (T0m + pr*g^{tau mu})*v^x + pr*g^{x mu}
-   vi_half = lin_int(0.0f, 1.0f, vim1[along], vi[along], 0.5f);
-   Jp = (AR + pr_half*gm[0])*vi_half + pr_half*gm[along];
-   Jm = (AL + pr_half*gm[0])*vi_half + pr_half*gm[along];
+   pr_half = 0.5f*(pr_im1 + pr_i);
+   vi_half = 0.5f*(vim1[along] + vi[along]);
+   // Flux Jp = (T0m + pr*g^{tau mu})*v^x - pr*g^{x mu}
+   Jp = (AR + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
+   Jm = (AL + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
 
+   // maximum local propagation speed at i-1/2
+   ev_half = 0.5f*(ev_i+ev_im1);
+   lam = maxPropagationSpeed(ev_half, vi_half, pr_half);
    // second part of kt1d; final results = src[i] - src[i-1]
    src -= 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
 

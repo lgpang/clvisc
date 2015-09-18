@@ -1,10 +1,7 @@
 # comments start with '#'
 [path]
-
-fPathIni = /Users/lgpang/CLVisc/event0/edv0.txt
-fPathOut = /Users/lgpang/CLVisc/event0/
-#fPathIni = /scratch/hyihp/pang/results/event5/EdVxyz_PbPb_2760GeV_nz6.dat
-#fPathOut = /scratch/hyihp/pang/results/event6/
+fPathIni = /home/hyihp/pang/PyVisc/results/event0/edv0.txt
+fPathOut = /home/hyihp/pang/PyVisc/results/event0
 
 [glauber]
 ########### Params for Glauber initial condition 
@@ -41,11 +38,11 @@ Eta_gw = 0.5
 [geometry]
 ############# Params for hydro grid setting 
 # x range [ -NX/2, NX/2] * dx
-NX = 205              
+NX = 35              
 # y range [ -NY/2, NY/2] * dy
-NY = 205              
+NY = 35              
 # etas range [ -NZ/2, NZ/2] * dz
-NZ = 85              
+NZ = 35              
 # time step
 dt = 0.02             
 dx = 0.16            
@@ -60,8 +57,8 @@ nyskip = 3
 # DZ = 0.3 in output file
 nzskip = 1            
 
-#BSZ = LSZ + 4 is used as the local size
-BSZ = 7
+#BSZ + 4 is used as the size for local 1d array
+BSZ = 32
 
 ############## Params for hydro evolution setting
 
@@ -69,9 +66,9 @@ BSZ = 7
 ## starting proper time for hydro in units fm
 #tau0 = 1.0            
 ## starting proper time for hydro in units fm
-tau0 = 0.2            
+tau0 = 0.6            
 
-IEOS = 2              
+IEOS = 0              
 # IEOS = 0 for p = e/3
 # IEOS = 1 for s95p_v1 CE lattice QCD EOS
 # IEOS = 2 for s95p_PCE_v0 lattice QCD EOS
