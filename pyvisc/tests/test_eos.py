@@ -18,7 +18,7 @@ class TestEos(unittest.TestCase):
     
     __kernel void PTS(global real * eps, 
                       global real * pts, 
- 		      const int size) {
+                      const int size) {
       int gid = (int) get_global_id(0);
       if ( gid < size ) {
          real energy_density = eps[gid];
