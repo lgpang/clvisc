@@ -10,7 +10,6 @@ import os
 import sys
 from time import time
 
-from config import cfg
 
 def get_device_info(devices):
     print('image2d_max_width=', devices[0].image2d_max_width)
@@ -22,10 +21,11 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self):
+    def __init__(self, configs):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
         #self.ctx = cl.create_some_context()
+        self.cfg = configs
         platform = cl.get_platforms()[0]
         devices = platform.get_devices(device_type=cl.device_type.GPU)
         devices = [devices[0]]
@@ -38,18 +38,18 @@ class CLIdeal(object):
 
         self.queue = cl.CommandQueue(self.ctx)
 
-        self.size= cfg.NX*cfg.NY*cfg.NZ
-        self.tau = cfg.real(cfg.TAU0)
+        self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
+        self.tau = self.cfg.real(self.cfg.TAU0)
         self.__loadAndBuildCLPrg()
 
         # GX, GY, GZ are used as global_work_size which are multiples of BSZ
-        self.GX = self.roundUp(cfg.NX, cfg.BSZ)
-        self.GY = self.roundUp(cfg.NY, cfg.BSZ)
-        self.GZ = self.roundUp(cfg.NZ, cfg.BSZ)
+        self.GX = self.roundUp(self.cfg.NX, self.cfg.BSZ)
+        self.GY = self.roundUp(self.cfg.NY, self.cfg.BSZ)
+        self.GZ = self.roundUp(self.cfg.NZ, self.cfg.BSZ)
 
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
-        self.h_ev1 = np.zeros((self.size, 4), cfg.real)
+        self.h_ev1 = np.zeros((self.size, 4), self.cfg.real)
 
         # d_ev[0/1/2]: old/current/new value at time step n-1/n/n+1
         self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
@@ -58,7 +58,7 @@ class CLIdeal(object):
 
         self.d_Src = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
 
-        self.submax = np.empty(64, cfg.real)
+        self.submax = np.empty(64, self.cfg.real)
         self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
 
         self.history = []
@@ -68,7 +68,7 @@ class CLIdeal(object):
            initial condition stored in 4 columns
            num_of_rows = NX*NY*NZ'''
         print('start to load ini data')
-        dat1 = np.loadtxt(fIni1).astype(cfg.real)
+        dat1 = np.loadtxt(fIni1).astype(self.cfg.real)
         self.h_ev1 = dat1
         cl.enqueue_copy(self.queue, self.d_ev[1], self.h_ev1).wait()
         print('end of loading ini data')
@@ -77,24 +77,24 @@ class CLIdeal(object):
     def __loadAndBuildCLPrg(self):
         optlist = [ 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
         self.gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
-                in list(cfg.__dict__.items()) if key in optlist ]
-        self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=cfg.NX))
-        self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=cfg.NY))
-        self.gpu_defines.append('-D {key}={value}'.format(key='NZ', value=cfg.NZ))
+                in list(self.cfg.__dict__.items()) if key in optlist ]
+        self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))
+        self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=self.cfg.NY))
+        self.gpu_defines.append('-D {key}={value}'.format(key='NZ', value=self.cfg.NZ))
         self.gpu_defines.append('-D {key}={value}'.format(key='SIZE',
-                                                      value=cfg.NX*cfg.NY*cfg.NZ))
+                                                      value=self.cfg.NX*self.cfg.NY*self.cfg.NZ))
 
         #local memory size along x,y,z direction with 4 boundary cells
-        self.gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=cfg.BSZ))
+        self.gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=self.cfg.BSZ))
         #determine float32 or double data type in *.cl file
-        if cfg.use_float32:
+        if self.cfg.use_float32:
             self.gpu_defines.append( '-D USE_SINGLE_PRECISION' )
         #choose EOS by ifdef in *.cl file
-        if cfg.IEOS==0:
+        if self.cfg.IEOS==0:
             self.gpu_defines.append( '-D EOSI' )
-        elif cfg.IEOS==1:
+        elif self.cfg.IEOS==1:
             self.gpu_defines.append( '-D EOSLCE' )
-        elif cfg.IEOS==2:
+        elif self.cfg.IEOS==2:
             self.gpu_defines.append( '-D EOSLPCE' )
         #set the include path for the header file
         cwd, cwf = os.path.split(__file__)
@@ -135,13 +135,13 @@ class CLIdeal(object):
         NX, NY, NZ = self.GX, self.GY, self.GZ
         #print('GlobalWorkSizes=', NX, NY, NZ)
         along_x, along_y, along_z = 0, 1, 2
-        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (cfg.BSZ, 1, 1),
+        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (self.cfg.BSZ, 1, 1),
                         self.d_Src, self.d_ev[step], self.tau, np.int32(step),
                         np.int32(along_x)).wait()
-        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, cfg.BSZ, 1),
+        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, self.cfg.BSZ, 1),
                         self.d_Src, self.d_ev[step], self.tau, np.int32(step),
                         np.int32(along_y)).wait()
-        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, 1, cfg.BSZ),
+        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, 1, self.cfg.BSZ),
                         self.d_Src, self.d_ev[step], self.tau, np.int32(step),
                         np.int32(along_z)).wait()
 
@@ -150,7 +150,7 @@ class CLIdeal(object):
         # Notice that d_Src=f(t,x) at step1 and 
         # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
         # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
-        self.kernel_ideal.update_ev(self.queue, (cfg.NX*cfg.NY*cfg.NZ,), None,
+        self.kernel_ideal.update_ev(self.queue, (self.cfg.NX*self.cfg.NY*self.cfg.NZ,), None,
                               self.d_ev[3-step], self.d_ev[1], self.d_Src,
                               self.tau, np.int32(step)).wait()
 
@@ -163,13 +163,13 @@ class CLIdeal(object):
 
 
     def __output(self, nstep):
-        if nstep%cfg.ntskip == 0:
+        if nstep%self.cfg.ntskip == 0:
             cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev[1]).wait()
             fout = '{pathout}/Ed{nstep}.dat'.format(
-                    pathout=cfg.fPathOut, nstep=nstep)
-            edxy = self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)[:,:,cfg.NZ//2]
-            np.savetxt(fout, self.h_ev1[:,0].reshape(cfg.NX, cfg.NY, cfg.NZ)
-                    [::cfg.nxskip,::cfg.nyskip,::cfg.nzskip].flatten(), header='Ed')
+                    pathout=self.cfg.fPathOut, nstep=nstep)
+            edxy = self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,self.cfg.NZ//2]
+            np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
+                    [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed')
 
 
 
@@ -183,7 +183,7 @@ class CLIdeal(object):
 
             self.__stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
-            self.tau = cfg.real(cfg.TAU0 + (n+1)*cfg.DT)
+            self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.__stepUpdate(step=2)
  
 
@@ -192,9 +192,10 @@ def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
+    from config import cfg
     print('start ...')
     t0 = time()
-    ideal = CLIdeal()
+    ideal = CLIdeal(cfg)
     fname = cfg.fPathIni
     ideal.read_ini(fname)
     ideal.evolve()

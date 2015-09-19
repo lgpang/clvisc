@@ -14,12 +14,19 @@ cwd, cwf = os.path.split(__file__)
 sys.path.append(os.path.join(cwd, '..'))
 
 from ideal import CLIdeal
+from config import cfg
 
 class TestBjorken(unittest.TestCase):
     def setUp(self):
-        self.ideal = CLIdeal()
+        cfg.NX = 25
+        cfg.NY = 25
+        cfg.NZ = 25
+        cfg.BSZ = 16
+        cfg.IEOS = 0
+        self.ideal = CLIdeal(configs=cfg)
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
+
 
     def test_bjorken(self):
         ''' initialize with uniform energy density in (tau, x, y, eta) coordinates
