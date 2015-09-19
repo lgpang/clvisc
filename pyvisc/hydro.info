@@ -57,9 +57,6 @@ nyskip = 3
 # DZ = 0.3 in output file
 nzskip = 1            
 
-#BSZ + 4 is used as the size for local 1d array
-BSZ = 32
-
 ############## Params for hydro evolution setting
 
 [intrinsic]
@@ -81,3 +78,7 @@ ETAOS = 0.08
 
 # \hat{ \lambda_1 }
 LAM1H = 0.001           
+
+[opencl]
+
+local_workgroup_size = 32

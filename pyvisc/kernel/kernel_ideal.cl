@@ -23,8 +23,9 @@ __kernel void kt_src(
 
     if ( in_range ) { ev[i] = d_ev[IND]; }
 
-    // barrier can not be in the if( in_range ) because threads with I>NX
-    // will never reach this point and deadlock is created
+    // barrier can not be in the if( in_range ) because that 
+    // threads with I>NX or J>NY or K>NZ never reach this point
+    // and deadlock is created in CLK_LOCAL_MEM_FENCE
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // set boundary condition

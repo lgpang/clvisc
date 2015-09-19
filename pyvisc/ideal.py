@@ -21,22 +21,12 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self, configs):
+    def __init__(self, configs, backend):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
-        #self.ctx = cl.create_some_context()
         self.cfg = configs
-        platform = cl.get_platforms()[0]
-        devices = platform.get_devices(device_type=cl.device_type.GPU)
-        devices = [devices[0]]
-
-        get_device_info(devices)
-        self.max_work_item_sizes = devices[0].max_work_item_sizes
-
-        self.ctx = cl.Context(devices=devices, properties=[
-            (cl.context_properties.PLATFORM, platform)])
-
-        self.queue = cl.CommandQueue(self.ctx)
+        self.ctx = backend.ctx
+        self.queue = backend.default_queue
 
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
@@ -193,9 +183,12 @@ def main():
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
     from config import cfg
+    from backend_opencl import OpenCLBackend
+
+    backend = OpenCLBackend(cfg, gpu_id=0)
     print('start ...')
     t0 = time()
-    ideal = CLIdeal(cfg)
+    ideal = CLIdeal(cfg, backend)
     fname = cfg.fPathIni
     ideal.read_ini(fname)
     ideal.evolve()

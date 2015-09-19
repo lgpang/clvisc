@@ -3,7 +3,6 @@
 #email: lgpang@qq.com
 #createTime: Sat 25 Oct 2014 04:40:15 PM CST
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
@@ -12,31 +11,22 @@ import sys
 from time import time
 
 from config import cfg
-
 from ideal import CLIdeal
+from backend_opencl import OpenCLBackend
 
-class CLVisc(CLIdeal):
+class CLVisc(object):
     '''The pyopencl version for 3+1D visc hydro dynamic simulation'''
-    def __init__(self):
-        '''Def hydro in opencl with params stored in self.__dict__ '''
-        super(CLVisc, self).__init__()
-
-    def __readIniCondition( self, fIni1 ):
-        '''load initial condition (Ed, Umu ) from dat file '''
-        super(CLVisc, self).__readIniCondition(fIni1)
-        mf = cl.mem_flags
-        #pitt, pitx, pity, pitz, pixx, pixy, pixz, piyy, piyz, pizz
+    def __init__(self, config, backend):
+        self.ideal = CLIdeal(configs=cfg, backend)
+        self.ctx = backend.ctx
+        self.queue = backend.default_queue
         self.h_pi0  = np.empty(10*self.size, cfg.real)
 
         self.d_pi0 = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         self.d_pi1 = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         self.d_pi2 = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
 
-        self.d_um0 = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_um1.nbytes)
-
-        
-    def __loadAndBuildCLPrg( self ):
-        super(CLVisc, self).__loadAndBuildCLPrg()
+    def __loadAndBuildCLPrg(self):
         #load and build *.cl programs with compile options
         src = open( 'kernel/kernel_visc.cl', 'r').read()
         self.kernel_visc = cl.Program(self.ctx, src).build(options=self.gpu_defines)

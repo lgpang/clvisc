@@ -47,9 +47,7 @@ def read_config():
     config['nzskip'] = ( _parser.getint( 'geometry', 'nzskip'), 
             'Skip steps along z for bulk information output')
 
-    config['BSZ'] = ( _parser.getint( 'geometry', 'BSZ'), 
-            'Local memory size in one dimension')
-    
+   
     config['DT'] = (_parser.getfloat( 'geometry', 'dt'), 
             'time step for hydro evolution' )
 
@@ -74,6 +72,9 @@ def read_config():
     config['ETAOS']= (_parser.getfloat('intrinsic', 'ETAOS'), 
             'Shear viscosity over entropy density')
 
+    config['BSZ'] = (_parser.getint('opencl', 'local_workgroup_size'), 
+            'Local workgroup size in one dimension')
+
     parser = argparse.ArgumentParser(description=\
         'Input parameters for hydrodynamic simulations')
     
@@ -83,6 +84,9 @@ def read_config():
 
     parser.add_argument('--use_float32', nargs='?', const=1, type=bool, 
             default=True, help='true for float and false for double precision')
+
+    parser.add_argument('--opencl_interactive', nargs='?', const=1, type=bool, 
+            default=False, help='true to choose device type and device id at run time')
     
     args, unknown = parser.parse_known_args()
 

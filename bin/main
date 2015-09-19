@@ -6,7 +6,7 @@ import sys, os
 
 cwd, cwf = os.path.split(__file__)
 
-sys.path.append(os.path.join(cwd, '..'))
+sys.path.append(os.path.join(cwd, '..', 'pyvisc/'))
 
 import pyvisc.ideal as ideal
 
