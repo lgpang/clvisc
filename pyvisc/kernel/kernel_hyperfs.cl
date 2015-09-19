@@ -26,19 +26,49 @@ is the same as in 2D.
 */
 
 typedef struct {
-    real4 p0, p1, p2, p3, p4;
+    real4 p[5];
 } simplex;
 
-// judge if all the 5 intersections are coplanar 
+typedef struct {
+    real4 p[4];     // 4 points in 3d hypersf
+    real  center;     // surface center 
+    real4 norm;     // out ward norm vector
+} hypersf;
+
+// get the ourward norm vector of one hyper surface
+// mass_center is the center for all intersections
+// vector_out = surf_center - mass_center
+// norm_out * vout > 0
+void get_norm_out(hypersf & surf, real4 mass_center) {
+    //real4 surf_center = 0.25f*(surf.p[0]+surf.p[1]+surf.p[2]+surf.p[3]);
+    real4 vector_out = surf.center - mass_center;
+    // the 3 vector that spans the hypersf
+    real4 a = surf.p[1] - surf.p[0];
+    real4 b = surf.p[2] - surf.p[0];
+    real4 c = surf.p[3] - surf.p[0];
+    // norm_vector has 2 directions
+    real4 norm_vector = (real4)(
+		 a.s1*(b.s2*c.s3-b.s3*c.s2) + a.s2*(b.s3*c.s1-b.s1*c.s3) + a.s3*(b.s1*c.s2-b.s2*c.s1),
+		 -(a.s0*(b.s2*c.s3-b.s3*c.s2) + a.s2*(b.s3*c.s0-b.s0*c.s3) + a.s3*(b.s0*c.s2-b.s2*c.s0)),
+		a.s0*(b.s1*c.s3-b.s3*c.s1) + a.s1*(b.s3*c.s0-b.s0*c.s3) + a.s3*(b.s0*c.s1-b.s1*c.s0),
+		-(a.s0*(b.s1*c.s2-b.s2*c.s1) + a.s1*(b.s2*c.s0-b.s0*c.s2) + a.s2*(b.s0*c.s1-b.s1*c.s0)));
+
+    real projection = dot(vector_out, norm_vector);
+    if ( projection < 0 ) norm_vector = - norm_vector;
+    return norm_vector;
+}
+
+// judge if all the 5 intersections (in one simplex) are coplanar 
 inline bool is_coplanar(simplex A){
 }
 
 // do tiny move such that they are not coplanar any more
-void tiny_move(simplex & A){
+void tiny_move(hypersf & surf){
 }
 
 // check if there are points on both side of A, if not return true
-bool is_on_convex_hull(simplex A, __private real4 * all_points){
+// n is the number of intersections
+bool is_on_convex_hull(hypersf A, __private real4 * all_points, int n){
 }
 
 // get the energy flow vector
