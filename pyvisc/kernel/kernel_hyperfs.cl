@@ -287,16 +287,16 @@ inline int idn(int I, int J, int K) {
 
 
 // output: global d_hypersf array;
-__kernel void extract_hypersf(
-                       __global real4 * d_evold,
-		               __global real4 * d_evnew,
-		               const real DTD) {
-    int I = get_global_id(0);
-    int J = get_global_id(1);
-    int K = get_global_id(2);
-
-    bool in_range = (I < NX && J < NY && K < NZ);
-
-    if ( in_range ) {
+__kernel void test_hypersf(__global real4 * result) {
+    __private real ed_cube[16];
+    real4 mass_center;
+    for (int i = 0; i < 8; i++) {
+        ed_cube[i] = 2.0f;
+        ed_cube[8+i] = 3.0f;
     }
+    __private real4 all_ints[32];
+    int num_of_intsection;
+    get_all_intersections(ed_cube, all_ints, & num_of_intsection);
+    real4 energy_flow_vector = energy_flow(ed_cube);
+    printf( 'energy flow vector=%f', energy_flow_vector.s0);
 }
