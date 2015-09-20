@@ -24,6 +24,29 @@ For 3D hyper surface, 3-simplex is one piece of hyper surface. Everything
 is the same as in 2D.
 */
 
+constant real4 cube[16] = {
+    // tau = tau_old, 8 corners cube
+    (real4)(0.0f, 0.0f, 0.0f, 0.0f),
+    (real4)(0.0f, 1.0f, 0.0f, 0.0f),
+    (real4)(0.0f, 1.0f, 1.0f, 0.0f),
+    (real4)(0.0f, 0.0f, 1.0f, 0.0f),
+    
+    (real4)(0.0f, 0.0f, 0.0f, 1.0f),
+    (real4)(0.0f, 1.0f, 0.0f, 1.0f),
+    (real4)(0.0f, 1.0f, 1.0f, 1.0f),
+    (real4)(0.0f, 0.0f, 1.0f, 1.0f),
+    // tau = tau_new, 8 corners cube
+    (real4)(1.0f, 0.0f, 0.0f, 0.0f),
+    (real4)(1.0f, 1.0f, 0.0f, 0.0f),
+    (real4)(1.0f, 1.0f, 1.0f, 0.0f),
+    (real4)(1.0f, 0.0f, 1.0f, 0.0f),
+    
+    (real4)(1.0f, 0.0f, 0.0f, 1.0f),
+    (real4)(1.0f, 1.0f, 0.0f, 1.0f),
+    (real4)(1.0f, 1.0f, 1.0f, 1.0f),
+    (real4)(1.0f, 0.0f, 1.0f, 1.0f)
+};
+
 typedef struct {
     real4 p[4];       // 4 points in 3d hypersf
     real  center;     // surface center 
@@ -33,7 +56,7 @@ typedef struct {
 // get the ourward norm vector of one hyper surface
 // mass_center is the center for all intersections
 // vector_out = surf_center - mass_center
-// norm_out * vout > 0
+// norm_out * vector_out > 0
 hypersf construct_hypersf(real4 p0, real4 p1, real4 p2, real4 p3,
                           real4 mass_center) {
     hypersf surf;
@@ -60,7 +83,7 @@ hypersf construct_hypersf(real4 p0, real4 p1, real4 p2, real4 p3,
     return surf;
 }
 
-// judge if the point 'pnew' is coplanar with the give hypersf
+// judge if the point 'pnew' is coplanar with the given hypersf
 inline bool is_coplanar(hypersf sf, real4 pnew){
     real4 test_vector = pnew - sf.center;
     bool coplanar = false;
@@ -70,8 +93,25 @@ inline bool is_coplanar(hypersf sf, real4 pnew){
     return coplanar;
 }
 
+// very simple random number generator to provid some random tiny shift
+// in case 5 points are coplanar.
+int rand(int* seed) // 1 <= *seed < m
+{
+    int const a = 16807; //ie 7**5
+    int const m = 2147483647; //ie 2**31-1
+    *seed = (long(*seed * a))%m;
+    return(*seed);
+}
+
 // do tiny move such that they are not coplanar any more
-void tiny_move(hypersf & surf){
+void tiny_move(hypersf surf, real4 * pnew, int seed_from_gid){
+    int seed = seed_from_gid;
+    int maxi = 2147483647.0f;
+    while ( is_coplanar(surf, *pnew) ) {
+        real4 tiny_shift = (real4)(rand(&seed)/maxi*acu, rand(&seed)/maxi*acu,
+                                   rand(&seed)/maxi*acu, rand(&seed)/maxi*acu);
+        *pnew = *pnew + tiny_shift;
+    }
 }
 
 // check if there are points beyond sf, if not return true
@@ -82,15 +122,19 @@ bool is_on_convex_hull(hypersf sf, real4 mass_center, __private real4 * all_poin
     for ( int n = 0; n < num_points; n++ ) {
         real4 point = all_points[n];
         if ( n != i && n != j && n != k && n != l ) {
+            if ( is_coplanar(sf, point) ) tiny_move(sf, & point, 2355553);
+            all_points[n] = point;           // update after tiny move
             test_vector = point - sf.center;
             // if there are points beyond sf, sf is not on convex
-            if ( dot(test_vector, positive_direction) > 0.0f )
+            if ( dot(test_vector, outward_vector) > 0.0f ) {
                 return false;
+            }
         }
     }
     return true;
 }
 
+// get the weight of energy from each corner of the cube
 inline void contribution_from(__private real4 ed_cube[16], int n, int i, int j, int k,
                               real4 *vl, real4 *vh, real *elsum, real *ehsum) {
     int id = 8*n + 4*i + 2*j + k;
@@ -120,8 +164,8 @@ real4 energy_flow(__private real ed_cube[16]) {
     // vl, vh wight to low/high energy density
     real4 vl = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
     real4 vh = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
-    real  elsum = 0.0;
-    real  ehsum = 0.0;    // sum of ed difference
+    real  elsum = 0.0f;
+    real  ehsum = 0.0f;    // sum of ed difference
     contribution_from(ed_cube, 0, 0, 0, 0, vl, vh, elsum, ehsum);
     contribution_from(ed_cube, 1, 0, 0, 0, vl, vh, elsum, ehsum);
     contribution_from(ed_cube, 0, 1, 0, 0, vl, vh, elsum, ehsum);
@@ -175,8 +219,8 @@ real4 calc_area(__private real4 *all_points, real4 energy_flow,
         for ( int j = i+1; j < num_points-3; j ++ )
         for ( int k = i+2; k < num_points-2; k ++ )
         for ( int l = i+3; l < num_points-1; l ++ ) {
-            sf = construct_hypersf(all_points[i],
-            all_points[j], all_points[k], all_points[l], mass_center);
+            sf = construct_hypersf(all_points[i], all_points[j], all_points[k],
+                                   all_points[l], mass_center);
             if ( is_on_convex_hull(sf, mass_center, all_points,
                                    num_points, i, j, k, l) ) {
                 area += sf.norm;
@@ -186,21 +230,47 @@ real4 calc_area(__private real4 *all_points, real4 energy_flow,
     return area;
 }
 
-
-bool ints_between(real ed_left, real ed_right, __private real4 all_ints[32], int * num_points) {
-    if ( (EDEC-ed_left)*(EDEC-ed_right) < 0.0f ) {
-        all_ints
+// Get the position of the intersection point on the edges of the cube
+inline void ints_between(real ed_left, real ed_right， real4 pos_left, real4 pos_right,
+                  __private real4 all_ints[32], int * num_points) {
+    if ( (EFRZ-ed_left)*(EFRZ-ed_right) < 0.0f ) {
+        real ratio = (EFRZ-ed_left)/max(acu, ed_right-ed_left);
+        all_ints[num_points] = ratio*pos_right + (1-ratio)*pos_left;
         *num_points += 1;
-
     }
 }
 
-// Get all the intersections by comparing EDEC with ed_cube
-void get_all_intersections(__private real ed_cube[16],
+// Get all the intersections by comparing EFRZ with ed on the cube
+void get_all_intersections(__private real ed[16],
                __private real4 all_ints[32], int * num_points) {
-    ints_between(__private real ed_cube[16], 0, 1);
-
-}
+    // 16 edges with the same (z, tau)
+    for (int start = 0; start < 16; start += 4) {
+        ints_between(ed[start+0], ed[start+1], cube[start+0], cube[start+1],
+                     all_ints, num_points);
+        ints_between(ed[start+1], ed[start+2], cube[start+1], cube[start+2],
+                     all_ints, num_points);
+        ints_between(ed[start+2], ed[start+3], cube[start+2], cube[start+3],
+                     all_ints, num_points);
+        ints_between(ed[start+3], ed[start+0], cube[start+3], cube[start+0],
+                     all_ints, num_points);
+    }
+    // 8 edges with the same (x, y, tau)
+    for (int start = 0; start < 16; start += 8) {
+        ints_between(ed[start+0], ed[start+4], cube[start+0], cube[start+4],
+                     all_ints, num_points);
+        ints_between(ed[start+1], ed[start+5], cube[start+1], cube[start+5],
+                     all_ints, num_points);
+        ints_between(ed[start+2], ed[start+6], cube[start+2], cube[start+6],
+                     all_ints, num_points);
+        ints_between(ed[start+3], ed[start+7], cube[start+3], cube[start+7],
+                     all_ints, num_points);
+    }
+    // 8 edges with same (x, y, z) but different tau
+    for ( int start = 0; start < 8; start ++) {
+        ints_between(ed[start+0], ed[start+8], cube[start+0], cube[start+8],
+                     all_ints, num_points);
+    }
+ }
 
 
 
