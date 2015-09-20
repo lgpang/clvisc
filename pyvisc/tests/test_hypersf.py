@@ -50,7 +50,7 @@ class TestBjorken(unittest.TestCase):
         compile_options.append('-D EOSI')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
 
-        final = np.empty(1).astype( array.vec.float4 )
+        final = np.empty(32).astype( array.vec.float4 )
         mf = cl.mem_flags
         final_gpu = cl.Buffer(self.ctx, mf.READ_WRITE, final.nbytes)
  

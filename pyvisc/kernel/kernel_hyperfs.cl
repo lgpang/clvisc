@@ -105,7 +105,7 @@ hypersf construct_hypersf(real4 p0, real4 p1, real4 p2, real4 p3,
 inline bool is_coplanar(hypersf sf, real4 pnew){
     real4 test_vector = pnew - sf.center;
     bool coplanar = false;
-    if ( dot(test_vector, sf.norm) < acu ) {
+    if ( dot(test_vector, sf.norm) < acu*acu ) {
         coplanar = true;
     }
     return coplanar;
@@ -156,8 +156,8 @@ bool is_on_convex_hull(hypersf sf, real4 mass_center, __private real4 * all_poin
 void contribution_from(__private real ed_cube[16], int n, int i, int j, int k,
                               real4 *vl, real4 *vh, real *elsum, real *ehsum) {
     int id = 8*n + 4*k + 2*j + i;
-    real vl_tmp[4];
-    real vh_tmp[4];
+    real vl_tmp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    real vh_tmp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     real dek = EFRZ - ed_cube[id];
     real adek = fabs(dek);
     if ( dek > 0.0f ) {
@@ -173,8 +173,8 @@ void contribution_from(__private real ed_cube[16], int n, int i, int j, int k,
         if ( j == 1 ) vh_tmp[2] = adek;
         if ( k == 1 ) vh_tmp[3] = adek;
     }
-    *vl += (real4)(vl_tmp[0], vl_tmp[1], vl_tmp[2], vl_tmp[3]);
-    *vh += (real4)(vh_tmp[0], vh_tmp[1], vh_tmp[2], vh_tmp[3]);
+    *vl +=  (real4)(vl_tmp[0], vl_tmp[1], vl_tmp[2], vl_tmp[3]);
+    *vh +=  (real4)(vh_tmp[0], vh_tmp[1], vh_tmp[2], vh_tmp[3]);
 }
 
 // get the energy flow vector
@@ -184,27 +184,27 @@ real4 energy_flow(__private real ed_cube[16]) {
     real4 vh = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
     real  elsum = 0.0f;
     real  ehsum = 0.0f;    // sum of ed difference
+    // n==0 tau_old
     contribution_from(ed_cube, 0, 0, 0, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 1, 0, 0, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 0, 1, 0, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 0, 0, 1, 0, &vl, &vh, &elsum, &ehsum);
     contribution_from(ed_cube, 0, 0, 0, 1, &vl, &vh, &elsum, &ehsum);
-
-    contribution_from(ed_cube, 1, 1, 0, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 1, 0, 1, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 1, 0, 0, 1, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 0, 1, 1, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 0, 1, 0, 1, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 0, 0, 1, 0, &vl, &vh, &elsum, &ehsum);
     contribution_from(ed_cube, 0, 0, 1, 1, &vl, &vh, &elsum, &ehsum);
-
-    contribution_from(ed_cube, 1, 1, 1, 0, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 1, 1, 0, 1, &vl, &vh, &elsum, &ehsum);
-    contribution_from(ed_cube, 1, 0, 1, 1, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 0, 1, 0, 0, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 0, 1, 0, 1, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 0, 1, 1, 0, &vl, &vh, &elsum, &ehsum);
     contribution_from(ed_cube, 0, 1, 1, 1, &vl, &vh, &elsum, &ehsum);
+    // n==1 tau_new
+    contribution_from(ed_cube, 1, 0, 0, 0, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 1, 0, 0, 1, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 1, 0, 1, 0, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 1, 0, 1, 1, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 1, 1, 0, 0, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 1, 1, 0, 1, &vl, &vh, &elsum, &ehsum);
+    contribution_from(ed_cube, 1, 1, 1, 0, &vl, &vh, &elsum, &ehsum);
     contribution_from(ed_cube, 1, 1, 1, 1, &vl, &vh, &elsum, &ehsum);
 
     if ( fabs(elsum) > acu ) vl /= elsum;
-    if ( fabs(ehsum) > acu ) vh /= elsum;
+    if ( fabs(ehsum) > acu ) vh /= ehsum;
     return vl - vh;
 }
 
@@ -239,10 +239,10 @@ real4 calc_area(__private real4 *all_points, real4 energy_flow,
         for ( int l = i+3; l < num_points-1; l ++ ) {
             sf = construct_hypersf(all_points[i], all_points[j], all_points[k],
                                    all_points[l], mass_center);
-            if ( is_on_convex_hull(sf, mass_center, all_points,
-                                   num_points, i, j, k, l) ) {
-                area += sf.norm;
-            }
+             if ( is_on_convex_hull(sf, mass_center, all_points,
+                                    num_points, i, j, k, l) ) {
+                 area += sf.norm;
+             }
         }
     }
     return area;
@@ -259,8 +259,6 @@ void ints_between(real ed_left, real ed_right, real4 pos_left,
         real ratio = fabs(dE1)/fabs(dE12);
         all_ints[num_points[0]] = ratio*pos_right + (1-ratio)*pos_left;
         num_points[0] += 1;
-        printf("num_of_points=%d \n", num_points[0]);
-        printf("ratio=%f \n", ratio);
     }
 }
 
@@ -268,6 +266,7 @@ void ints_between(real ed_left, real ed_right, real4 pos_left,
 void get_all_intersections(__private real ed[16],
                __private real4 all_ints[32],
                __private int num_points[1]) {
+    num_points[0] = 0;
     // 16 edges with the same (z, tau)
     for (int start = 0; start < 16; start += 4) {
         ints_between(ed[start+0], ed[start+1], cube[start+0], cube[start+1],
@@ -316,16 +315,22 @@ __kernel void test_hypersf(__global real4 * result) {
     __private real ed_cube[16];
     real4 mass_center;
     for (int i = 0; i < 8; i++) {
-        ed_cube[i] = 3.0f;
-        ed_cube[8+i] = 2.0f;
+        ed_cube[i] = 2.0f;
+        ed_cube[8+i] = 3.0f;
     }
+    
+    int num_of_intersection[1];
+    
     __private real4 all_ints[32];
-    __private int num_points[1];
 
-    get_all_intersections(ed_cube, all_ints, num_points);
-    printf("num_of_intersection=%d", num_points[0]);
-
+    get_all_intersections(ed_cube, all_ints, num_of_intersection);
+    printf("num_of_intersection=%d\n", num_of_intersection[0]);
+    
     real4 energy_flow_vector = energy_flow(ed_cube);
 
-    result[0] = energy_flow_vector;
+    mass_center = get_mass_center(all_ints, num_of_intersection[0]);
+
+    real4 d_Sigma = calc_area(all_ints, energy_flow_vector, num_of_intersection[0]);
+
+     result[0] = d_Sigma;
 }
