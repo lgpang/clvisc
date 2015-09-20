@@ -55,7 +55,7 @@ void get_norm_out(hypersf & surf, real4 mass_center) {
 
     real projection = dot(vector_out, norm_vector);
     if ( projection < 0 ) norm_vector = - norm_vector;
-    return norm_vector;
+    surf.norm = norm_vector;
 }
 
 // judge if all the 5 intersections (in one simplex) are coplanar 
@@ -66,13 +66,76 @@ inline bool is_coplanar(simplex A){
 void tiny_move(hypersf & surf){
 }
 
-// check if there are points on both side of A, if not return true
+// check if there are points beyond A, if not return true
 // n is the number of intersections
-bool is_on_convex_hull(hypersf A, __private real4 * all_points, int n){
+bool is_on_convex_hull(hypersf A, real4 mass_center, __private real4 * all_points, int npoints){
+    real4 positive_direction = A.center - mass_center;
+    for ( int n = 0; n < npoints; n++ ) {
+        real4 point = all_points[n];
+        if ( point != A.p[0] && point != A.p[1] &&
+                   point != A.p[2] && point != A.p[3] ) {
+            test_vector = point - A.center;
+            // if there are points beyond A, A is not on convex
+            if ( dot(test_vector, positive_direction) > 0.0f )
+                return false;
+        }
+    }
+    return true;
 }
 
+inline void contribution_from(__private real4 ed_cube[16], int n, int i, int j, int k, real4 & vl, real4 & vh, real & elsum, real & ehsum) {
+    int id = 8*n + 4*i + 2*j + k;
+    real vl_tmp[4];
+    real vh_tmp[4];
+    real dek = EFRZ - ed_cube[id];
+    real adek = fabs(dek);
+    if ( dek > 0.0f ) {
+        elsum += adek;
+        if ( n == 1 ) vl_tmp[0] = adek;
+        if ( i == 1 ) vl_tmp[1] = adek;
+        if ( j == 1 ) vl_tmp[2] = adek;
+        if ( k == 1 ) vl_tmp[3] = adek;
+    } else {
+        ehsum += adek;
+        if ( n == 1 ) vh_tmp[0] = adek;
+        if ( i == 1 ) vh_tmp[1] = adek;
+        if ( j == 1 ) vh_tmp[2] = adek;
+        if ( k == 1 ) vh_tmp[3] = adek;
+    }
+    vl += (real4)(vl_tmp[0], vl_tmp[1], vl_tmp[2], vl_tmp[3]);
+    vh += (real4)(vh_tmp[0], vh_tmp[1], vh_tmp[2], vh_tmp[3]);
+}
+
+
 // get the energy flow vector
-real4 energy_flow(__private real4[16] ed_cube) {
+real4 energy_flow(__private real4 ed_cube[16]) {
+    // vl, vh wight to low/high energy density
+    real4 vl = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
+    real4 vh = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
+    real  elsum = 0.0;
+    real  ehsum = 0.0;    // sum of ed difference
+    contribution_from(ed_cube, 0, 0, 0, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 1, 0, 0, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 1, 0, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 0, 1, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 0, 0, 1, vl, vh, elsum, ehsum);
+
+    contribution_from(ed_cube, 1, 1, 0, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 1, 0, 1, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 1, 0, 0, 1, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 1, 1, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 1, 0, 1, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 0, 1, 1, vl, vh, elsum, ehsum);
+
+    contribution_from(ed_cube, 1, 1, 1, 0, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 1, 1, 0, 1, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 1, 0, 1, 1, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 0, 1, 1, 1, vl, vh, elsum, ehsum);
+    contribution_from(ed_cube, 1, 1, 1, 1, vl, vh, elsum, ehsum);
+
+    if ( fabs(elsum) > acu ) vl /= elsum;
+    if ( fabs(ehsum) > acu ) vh /= elsum;
+    return vl - vh;
 }
 
 // select half of the hyper surface with norm*energy_flow>0,
