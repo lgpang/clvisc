@@ -48,17 +48,18 @@ constant real4 cube[16] = {
 };
 
 typedef struct {
-    real4 p[4];       // 4 points in 3d hypersf
+    int   id[4];      // id for 4 points in the intersection list
     real4 center;     // surface center 
     real4 norm;       // outward norm vector
 } hypersf;
 
-hypersf construct_hypersf(real4 p0, real4 p1, real4 p2, real4 p3,
-                          real4 mass_center);
+hypersf construct_hypersf(int id0, int id1, int id2, int id3,
+                      __private real4 * all_points, real4 mass_center);
 
-int rand(int* seed);
+real rand(int* seed);
 
-void tiny_move(hypersf surf, real4 * pnew, int seed_from_gid);
+void tiny_move(hypersf * surf, int idnew, __private real4 * all_points,
+                       real4 mass_center, int seed_from_gid);
 
 void contribution_from(__private real ed_cube[16], int n, int i, int j, int k,
                    real4 *vl, real4 *vh, real *elsum, real *ehsum);
@@ -67,6 +68,7 @@ real4 energy_flow(__private real ed_cube[16]);
 
 real4 calc_area(__private real4 *all_points, real4 energy_flow,
                 int num_points);
+
 void get_all_intersections(__private real ed[16],
                __private real4 all_ints[32],
                __private int num_points[1]);
@@ -74,77 +76,103 @@ void get_all_intersections(__private real ed[16],
 // get the ourward norm vector of one hyper surface
 // mass_center is the center for all intersections
 // vector_out = surf_center - mass_center
-// norm_out * vector_out > 0
-hypersf construct_hypersf(real4 p0, real4 p1, real4 p2, real4 p3,
-                          real4 mass_center) {
+// norm_out * vector_out > 0; if possible for norm_out==0.0f
+hypersf construct_hypersf(int id0, int id1, int id2, int id3,
+                      __private real4 * ints, real4 mass_center) {
     hypersf surf;
-    surf.p[0] = p0;
-    surf.p[1] = p1;
-    surf.p[2] = p2;
-    surf.p[3] = p3;
-    surf.center = 0.25f*(p0+p1+p2+p3);
+    surf.id[0] = id0;
+    surf.id[1] = id1;
+    surf.id[2] = id2;
+    surf.id[3] = id3;
+    surf.center = 0.25f*(ints[id0] + ints[id1] + ints[id2] + ints[id3]);
     real4 vector_out = surf.center - mass_center;
     // the 3 vector that spans the hypersf
-    real4 a = p1 - p0;
-    real4 b = p2 - p0;
-    real4 c = p3 - p0;
+    real4 a = ints[id1] - ints[id0];
+    real4 b = ints[id2] - ints[id0];
+    real4 c = ints[id3] - ints[id0];
     // norm_vector has 2 directions
     real4 norm_vector = (real4)(
 		 a.s1*(b.s2*c.s3-b.s3*c.s2) + a.s2*(b.s3*c.s1-b.s1*c.s3) + a.s3*(b.s1*c.s2-b.s2*c.s1),
 		 -(a.s0*(b.s2*c.s3-b.s3*c.s2) + a.s2*(b.s3*c.s0-b.s0*c.s3) + a.s3*(b.s0*c.s2-b.s2*c.s0)),
 		a.s0*(b.s1*c.s3-b.s3*c.s1) + a.s1*(b.s3*c.s0-b.s0*c.s3) + a.s3*(b.s0*c.s1-b.s1*c.s0),
 		-(a.s0*(b.s1*c.s2-b.s2*c.s1) + a.s1*(b.s2*c.s0-b.s0*c.s2) + a.s2*(b.s0*c.s1-b.s1*c.s0)));
-
+    
     real projection = dot(vector_out, norm_vector);
     if ( projection < 0 ) norm_vector = - norm_vector;
     surf.norm = norm_vector;
     return surf;
 }
 
-// judge if the point 'pnew' is coplanar with the given hypersf
-inline bool is_coplanar(hypersf sf, real4 pnew){
-    real4 test_vector = pnew - sf.center;
+// judge if the point 'id4' is coplanar with the given hypersf
+inline bool is_coplanar(hypersf sf, int idnew, __private real4 * ints){
+    real4 test_vector = ints[idnew] - sf.center;
     bool coplanar = false;
-    if ( dot(test_vector, sf.norm) < acu*acu ) {
+    if ( dot(test_vector, sf.norm) == 0.0f ) {
         coplanar = true;
     }
+    // it's possible that len(sf.norm) == 0.0f so one needs to do random move for sf too.
+    printf("dot(test_vector, sf.norm)=%f \n", dot(test_vector, sf.norm));
+    printf("test_vector = (%f, %f, %f, %f) \n",test_vector.s0, test_vector.s1, test_vector.s2, test_vector.s3);
+    printf("sf.norm = (%f, %f, %f, %f) \n",sf.norm.s0, sf.norm.s1, sf.norm.s2, sf.norm.s3);
+
     return coplanar;
 }
 
 // very simple random number generator to provid some random tiny shift
 // in case 5 points are coplanar.
-int rand(int* seed) // 1 <= *seed < m
+real rand(int* seed) // 1 <= *seed < m
 {
     int const a = 16807; //ie 7**5
     int const m = 2147483647; //ie 2**31-1
     *seed = ((long)(*seed * a))%m;
-    return(*seed);
+    return (*seed)/((real)m);
 }
 
 // do tiny move such that they are not coplanar any more
-void tiny_move(hypersf surf, real4 * pnew, int seed_from_gid){
+void tiny_move(hypersf *surf, int idnew, __private real4 * ints,
+                       real4 mass_center, int seed_from_gid){
     int seed = seed_from_gid;
-    real maxi = 2147483647.0f;
-    while ( is_coplanar(surf, *pnew) ) {
-        real4 tiny_shift = (real4)(rand(&seed)/maxi*acu, rand(&seed)/maxi*acu,
-                                   rand(&seed)/maxi*acu, rand(&seed)/maxi*acu);
-        *pnew = *pnew + tiny_shift;
+    int max_loops = 5;
+    int loop = 0;
+    real4 tiny_shift;
+    while ( is_coplanar(*surf, idnew, ints) ) {
+        for ( int i = 0; i < 4; i ++ ) {
+            tiny_shift = (real4)((rand(&seed)-0.5f)*1.0E-4,
+                                   (rand(&seed)-0.5f)*1.0E-4,
+                                   (rand(&seed)-0.5f)*1.0E-4,
+                                   (rand(&seed)-0.5f)*1.0E-4);
+            ints[(*surf).id[i]] += tiny_shift;
+        }
+
+        *surf = construct_hypersf((*surf).id[0], (*surf).id[1], (*surf).id[2],
+                                  (*surf).id[3], ints, mass_center );
+        tiny_shift = (real4)((rand(&seed)-0.5f)*1.0E-4,
+                                   (rand(&seed)-0.5f)*1.0E-4,
+                                   (rand(&seed)-0.5f)*1.0E-4,
+                                   (rand(&seed)-0.5f)*1.0E-4);
+        ints[idnew] += tiny_shift;
+        loop ++;
+        if ( loop >= max_loops ) {
+            // printf("exceed 5 loops\n");
+            break;
+        }
     }
 }
 
 // check if there are points beyond sf, if not return true
 // n is the number of intersections
-bool is_on_convex_hull(hypersf sf, real4 mass_center, __private real4 * all_points,
-                       int num_points, int i, int j, int k, int l){
-    real4 outward_vector = sf.center - mass_center;
+bool is_on_convex_hull(hypersf sf, real4 mass_center,
+                       __private real4 * all_points,
+                       int num_points){
+    int seed = 23435555;
     for ( int n = 0; n < num_points; n++ ) {
         real4 point = all_points[n];
-        if ( n != i && n != j && n != k && n != l ) {
-            if ( is_coplanar(sf, point) ) tiny_move(sf, & point, 2355553);
-            all_points[n] = point;           // update after tiny move
-            real4 test_vector = point - sf.center;
+        if ( n != sf.id[0] && n != sf.id[1] && n != sf.id[2] && n != sf.id[3] ) {
+            if ( is_coplanar(sf, n, all_points) )
+                tiny_move(&sf, n, all_points, mass_center, seed);
+            real4 test_vector = all_points[n] - sf.center;
             // if there are points beyond sf, sf is not on convex
-            if ( dot(test_vector, outward_vector) > 0.0f ) {
+            if ( dot(test_vector, sf.norm) > 0.0f ) {
                 return false;
             }
         }
@@ -226,8 +254,7 @@ real4 calc_area(__private real4 *all_points, real4 energy_flow,
     real4 area = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
     hypersf sf;
     if ( num_points == 4 ) {
-        sf = construct_hypersf(all_points[0], all_points[1],
-                           all_points[2], all_points[3], mass_center);
+        sf = construct_hypersf(0, 1, 2, 3, all_points, mass_center);
         // if only 4 points, the norm vector has 2 possible directions
         if ( dot(energy_flow, sf.norm) < 0.0f ) sf.norm = -sf.norm;
         area = sf.norm;
@@ -237,15 +264,14 @@ real4 calc_area(__private real4 *all_points, real4 energy_flow,
         for ( int j = i+1; j < num_points-3; j ++ )
         for ( int k = i+2; k < num_points-2; k ++ )
         for ( int l = i+3; l < num_points-1; l ++ ) {
-            sf = construct_hypersf(all_points[i], all_points[j], all_points[k],
-                                   all_points[l], mass_center);
-             if ( is_on_convex_hull(sf, mass_center, all_points,
-                                    num_points, i, j, k, l) ) {
+            sf = construct_hypersf(i, j, k, l, all_points, mass_center);
+            if ( is_on_convex_hull(sf, mass_center, all_points, num_points)
+                 && dot(sf.norm, energy_flow) > 0.0f  ) {
                  area += sf.norm;
-             }
+            }
         }
     }
-    return area;
+    return area/6.0f;
 }
 
 // Get the position of the intersection point on the edges of the cube
@@ -332,5 +358,5 @@ __kernel void test_hypersf(__global real4 * result) {
 
     real4 d_Sigma = calc_area(all_ints, energy_flow_vector, num_of_intersection[0]);
 
-     result[0] = d_Sigma;
+    result[0] = d_Sigma;
 }
