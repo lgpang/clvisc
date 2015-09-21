@@ -56,7 +56,7 @@ class TestBjorken(unittest.TestCase):
  
         prg.test_hypersf(self.queue, (1,), None, final_gpu)
         cl.enqueue_copy(self.queue, final, final_gpu).wait()
-        print final
+        print(final)
 
    
 
