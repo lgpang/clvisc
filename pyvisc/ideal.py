@@ -21,13 +21,13 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self, configs):
+    def __init__(self, configs, gpu_id=0):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
         self.cfg = configs
 
         from backend_opencl import OpenCLBackend
-        backend = OpenCLBackend(self.cfg, gpu_id=0)
+        backend = OpenCLBackend(self.cfg, gpu_id)
 
         self.ctx = backend.ctx
         self.queue = backend.default_queue
@@ -57,13 +57,11 @@ class CLIdeal(object):
 
         self.history = []
  
-    def read_ini(self, fIni1):
-        '''load initial condition (Ed, vx, vy, vz) from dat file
-           initial condition stored in 4 columns
-           num_of_rows = NX*NY*NZ'''
+    def load_ini(self, dat):
+        '''load initial condition stored in np array whose 4 columns
+           are (Ed, vx, vy, vz) and  num_of_rows = NX*NY*NZ'''
         print('start to load ini data')
-        dat1 = np.loadtxt(fIni1).astype(self.cfg.real)
-        self.h_ev1 = dat1
+        self.h_ev1 = dat.astype(self.cfg.real)
         cl.enqueue_copy(self.queue, self.d_ev[1], self.h_ev1).wait()
         print('end of loading ini data')
 
@@ -190,11 +188,11 @@ def main():
     print('start ...')
     t0 = time()
     ideal = CLIdeal(cfg)
-    fname = cfg.fPathIni
-    ideal.read_ini(fname)
+    dat = np.loadtxt(cfg.fPathIni)
+    ideal.load_ini(dat)
     ideal.evolve()
     t1 = time()
-    print('finished. Total time: {dtime}'.format( dtime = t1-t0 ))
+    print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
 if __name__ == '__main__':
     main()
