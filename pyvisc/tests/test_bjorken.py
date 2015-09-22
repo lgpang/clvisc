@@ -19,12 +19,12 @@ from backend_opencl import OpenCLBackend
 
 class TestBjorken(unittest.TestCase):
     def setUp(self):
-        cfg.NX = 25
-        cfg.NY = 25
-        cfg.NZ = 25
-        cfg.BSZ = 32
-        cfg.IEOS = 0
-        cfg.opencl_interactive = True
+        #cfg.NX = 25
+        #cfg.NY = 25
+        #cfg.NZ = 25
+        #cfg.BSZ = 32
+        #cfg.IEOS = 0
+        #cfg.opencl_interactive = True
         backend = OpenCLBackend(cfg, gpu_id=0)
         self.ideal = CLIdeal(cfg, backend)
         self.ctx = backend.ctx

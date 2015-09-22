@@ -19,11 +19,6 @@ from backend_opencl import backend
 
 class TestBjorken(unittest.TestCase):
     def setUp(self):
-        cfg.NX = 25
-        cfg.NY = 25
-        cfg.NZ = 25
-        cfg.BSZ = 16
-        cfg.IEOS = 0
         bend = backend(cfg, gpu_id=0)
         self.ideal = CLIdeal(configs=cfg, backend=bend)
         self.ctx = bend.ctx
@@ -56,7 +51,8 @@ class TestBjorken(unittest.TestCase):
  
         prg.test_hypersf(self.queue, (1,), None, final_gpu)
         cl.enqueue_copy(self.queue, final, final_gpu).wait()
-        print(final)
+        print('the 3d volume of one cube is:')
+        print(final[0])
 
    
 

@@ -258,7 +258,7 @@ real4 calc_area(__private real4 *ints, real4 energy_flow,
             if ( is_on_convex_hull(sf, &mass_center, ints, size_of_ints)
                  && dot(sf.norm, energy_flow) > 0.0f  ) {
                  area += sf.norm;
-                 printf("used (i,j,k,l=%d,%d,%d,%d", i, j, k, l);
+                 // printf("used (i,j,k,l=%d,%d,%d,%d", i, j, k, l);
             }
         }
     }
@@ -341,7 +341,6 @@ __kernel void test_hypersf(__global real4 * result) {
     __private real4 all_ints[32];
 
     get_all_intersections(ed_cube, all_ints, &num_of_intersection);
-    printf("num_of_intersection=%d\n", num_of_intersection);
     
     real4 energy_flow_vector = energy_flow(ed_cube);
 
