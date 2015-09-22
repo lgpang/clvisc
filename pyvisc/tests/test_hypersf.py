@@ -15,22 +15,19 @@ sys.path.append(os.path.join(cwd, '..'))
 
 from ideal import CLIdeal
 from config import cfg
-from backend_opencl import backend
 
-class TestBjorken(unittest.TestCase):
+class TestHypersf(unittest.TestCase):
     def setUp(self):
-        bend = backend(cfg, gpu_id=0)
-        self.ideal = CLIdeal(configs=cfg, backend=bend)
-        self.ctx = bend.ctx
-        self.queue = bend.default_queue
+        self.ideal = CLIdeal(configs=cfg)
+        self.ctx = self.ideal.ctx
+        self.queue = self.ideal.queue
 
 
-    def test_bjorken(self):
-        ''' initialize with uniform energy density in (tau, x, y, eta) coordinates
-        to test the Bjorken expansion:
-           eps/eps0 = (tau/tau0)**(-4.0/3.0)
+    def test_hypersf(self):
+        ''' initialize 4D cube with ed=2 at (n=0, i,j,k=*),
+        ed=3 at (n=1, i,j,k=*) and EFRZ=2.5 to calc the volumn of
+        3D cube at ed=2.5 freeze out hypersurface in 4D space.
         '''
-
         with open('../kernel/kernel_hyperfs.cl', 'r') as f:
             kernel_src = f.read()
 

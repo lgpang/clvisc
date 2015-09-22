@@ -15,20 +15,19 @@ sys.path.append(os.path.join(cwd, '..'))
 
 from ideal import CLIdeal
 from config import cfg
-from backend_opencl import OpenCLBackend
 
 class TestBjorken(unittest.TestCase):
     def setUp(self):
-        #cfg.NX = 25
-        #cfg.NY = 25
-        #cfg.NZ = 25
-        #cfg.BSZ = 32
-        #cfg.IEOS = 0
-        #cfg.opencl_interactive = True
-        backend = OpenCLBackend(cfg, gpu_id=0)
-        self.ideal = CLIdeal(cfg, backend)
-        self.ctx = backend.ctx
-        self.queue = backend.default_queue
+#        self.cfg = cfg
+#        self.cfg.NX = 25
+#        self.cfg.NY = 25
+#        self.cfg.NZ = 25
+#        self.cfg.BSZ= 32
+#        self.cfg.IEOS = 0
+#        self.cfg.opencl_interactive = True
+        self.ideal = CLIdeal(cfg)
+        self.ctx = self.ideal.ctx
+        self.queue = self.ideal.queue
 
 
     def test_bjorken(self):
@@ -58,7 +57,6 @@ class TestBjorken(unittest.TestCase):
         self.ideal.evolve(max_loops=200)
         history = np.array(self.ideal.history)
         tau, edmax = history[:,0], history[:,1]
-        print(edmax)
         a = (tau/tau[0])**(-4.0/3.0)
         b = edmax/edmax[0]
         np.testing.assert_almost_equal(a, b, 2)
