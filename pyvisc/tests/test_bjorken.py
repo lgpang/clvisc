@@ -18,14 +18,14 @@ from config import cfg
 
 class TestBjorken(unittest.TestCase):
     def setUp(self):
-#        self.cfg = cfg
-#        self.cfg.NX = 25
-#        self.cfg.NY = 25
-#        self.cfg.NZ = 25
-#        self.cfg.BSZ= 32
-#        self.cfg.IEOS = 0
-#        self.cfg.opencl_interactive = True
-        self.ideal = CLIdeal(cfg)
+        self.cfg = cfg
+        #self.cfg.NX = 25
+        #self.cfg.NY = 25
+        #self.cfg.NZ = 25
+        #self.cfg.BSZ= 32
+        #self.cfg.IEOS = 0
+        #self.cfg.opencl_interactive = True
+        self.ideal = CLIdeal(self.cfg)
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
 

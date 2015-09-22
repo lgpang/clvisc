@@ -34,6 +34,8 @@ class CLIdeal(object):
 
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
+
+        self.gpu_defines = self.__compile_options()
         self.__loadAndBuildCLPrg()
 
         # GX, GY, GZ are used as global_work_size which are multiples of BSZ
@@ -65,40 +67,42 @@ class CLIdeal(object):
         cl.enqueue_copy(self.queue, self.d_ev[1], self.h_ev1).wait()
         print('end of loading ini data')
 
-       
-    def __loadAndBuildCLPrg(self):
+    def __compile_options(self):
         optlist = [ 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
-        self.gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
+        gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
                 in list(self.cfg.__dict__.items()) if key in optlist ]
-        self.gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))
-        self.gpu_defines.append('-D {key}={value}'.format(key='NY', value=self.cfg.NY))
-        self.gpu_defines.append('-D {key}={value}'.format(key='NZ', value=self.cfg.NZ))
-        self.gpu_defines.append('-D {key}={value}'.format(key='SIZE',
+        gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))
+        gpu_defines.append('-D {key}={value}'.format(key='NY', value=self.cfg.NY))
+        gpu_defines.append('-D {key}={value}'.format(key='NZ', value=self.cfg.NZ))
+        gpu_defines.append('-D {key}={value}'.format(key='SIZE',
                                                       value=self.cfg.NX*self.cfg.NY*self.cfg.NZ))
 
         #local memory size along x,y,z direction with 4 boundary cells
-        self.gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=self.cfg.BSZ))
+        gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=self.cfg.BSZ))
         #determine float32 or double data type in *.cl file
         if self.cfg.use_float32:
-            self.gpu_defines.append( '-D USE_SINGLE_PRECISION' )
+            gpu_defines.append( '-D USE_SINGLE_PRECISION' )
         #choose EOS by ifdef in *.cl file
         if self.cfg.IEOS==0:
-            self.gpu_defines.append( '-D EOSI' )
+            gpu_defines.append( '-D EOSI' )
         elif self.cfg.IEOS==1:
-            self.gpu_defines.append( '-D EOSLCE' )
+            gpu_defines.append( '-D EOSLCE' )
         elif self.cfg.IEOS==2:
-            self.gpu_defines.append( '-D EOSLPCE' )
+            gpu_defines.append( '-D EOSLPCE' )
         #set the include path for the header file
-        cwd, cwf = os.path.split(__file__)
-        self.gpu_defines.append('-I '+os.path.join(cwd, 'kernel/'))
+        self.cwd, cwf = os.path.split(__file__)
+        gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
+        return gpu_defines
+      
+    def __loadAndBuildCLPrg(self):
         print(self.gpu_defines)
         #load and build *.cl programs with compile self.gpu_defines
-        with open(os.path.join(cwd, 'kernel', 'kernel_ideal.cl'), 'r') as f:
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_ideal.cl'), 'r') as f:
             prg_src = f.read()
             self.kernel_ideal = cl.Program(self.ctx, prg_src).build(
                                              options=self.gpu_defines)
 
-        with open(os.path.join(cwd, 'kernel', 'kernel_reduction.cl'), 'r') as f:
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_reduction.cl'), 'r') as f:
             src_maxEd = f.read()
             self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(
                                                  options=self.gpu_defines)
