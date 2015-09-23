@@ -5,95 +5,140 @@
 #define ALONG_Z 2
 
 
-// output: d_Src; all the others are input
-__kernel void kt_src(
+__kernel void kt_src_christoffel(
              __global real4 * d_Src,
 		     __global real4 * d_ev,
 		     const real tau,
-		     const int step,
-             const int direction) {
+             const int step) {
     int I = get_global_id(0);
-    int J = get_global_id(1);
-    int K = get_global_id(2);
-    int IND = I*NY*NZ + J*NZ + K;
-    int i = get_local_id(direction) + 2;
-    __local real4 ev[BSZ+4];
 
-    bool in_range = (I < NX && J < NY && K < NZ);
-
-    if ( in_range ) { ev[i] = d_ev[IND]; }
-
-    // barrier can not be in the if( in_range ) because that 
-    // threads with I>NX or J>NY or K>NZ never reach this point
-    // and deadlock is created in CLK_LOCAL_MEM_FENCE
-    barrier(CLK_LOCAL_MEM_FENCE);
-
-    // set boundary condition
-    if ( get_group_id(direction) != 0 && i==2 ) {
-        if ( direction == ALONG_X ) {
-            ev[0] = d_ev[(I-2)*NY*NZ+J*NZ+K];
-            ev[1] = d_ev[(I-1)*NY*NZ+J*NZ+K];
-        } else if ( direction == ALONG_Y ) {
-            ev[0] = d_ev[I*NY*NZ+(J-2)*NZ+K];
-            ev[1] = d_ev[I*NY*NZ+(J-1)*NZ+K];
-        } else if ( direction == ALONG_Z ) {
-            ev[0] = d_ev[I*NY*NZ+J*NZ+K-2];
-            ev[1] = d_ev[I*NY*NZ+J*NZ+K-1];
+    if ( I < NX*NY*NZ ) {
+        if ( step == 1 ) {
+            d_Src[I] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
         }
-    }
-    
-    // set boundary condition
-    if ( get_group_id(direction) != get_num_groups(direction)
-        && i == BSZ+1 ) {
-        if ( direction == ALONG_X ) {
-            ev[BSZ+3] = d_ev[(I+2)*NY*NZ+J*NZ+K];
-            ev[BSZ+2] = d_ev[(I+1)*NY*NZ+J*NZ+K];
-        } else if ( direction == ALONG_Y ) {
-            ev[BSZ+3] = d_ev[I*NY*NZ+(J+2)*NZ+K];
-            ev[BSZ+2] = d_ev[I*NY*NZ+(J+1)*NZ+K];
-        } else if ( direction == ALONG_Z ) {
-            ev[BSZ+3] = d_ev[I*NY*NZ+J*NZ+K+2];
-            ev[BSZ+2] = d_ev[I*NY*NZ+J*NZ+K+1];
-        }
-    }
-    
-    if ( get_global_id(direction) == 0 ) {
-       ev[0] = ev[2];
-       ev[1] = ev[2];
-    }
-    
-    int NSize[3] = {NX, NY, NZ};
-    if ( get_global_id(direction) == NSize[direction] ) {
-        ev[BSZ+3] = ev[BSZ+1];
-        ev[BSZ+2] = ev[BSZ+1];
-    }
-    barrier(CLK_LOCAL_MEM_FENCE);
+        real4 e_v = d_ev[I];
+        real ed = e_v.s0;
+        real vx = e_v.s1;
+        real vy = e_v.s2;
+        real vz = e_v.s3;
+        real pressure = P(ed);
+        real u0 = gamma(vx, vy, vz);
 
-    if ( in_range ) {
-        real4 christoffel_src = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
-        if ( direction == ALONG_X ) {
-            if ( step == 1 ) {
-               d_Src[IND] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
-            }
-            real4 e_v = ev[i];
-            real ed = e_v.s0;
-            real vx = e_v.s1;
-            real vy = e_v.s2;
-            real vz = e_v.s3;
-            real pressure = P(ed);
-            real u0 = gamma(vx, vy, vz);
-
-            // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
-            real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
-            real Ttz_tilde = (ed + pressure)*u0*u0*vz;
-            christoffel_src = (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
-        }
-
-        real DW[3] = {DX, DY, DZ*tau};
-        d_Src[IND] = d_Src[IND] - christoffel_src - kt1d(ev[i-2], ev[i-1],
-                     ev[i], ev[i+1], ev[i+2], tau, direction)/DW[direction];
+        // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
+        real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
+        real Ttz_tilde = (ed + pressure)*u0*u0*vz;
+        d_Src[I] = d_Src[I] + (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
     }
 }
+
+
+// output: d_Src; all the others are input
+__kernel void kt_src_alongx(
+             __global real4 * d_Src,
+		     __global real4 * d_ev,
+		     const real tau) {
+    int J = get_global_id(1);
+    int K = get_global_id(2);
+    __local real4 ev[NX+4];
+
+    // Use num of threads = BSZ to compute src for NX elements
+    for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
+        int IND = I*NY*NZ + J*NZ + K;
+        ev[I+2] = d_ev[IND];
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    // set boundary condition (constant extrapolation)
+    if ( get_local_id(0) == 0 ) {
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[NX+3] = ev[NX+1];
+       ev[NX+2] = ev[NX+1];
+    }
+    
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
+        int IND = I*NY*NZ + J*NZ + K;
+        int i = I + 2;
+        d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1],
+                     ev[i], ev[i+1], ev[i+2], tau, ALONG_X)/DX;
+
+    }
+}
+
+
+// output: d_Src; all the others are input
+__kernel void kt_src_alongy(
+             __global real4 * d_Src,
+		     __global real4 * d_ev,
+		     const real tau) {
+    int I = get_global_id(0);
+    int K = get_global_id(2);
+    __local real4 ev[NY+4];
+
+    // Use num of threads = BSZ to compute src for NX elements
+    for ( int J = get_local_id(1); J < NY; J = J + BSZ ) {
+        int IND = I*NY*NZ + J*NZ + K;
+        ev[J+2] = d_ev[IND];
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    // set boundary condition (constant extrapolation)
+    if ( get_global_id(1) == 0 ) {
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[NY+3] = ev[NY+1];
+       ev[NY+2] = ev[NY+1];
+    }
+    
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    for ( int J = get_global_id(1); J < NY; J = J + BSZ ) {
+        int IND = I*NY*NZ + J*NZ + K;
+        int j = J + 2;
+        d_Src[IND] = d_Src[IND] - kt1d(ev[j-2], ev[j-1],
+                     ev[j], ev[j+1], ev[j+2], tau, ALONG_Y)/DY;
+    }
+}
+
+// output: d_Src; all the others are input
+__kernel void kt_src_alongz(
+             __global real4 * d_Src,
+		     __global real4 * d_ev,
+		     const real tau) {
+    int I = get_global_id(0);
+    int J = get_global_id(1);
+    __local real4 ev[NZ+4];
+
+    // Use num of threads = BSZ to compute src for NX elements
+    for ( int K = get_local_id(2); K < NZ; K = K + BSZ ) {
+        int IND = I*NY*NZ + J*NZ + K;
+        ev[K+2] = d_ev[IND];
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    // set boundary condition (constant extrapolation)
+    if ( get_global_id(2) == 0 ) {
+       ev[0] = ev[2];
+       ev[1] = ev[2];
+       ev[NZ+3] = ev[NZ+1];
+       ev[NZ+2] = ev[NZ+1];
+    }
+    
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    for ( int K = get_global_id(2); K < NZ; K = K + BSZ ) {
+        int IND = I*NY*NZ + J*NZ + K;
+        int k = K + 2;
+        d_Src[IND] = d_Src[IND] - kt1d(ev[k-2], ev[k-1],
+                     ev[k], ev[k+1], ev[k+2], tau, ALONG_Z)/(tau*DZ);
+    }
+}
+
 
 
 /** update d_evnew with d_ev1 and d_Src*/

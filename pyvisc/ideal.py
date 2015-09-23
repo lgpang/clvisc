@@ -127,26 +127,26 @@ class CLIdeal(object):
         # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
-        #self.kernel_ideal.kt_src_alongx.set_scalar_arg_dtypes(np.float32, np.int32)
-        NX, NY, NZ = self.GX, self.GY, self.GZ
-        #print('GlobalWorkSizes=', NX, NY, NZ)
-        along_x, along_y, along_z = 0, 1, 2
-        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (self.cfg.BSZ, 1, 1),
-                        self.d_Src, self.d_ev[step], self.tau, np.int32(step),
-                        np.int32(along_x)).wait()
-        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, self.cfg.BSZ, 1),
-                        self.d_Src, self.d_ev[step], self.tau, np.int32(step),
-                        np.int32(along_y)).wait()
-        self.kernel_ideal.kt_src(self.queue, (NX,NY,NZ), (1, 1, self.cfg.BSZ),
-                        self.d_Src, self.d_ev[step], self.tau, np.int32(step),
-                        np.int32(along_z)).wait()
+        NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+        self.kernel_ideal.kt_src_christoffel(self.queue, (NX*NY*NZ, ), None,
+                         self.d_Src, self.d_ev[step], self.tau, np.int32(step)
+                         ).wait()
+
+        self.kernel_ideal.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
+                        self.d_Src, self.d_ev[step], self.tau).wait()
+
+        self.kernel_ideal.kt_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
+                        self.d_Src, self.d_ev[step], self.tau).wait()
+
+        self.kernel_ideal.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
+                        self.d_Src, self.d_ev[step], self.tau).wait()
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
         # Notice that d_Src=f(t,x) at step1 and 
         # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
         # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
-        self.kernel_ideal.update_ev(self.queue, (self.cfg.NX*self.cfg.NY*self.cfg.NZ,), None,
+        self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ, ), None,
                               self.d_ev[3-step], self.d_ev[1], self.d_Src,
                               self.tau, np.int32(step)).wait()
 
