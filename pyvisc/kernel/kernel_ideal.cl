@@ -27,7 +27,7 @@ __kernel void kt_src_christoffel(
         // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
         real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
         real Ttz_tilde = (ed + pressure)*u0*u0*vz;
-        d_Src[I] = d_Src[I] + (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
+        d_Src[I] = d_Src[I] - (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
     }
 }
 
