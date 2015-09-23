@@ -58,7 +58,7 @@ class CLVisc(object):
             self.d_Src, self.tau, halfStep, self.size ).wait()
 
         #update src2
-        #self.kernel_src2.updateSrcFromPimn(self.queue, global_size, local_size, \
+        self.kernel_src2.updateSrcFromPimn(self.queue, global_size, local_size, \
                 self.d_pi2, self.d_um1, self.d_Src, self.tau, self.size)
 
 

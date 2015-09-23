@@ -1,5 +1,4 @@
 #include<helper.h>
-#include<MWC64X.cl>
 
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
@@ -9,22 +8,6 @@ constant int INDEX[4][4] = \
     2, 5, 7, 8,
     3, 6, 8, 9};  
 
-// Read global data Ed, Uold, Unew to local memory 
-void loadEdUmu( 
-        __global real4 * d_Umu0,
-        __global real4 * d_Umu1,
-        __global real  * d_Ed,
-        __local real4 Umu0[BSZ][BSZ][BSZ], 
-        __local real4 Umu1[BSZ][BSZ][BSZ], 
-        __local real  Ed[BSZ][BSZ][BSZ], 
-        __local real CS2[BSZ][BSZ][BSZ], 
-        int i, int j, int k, int IND)
-{
-    Umu0[i][j][k]  =  d_Umu0[IND];
-    Umu1[i][j][k]  =  d_Umu1[IND];
-      Ed[i][j][k]  =  d_Ed[IND];
-     CS2[i][j][k]  =  P( Ed[i][j][k] )/max( acu, Ed[i][j][k] );
-}
 
 
 void CalcSourcesVisc( 
@@ -41,9 +24,8 @@ void CalcSourcesVisc(
 __kernel void initVisc(  
 	__global real * d_pi0,            
 	__global real * d_pi1,            
-	__global real * d_Ed,            
-	__global real4 * d_Umu0,            
-	__global real4 * d_Umu1,            
+	__global real4 * d_ev0,
+	__global real4 * d_ev1,
     const real tau0,
 	const int  Size)
 {   //In this kernel, globalsize=NDRange( Size )
@@ -53,14 +35,14 @@ __kernel void initVisc(
     d_Umu0[ idx ] = d_Umu1[ idx ];
 
     for(int i=0; i<10; i++) {
-       d_pi0[ 10*idx + i ] = 0.0;
-       d_pi1[ 10*idx + i ] = 0.0;
+       d_pi0[ 10*idx + i ] = 0.0f;
+       d_pi1[ 10*idx + i ] = 0.0f;
     }
 
     real S0 = S( d_Ed[idx] );
     d_pi0[10*idx + 4] = 2.0*ETAOS*S0/(3.0*tau0);
     d_pi0[10*idx + 7] = 2.0*ETAOS*S0/(3.0*tau0);
-    d_pi0[10*idx + 9] =-4.0*ETAOS*S0/(3.0*tau0*tau0*tau0);
+    d_pi0[10*idx + 9] =-4.0*ETAOS*S0/(3.0*tau0);
 
 
 //    int I = get_global_id(0);
