@@ -29,11 +29,43 @@ __kernel void kt_src(
     barrier(CLK_LOCAL_MEM_FENCE);
 
     // set boundary condition
-    if ( i == 2 ) {
+    if ( get_group_id(direction) != 0 && i==2 ) {
+        if ( direction == ALONG_X ) {
+            ev[0] = d_ev[(I-2)*NY*NZ+J*NZ+K];
+            ev[1] = d_ev[(I-1)*NY*NZ+J*NZ+K];
+        } else if ( direction == ALONG_Y ) {
+            ev[0] = d_ev[I*NY*NZ+(J-2)*NZ+K];
+            ev[1] = d_ev[I*NY*NZ+(J-1)*NZ+K];
+        } else if ( direction == ALONG_Z ) {
+            ev[0] = d_ev[I*NY*NZ+J*NZ+K-2];
+            ev[1] = d_ev[I*NY*NZ+J*NZ+K-1];
+        }
+    }
+    
+    // set boundary condition
+    if ( get_group_id(direction) != get_num_groups(direction)
+        && i == BSZ+1 ) {
+        if ( direction == ALONG_X ) {
+            ev[BSZ+3] = d_ev[(I+2)*NY*NZ+J*NZ+K];
+            ev[BSZ+2] = d_ev[(I+1)*NY*NZ+J*NZ+K];
+        } else if ( direction == ALONG_Y ) {
+            ev[BSZ+3] = d_ev[I*NY*NZ+(J+2)*NZ+K];
+            ev[BSZ+2] = d_ev[I*NY*NZ+(J+1)*NZ+K];
+        } else if ( direction == ALONG_Z ) {
+            ev[BSZ+3] = d_ev[I*NY*NZ+J*NZ+K+2];
+            ev[BSZ+2] = d_ev[I*NY*NZ+J*NZ+K+1];
+        }
+    }
+    
+    if ( get_global_id(direction) == 0 ) {
        ev[0] = ev[2];
        ev[1] = ev[2];
-       ev[BSZ+3] = ev[BSZ+1];
-       ev[BSZ+2] = ev[BSZ+1];
+    }
+    
+    int NSize[3] = {NX, NY, NZ};
+    if ( get_global_id(direction) == NSize[direction] ) {
+        ev[BSZ+3] = ev[BSZ+1];
+        ev[BSZ+2] = ev[BSZ+1];
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 
