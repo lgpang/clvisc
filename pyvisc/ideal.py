@@ -25,6 +25,7 @@ class CLIdeal(object):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
         self.cfg = configs
+        self.cwd, cwf = os.path.split(__file__)
 
         from backend_opencl import OpenCLBackend
         backend = OpenCLBackend(self.cfg, gpu_id)
@@ -39,11 +40,6 @@ class CLIdeal(object):
         self.viscous_on = viscous_on
         self.gpu_defines = self.__compile_options()
         self.__loadAndBuildCLPrg()
-
-        # GX, GY, GZ are used as global_work_size which are multiples of BSZ
-        self.GX = self.roundUp(self.cfg.NX, self.cfg.BSZ)
-        self.GY = self.roundUp(self.cfg.NY, self.cfg.BSZ)
-        self.GZ = self.roundUp(self.cfg.NZ, self.cfg.BSZ)
 
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
@@ -94,7 +90,6 @@ class CLIdeal(object):
         elif self.cfg.IEOS==2:
             gpu_defines.append( '-D EOSLPCE' )
         #set the include path for the header file
-        self.cwd, cwf = os.path.split(__file__)
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
         return gpu_defines
       

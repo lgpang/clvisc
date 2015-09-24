@@ -20,8 +20,8 @@ class CLVisc(object):
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
         self.compile_options = self.ideal.gpu_defines
+        self.__loadAndBuildCLPrg()
 
-        self.cwd = self.ideal.cwd
         self.size =self.ideal.size
         self.h_pi0  = np.empty(10*self.size, self.cfg.real)
 
@@ -37,8 +37,9 @@ class CLVisc(object):
 
 
     def __loadAndBuildCLPrg(self):
+        self.cwd, cwf = os.path.split(__file__)
+        print self.cwd
         #load and build *.cl programs with compile options
-
         with open(os.path.join(self.cwd, 'kernel', 'kernel_visc.cl'), 'r') as f:
             src = f.read()
             self.kernel_visc = cl.Program(self.ctx, src).build(options=self.compile_options)
@@ -67,10 +68,10 @@ if __name__ == '__main__':
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    dat = np.loadtxt(cfg.fPathIni)
     visc = CLVisc(cfg)
-    visc.ideal.load_ini(dat)
-    visc.ideal.evolve(max_loops=200)
+    #dat = np.loadtxt(cfg.fPathIni)
+    #visc.ideal.load_ini(dat)
+    #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format( dtime = t1-t0 )
 
