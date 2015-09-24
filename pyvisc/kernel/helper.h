@@ -49,6 +49,16 @@ inline real4 minmod4(real4 x, real4 y) {
     return res*(sign(x)+sign(y))*0.5f;
 }
 
+// Calc du/dt, du/dx or du/dy or du/dz where du/dz = du/(tau deta)
+inline real4 dudw(real4 ev_l, real4 ev_r, real dw) {
+    real u0_l = gamma(ev_l.s1, ev_l.s2, ev_l.s3);
+    real u0_r = gamma(ev_r.s1, ev_r.s2, ev_r.s3);
+    return (u0_r*(real4)(1.0f, ev_r.s1, ev_r.s2, ev_r.s3) -
+            u0_l*(real4)(1.0f, ev_l.s1, ev_l.s2, ev_l.s3))
+           /dw;
+}
+
+
 /** Calc maximum propagation speed along k direction
  * The maximum lam can not be bigger than 1.0f, in relativity
  * if fluid velocity is v=1, maximum cs2=1/3, the signal speed

@@ -31,15 +31,6 @@ __kernel void kt_src_christoffel(
     }
 }
 
-// Calc du/dx or du/dy or du/dz where du/dz = du/(tau deta)
-inline real4 dudw(real4 ev_l, real4 ev_r, real dw) {
-    real u0_l = gamma(ev_l.s1, ev_l.s2, ev_l.s3);
-    real u0_r = gamma(ev_r.s1, ev_r.s2, ev_r.s3);
-    return (u0_r*(real4)(1.0f, ev_r.s1, ev_r.s2, ev_r.s3) -
-            u0_l*(real4)(1.0f, ev_l.s1, ev_l.s2, ev_l.s3))
-           /dw;
-}
-
 // output: d_Src; all the others are input
 __kernel void kt_src_alongx(
              __global real4 * d_Src,
@@ -77,7 +68,6 @@ __kernel void kt_src_alongx(
 #ifdef VISCOUS_ON
         d_udx[IND] = dudw(ev[i-1], ev[i+1], 2.0f*DX);
 #endif
-
     }
 }
 
@@ -155,7 +145,10 @@ __kernel void kt_src_alongz(
         d_Src[IND] = d_Src[IND] - kt1d(ev[k-2], ev[k-1],
                      ev[k], ev[k+1], ev[k+2], tau, ALONG_Z)/(tau*DZ);
 #ifdef VISCOUS_ON
-        d_udz[IND] = dudw(ev[k-1], ev[k+1], 2.0f*tau*DZ);
+        real4 evi = ev[k];
+        real u0 = gamma(evk.s1, evk.s2, evk.s3);
+        real4 christoffel_term = (real4)(evk.s3, 0.0f, 0.0f, 1.0)*u0/tau;
+        d_udz[IND] = dudw(ev[k-1], ev[k+1], 2.0f*tau*DZ) + christoffel_term;
 #endif
     }
 }
