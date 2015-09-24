@@ -56,12 +56,6 @@ class CLIdeal(object):
 
         self.d_Src = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
 
-        # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
-        self.d_udt = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
-        self.d_udx = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
-        self.d_udy = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
-        self.d_udz = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
-
         self.submax = np.empty(64, self.cfg.real)
         self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
 
@@ -143,13 +137,13 @@ class CLIdeal(object):
                          ).wait()
 
         self.kernel_ideal.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
-                self.d_Src, self.d_udx, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.tau).wait()
 
         self.kernel_ideal.kt_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
-                self.d_Src, self.d_udy, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.tau).wait()
 
         self.kernel_ideal.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
-                self.d_Src, self.d_udz, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.tau).wait()
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]

@@ -25,6 +25,11 @@ inline real gamma(real vx, real vy, real vz){
     return 1.0f/sqrt(max(1.0f-vx*vx-vy*vy-vz*vz, acu));
 }
 
+/*!Cacl gamma from (real4)(ed, vx, vy, vz) where vz=veta in Milne space */
+inline real gamma_real4(real4 ev){
+    return 1.0f/sqrt(max(1.0f-ev.s1*ev.s1-ev.s2*ev.s2-ev.s3*ev.s3, acu));
+}
+
 /** 1D linear interpolation */
 inline real lin_int( real x1, real x2, real y1, real y2, real x )
 {
@@ -50,12 +55,8 @@ inline real4 minmod4(real4 x, real4 y) {
 }
 
 // Calc du/dt, du/dx or du/dy or du/dz where du/dz = du/(tau deta)
-inline real4 dudw(real4 ev_l, real4 ev_r, real dw) {
-    real u0_l = gamma(ev_l.s1, ev_l.s2, ev_l.s3);
-    real u0_r = gamma(ev_r.s1, ev_r.s2, ev_r.s3);
-    return (u0_r*(real4)(1.0f, ev_r.s1, ev_r.s2, ev_r.s3) -
-            u0_l*(real4)(1.0f, ev_l.s1, ev_l.s2, ev_l.s3))
-           /dw;
+inline real4 dudw(real4 ul, real4 ur, real dw) {
+    return (ur - ul)/dw;
 }
 
 
