@@ -31,10 +31,19 @@ __kernel void kt_src_christoffel(
     }
 }
 
+// Calc du/dx or du/dy or du/dz where du/dz = du/(tau deta)
+inline real4 dudw(real4 ev_l, real4 ev_r, real dw) {
+    real u0_l = gamma(ev_l.s1, ev_l.s2, ev_l.s3);
+    real u0_r = gamma(ev_r.s1, ev_r.s2, ev_r.s3);
+    return (u0_r*(real4)(1.0f, ev_r.s1, ev_r.s2, ev_r.s3) -
+            u0_l*(real4)(1.0f, ev_l.s1, ev_l.s2, ev_l.s3))
+           /dw;
+}
 
 // output: d_Src; all the others are input
 __kernel void kt_src_alongx(
              __global real4 * d_Src,
+             __global real4 * d_udx,
 		     __global real4 * d_ev,
 		     const real tau) {
     int J = get_global_id(1);
@@ -64,6 +73,10 @@ __kernel void kt_src_alongx(
         int i = I + 2;
         d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1],
                      ev[i], ev[i+1], ev[i+2], tau, ALONG_X)/DX;
+        // calc the fluid velocity gradient for viscous hydro
+#ifdef VISCOUS_ON
+        d_udx[IND] = dudw(ev[i-1], ev[i+1], 2.0f*DX);
+#endif
 
     }
 }
@@ -72,6 +85,7 @@ __kernel void kt_src_alongx(
 // output: d_Src; all the others are input
 __kernel void kt_src_alongy(
              __global real4 * d_Src,
+             __global real4 * d_udy,
 		     __global real4 * d_ev,
 		     const real tau) {
     int I = get_global_id(0);
@@ -101,12 +115,16 @@ __kernel void kt_src_alongy(
         int j = J + 2;
         d_Src[IND] = d_Src[IND] - kt1d(ev[j-2], ev[j-1],
                      ev[j], ev[j+1], ev[j+2], tau, ALONG_Y)/DY;
+#ifdef VISCOUS_ON
+        d_udy[IND] = dudw(ev[j-1], ev[j+1], 2.0f*DY);
+#endif
     }
 }
 
 // output: d_Src; all the others are input
 __kernel void kt_src_alongz(
              __global real4 * d_Src,
+             __global real4 * d_udz,
 		     __global real4 * d_ev,
 		     const real tau) {
     int I = get_global_id(0);
@@ -136,6 +154,9 @@ __kernel void kt_src_alongz(
         int k = K + 2;
         d_Src[IND] = d_Src[IND] - kt1d(ev[k-2], ev[k-1],
                      ev[k], ev[k+1], ev[k+2], tau, ALONG_Z)/(tau*DZ);
+#ifdef VISCOUS_ON
+        d_udz[IND] = dudw(ev[k-1], ev[k+1], 2.0f*tau*DZ);
+#endif
     }
 }
 

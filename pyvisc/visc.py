@@ -21,6 +21,7 @@ class CLVisc(object):
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
         self.compile_options = self.ideal.gpu_defines
+        self.__loadAndBuildCLPrg()
 
         self.cwd = self.ideal.cwd
 
@@ -38,9 +39,9 @@ class CLVisc(object):
             self.kernel_visc = cl.Program(self.ctx, src).build(
                                           options=self.compile_options)
 
-        with open(os.path.join(self.cwd, 'kernel', 'kernel_src2.cl'), 'r') as f:
-            src = f.read()
-            self.kernel_src2 = cl.Program(self.ctx, src).build(
+        #with open(os.path.join(self.cwd, 'kernel', 'kernel_src2.cl'), 'r') as f:
+        #    src = f.read()
+        #    self.kernel_src2 = cl.Program(self.ctx, src).build(
                                           options=self.compile_options)
 
     def __stepUpdate(self, step):
