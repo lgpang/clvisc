@@ -54,7 +54,7 @@ real kt1d_pimn(
 
 
 // christoffel terms from d;mu pi^{\alpha \beta}
-__kernel void kt_visc_christoffel(
+__kernel void visc_src_christoffel(
              __global real * d_Src,
              __global real * d_pi1,
 		     __global real4 * d_ev,
