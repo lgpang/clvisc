@@ -4,7 +4,7 @@
 #include"real_type.h"
 #include"EosPCEv0.cl"
 
-#define theta 1.1f
+#define THETA 1.1f
 #define hbarc 0.19733f
 #define acu 1.0E-8f
 
@@ -162,10 +162,10 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
 
    real4 DA0, DA1;
    DA0 = minmod4(0.5f*(T0m_ip1-T0m_im1),
-           minmod4(theta*(T0m_ip1-T0m_i), theta*(T0m_i-T0m_im1)));
+           minmod4(THETA*(T0m_ip1-T0m_i), THETA*(T0m_i-T0m_im1)));
 
    DA1 = minmod4(0.5f*(T0m_ip2-T0m_i),
-         minmod4(theta*(T0m_ip2-T0m_ip1), theta*(T0m_ip1-T0m_i)));
+         minmod4(THETA*(T0m_ip2-T0m_ip1), THETA*(T0m_ip1-T0m_i)));
   
    real vim1[3] = {ev_im1.s1, ev_im1.s2, ev_im1.s3};
    real vi[3] = {ev_i.s1, ev_i.s2, ev_i.s3};
@@ -191,7 +191,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real4 T0m_im2 = tau*t0m(ev_im2, pr_im2);
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod4(0.5f*(T0m_i-T0m_im2),
-           minmod4(theta*(T0m_i-T0m_im1), theta*(T0m_im1-T0m_im2)));
+           minmod4(THETA*(T0m_i-T0m_im1), THETA*(T0m_im1-T0m_im2)));
 
    AL = T0m_im1 + 0.5f * DA0;
    AR = T0m_i - 0.5f * DA1;

@@ -116,7 +116,7 @@ class CLIdeal(object):
             value += multiple - remainder
         return value
 
-    def __stepUpdate(self, step):
+    def stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
             Args:
                 gpu_ev_old: self.d_ev[1] for the 1st step,
@@ -176,10 +176,10 @@ class CLIdeal(object):
             print('tau=', self.tau, ' EdMax= ',self.edmax)
             #self.__output(n)
 
-            self.__stepUpdate(step=1)
+            self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
-            self.__stepUpdate(step=2)
+            self.stepUpdate(step=2)
  
 
 

@@ -4,6 +4,11 @@
 #define ALONG_Y 1
 #define ALONG_Z 2
 
+constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
+                           {0.0f,-1.0f, 0.0f, 0.0f},
+                           {0.0f, 0.0f,-1.0f, 0.0f},
+                           {0.0f, 0.0f, 0.0f,-1.0f}};
+
 // use pimn and ev at  i-2, i-1, i, i+1, i+2 to calc src term from flux
 // pr_mh = pr_{i-1/2} and pr_ph = pr_{i+1/2}
 // these mh, ph terms are calcualted 1 time and used 10 times by pimn
@@ -20,10 +25,10 @@ real kt1d_pimn(
 
    real DA0, DA1;
    DA0 = minmod(0.5f*(T0m_ip1-T0m_im1),
-           minmod(theta*(T0m_ip1-T0m_i), theta*(T0m_i-T0m_im1)));
+           minmod(THETA*(T0m_ip1-T0m_i), THETA*(T0m_i-T0m_im1)));
 
    DA1 = minmod(0.5f*(T0m_ip2-T0m_i),
-         minmod(theta*(T0m_ip2-T0m_ip1), theta*(T0m_ip1-T0m_i)));
+         minmod(THETA*(T0m_ip2-T0m_ip1), THETA*(T0m_ip1-T0m_i)));
 
    real  AL = T0m_i   + 0.5f * DA0;
    real  AR = T0m_ip1 - 0.5f * DA1;
@@ -38,7 +43,7 @@ real kt1d_pimn(
    real T0m_im2 = u0_im2 * pi_im2;
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod(0.5f*(T0m_i-T0m_im2),
-           minmod(theta*(T0m_i-T0m_im1), theta*(T0m_im1-T0m_im2)));
+           minmod(THETA*(T0m_i-T0m_im1), THETA*(T0m_im1-T0m_im2)));
 
    AL = T0m_im1 + 0.5f * DA0;
    AR = T0m_i - 0.5f * DA1;
@@ -150,8 +155,8 @@ __kernel void visc_src_alongx(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        d_udx[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s1, ev_ip1.s2, ev_ip1.s3)
-            -u0_im1*(real4)(1.0f, ev_im1.s1, ev_im1.s2, ev_im1.s3))/(2.0f*DX);
+        d_udx[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
+            -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DX);
         
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
@@ -229,8 +234,8 @@ __kernel void visc_src_alongy(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        d_udy[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s1, ev_ip1.s2, ev_ip1.s3)
-                      -u0_im1*(real4)(1.0f, ev_im1.s1, ev_im1.s2, ev_im1.s3))/(2.0f*DY);
+        d_udy[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
+                      -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DY);
         
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
@@ -310,8 +315,9 @@ __kernel void visc_src_alongz(
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
         real4 christoffel_term = (real4)(ev_i.s3, 0.0f, 0.0f, 1.0f)*u0_i/tau;
-        d_udz[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s1, ev_ip1.s2, ev_ip1.s3)
-                      -u0_im1*(real4)(1.0f, ev_im1.s1, ev_im1.s2, ev_im1.s3))/(2.0f*tau*DZ)
+        
+        d_udz[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
+                      -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*tau*DZ)
                       + christoffel_term;
         
         for ( int mn = 0; mn < 10; mn ++ ) {
@@ -324,4 +330,70 @@ __kernel void visc_src_alongz(
     }
 }
 
+/** update d_pinew with d_pi1 and d_Src*/
+__kernel void update_pimn(
+	__global real4 * d_pinew,
+	__global real4 * d_pi1,
+    __global real4 * d_ev1,
+    __global real4 * d_ev2,
+    __global real4 * d_udx,
+    __global real4 * d_udy,
+    __global real4 * d_udz,
+	__global real4 * d_Src,
+	const real tau,
+	const int  step)
+{
+    int I = get_global_id(0);
 
+    
+    real4 e_v1 = d_ev1[I];
+    real4 e_v2 = d_ev2[I];
+    real4 u_old = gamma_real4(e_v1)*(real4)(1.0f, e_v1.s123);
+    real4 u_new = gamma_real4(e_v2)*(real4)(1.0f, e_v2.s123);
+    real4 udt = (u_new - u_old)/DT;
+
+    real sigma[4][4];
+
+    real4 udx = d_udx[I];
+    real4 udy = d_udy[I];
+    real4 udz = d_udz[I];
+
+    // dalpha_u = (partial_t, partial_x, partial_y, partial_z)ux
+    real4 dalpha_u[4] = {(real4)(udt.s0, udx.s0, udy.s0, udz.s0),
+                         (real4)(udt.s1, udx.s1, udy.s1, udz.s1),
+                         (real4)(udt.s2, udx.s2, udy.s2, udz.s2),
+                         (real4)(udt.s3, udx.s3, udy.s3, udz.s3)};
+
+    real DU[4] = {dot(u_new, dalpha_u[0]), dot(u_new, dalpha_u[1]),
+                  dot(u_new, dalpha_u[2]), dot(u_new, dalpha_u[3])};
+    real u[4] = {u_new.s0, u_new.s1, u_new.s2, u_new.s3};
+    
+    // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
+    real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
+
+    for ( int mu = 0; mu < 4; mu ++ )
+        for ( int nu = 0; nu < 4; nu ++ ) {
+            sigma[mu][nu] = dot(gm[mu], dalpha_u[nu]) + 
+                            dot(gm[nu], dalpha_u[mu]) -
+                            (u[mu]*DU[nu] + u[nu]*DU[mu]) -
+                            2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
+
+        // real pi_old = d_pi1[10*I+mn] * umu_old.s0;
+
+        // /** step==1: Q' = Q0 + Src*DT
+        //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
+        // */
+        // pi_old = pi_old + d_Src[I]*DT/step;
+
+        // d_pinew[10*I + mn] = pi_old/umu_new;
+    }
+    
+    if ( I == (NX/2)*(NY/2)*(NZ/2) ) {
+        printf("traceless: %f - %f - %f - %f = %f \n",
+               sigma[0][0], sigma[1][1], sigma[2][2], sigma[3][3],
+           sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3]);
+        printf("umu=(%f,%f,%f,%f)\n", u[0], u[1], u[2], u[3]);
+        printf("theta=%f\n", theta);
+        printf("dtdu=(%f, %f, %f, %f)", udt.s0, udt.s1, udt.s2, udt.s3);
+    }
+}
