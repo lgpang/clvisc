@@ -67,7 +67,7 @@ class CLVisc(object):
                 self.ideal.d_Src, self.d_udy, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau).wait()
 
         print "udy along y"
-        self.kernel_visc.visc_src_alongy(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
+        self.kernel_visc.visc_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
                 self.ideal.d_Src, self.d_udz, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau).wait()
 
         print "udz along z"
@@ -102,9 +102,9 @@ if __name__ == '__main__':
     from config import cfg
     import pandas as pd
     visc = CLVisc(cfg)
-    # dat = np.loadtxt(cfg.fPathIni)
-    dat = pd.read_csv(cfg.fPathIni, sep=' ', skiprows=1,
-            header=None, dtype=cfg.real).values
+    dat = np.loadtxt(cfg.fPathIni)
+    #dat = pd.read_csv(cfg.fPathIni, sep=' ', skiprows=1,
+    #        header=None, dtype=cfg.real).values
     visc.ideal.load_ini(dat)
     visc.evolve(max_loops=20)
     #visc.ideal.evolve(max_loops=200)

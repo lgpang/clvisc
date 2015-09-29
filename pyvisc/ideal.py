@@ -174,7 +174,7 @@ class CLIdeal(object):
             self.edmax = self.__edMax()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            #self.__output(n)
+            self.__output(n)
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
@@ -188,10 +188,13 @@ def main():
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
     from config import cfg
+    import pandas as pd
     print('start ...')
     t0 = time()
     ideal = CLIdeal(cfg)
     dat = np.loadtxt(cfg.fPathIni)
+        #dat = pd.read_csv(cfg.fPathIni, sep=' ', skiprows=1,
+        #                 header=None, dtype=cfg.real).values
     ideal.load_ini(dat)
     ideal.evolve()
     t1 = time()

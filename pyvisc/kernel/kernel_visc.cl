@@ -388,7 +388,7 @@ __kernel void update_pimn(
         // d_pinew[10*I + mn] = pi_old/umu_new;
     }
     
-    if ( I == (NX/2)*(NY/2)*(NZ/2) ) {
+    if ( I == (10)*(10)*(NZ/2) ) {
         printf("traceless: %f - %f - %f - %f = %f \n",
                sigma[0][0], sigma[1][1], sigma[2][2], sigma[3][3],
            sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3]);
