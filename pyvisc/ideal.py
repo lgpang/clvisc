@@ -9,6 +9,7 @@ from pyopencl import array
 import os
 import sys
 from time import time
+import matplotlib.pyplot as plt
 
 
 def get_device_info(devices):
@@ -149,7 +150,7 @@ class CLIdeal(object):
                               self.d_ev[3-step], self.d_ev[1], self.d_Src,
                               self.tau, np.int32(step)).wait()
 
-    def __edMax(self):
+    def max_energy_density(self):
         '''Calc the maximum energy density on GPU and output the value '''
         self.kernel_reduction.reduction_stage1(self.queue, (256*64,), (256,), 
                 self.d_ev[1], self.d_submax, np.int32(self.size) ).wait()
@@ -157,24 +158,26 @@ class CLIdeal(object):
         return self.submax.max()
 
 
-    def __output(self, nstep):
+    def output(self, nstep):
         if nstep%self.cfg.ntskip == 0:
             cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev[1]).wait()
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=self.cfg.fPathOut, nstep=nstep)
-            edxy = self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,self.cfg.NZ//2]
-            np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
-                    [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed')
+            edxy = self.h_ev1[:,1].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,self.cfg.NZ//2]
+            #np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
+            #        [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed, vx, vy, veta')
+            plt.imshow(edxy)
+            plt.show()
 
 
 
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
-            self.edmax = self.__edMax()
+            self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.__output(n)
+            self.output(n)
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
@@ -193,8 +196,8 @@ def main():
     t0 = time()
     ideal = CLIdeal(cfg)
     dat = np.loadtxt(cfg.fPathIni)
-        #dat = pd.read_csv(cfg.fPathIni, sep=' ', skiprows=1,
-        #                 header=None, dtype=cfg.real).values
+    #dat = pd.read_csv(cfg.fPathIni, sep=' ', header=0, dtype=cfg.real).values
+    print(dat)
     ideal.load_ini(dat)
     ideal.evolve()
     t1 = time()

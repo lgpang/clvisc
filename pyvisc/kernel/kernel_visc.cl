@@ -13,40 +13,33 @@ constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
 // pr_mh = pr_{i-1/2} and pr_ph = pr_{i+1/2}
 // these mh, ph terms are calcualted 1 time and used 10 times by pimn
 real kt1d_pimn(
-       real pi_im2, real pi_im1, real pi_i, real pi_ip1, real pi_ip2,
-       real u0_im2, real u0_im1, real u0_i, real u0_ip1, real u0_ip2,
+       real Q_im2, real Q_im1, real Q_i, real Q_ip1, real Q_ip2,
        real pr_mh, real pr_ph, real v_mh, real v_ph, real lam_mh, real lam_ph,
        real tau, int along)
 {
-   real T0m_im1 = u0_im1 * pi_im1;
-   real T0m_i = u0_i * pi_i;
-   real T0m_ip1 = u0_ip1 * pi_ip1;
-   real T0m_ip2 = u0_ip2 * pi_ip2;
-
    real DA0, DA1;
-   DA0 = minmod(0.5f*(T0m_ip1-T0m_im1),
-           minmod(THETA*(T0m_ip1-T0m_i), THETA*(T0m_i-T0m_im1)));
+   DA0 = minmod(0.5f*(Q_ip1-Q_im1),
+           minmod(THETA*(Q_ip1-Q_i), THETA*(Q_i-Q_im1)));
 
-   DA1 = minmod(0.5f*(T0m_ip2-T0m_i),
-         minmod(THETA*(T0m_ip2-T0m_ip1), THETA*(T0m_ip1-T0m_i)));
+   DA1 = minmod(0.5f*(Q_ip2-Q_i),
+         minmod(THETA*(Q_ip2-Q_ip1), THETA*(Q_ip1-Q_i)));
 
-   real  AL = T0m_i   + 0.5f * DA0;
-   real  AR = T0m_ip1 - 0.5f * DA1;
+   real  AL = Q_i   + 0.5f * DA0;
+   real  AR = Q_ip1 - 0.5f * DA1;
 
-   // Flux Jp = (T0m + pr*g^{tau mu})*v^x - pr*g^{x mu}
+   // Flux Jp = (Q + pr*g^{tau mu})*v^x - pr*g^{x mu}
    real Jp = AR * v_ph;
    real Jm = AL * v_ph;
 
    // first part of kt1d; the final results = src[i]-src[i-1]
    real src = 0.5f*(Jp+Jm) - 0.5f*lam_ph*(AR-AL);
 
-   real T0m_im2 = u0_im2 * pi_im2;
    DA1 = DA0;  // reuse the previous calculate value
-   DA0 = minmod(0.5f*(T0m_i-T0m_im2),
-           minmod(THETA*(T0m_i-T0m_im1), THETA*(T0m_im1-T0m_im2)));
+   DA0 = minmod(0.5f*(Q_i-Q_im2),
+           minmod(THETA*(Q_i-Q_im1), THETA*(Q_im1-Q_im2)));
 
-   AL = T0m_im1 + 0.5f * DA0;
-   AR = T0m_i - 0.5f * DA1;
+   AL = Q_im1 + 0.5f * DA0;
+   AR = Q_i - 0.5f * DA1;
 
    Jp = AR*v_mh;
    Jm = AL*v_mh;
@@ -160,9 +153,9 @@ __kernel void visc_src_alongx(
         
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
-               pimn[(i-2)*10+mn], pimn[(i-1)*10+mn], pimn[i*10+mn],
-               pimn[(i+1)*10+mn], pimn[(i+2)*10+mn],
-               u0_im2, u0_im1, u0_i, u0_ip1, u0_ip2,
+               u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
+               u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
+               u0_ip2*pimn[(i+2)*10+mn],
                pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_X)/DX;
         }
     }
@@ -239,10 +232,10 @@ __kernel void visc_src_alongy(
         
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
-                        pimn[(i-2)*10+mn], pimn[(i-1)*10+mn], pimn[i*10+mn],
-                        pimn[(i+1)*10+mn], pimn[(i+2)*10+mn],
-                        u0_im2, u0_im1, u0_i, u0_ip1, u0_ip2,
-                        pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Y)/DY;
+               u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
+               u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
+               u0_ip2*pimn[(i+2)*10+mn],
+               pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Y)/DY;
         }
     }
 }
@@ -265,7 +258,7 @@ __kernel void visc_src_alongz(
     
     // Use num of threads = BSZ to compute src for NX elements
     // 10 pimn terms are stored continuesly
-    for ( int K = get_global_id(0); K < NZ; K = K + BSZ ) {
+    for ( int K = get_global_id(2); K < NZ; K = K + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[K+2] = d_ev[IND];
         int startK = 10*K + 2;
@@ -276,7 +269,7 @@ __kernel void visc_src_alongz(
     barrier(CLK_LOCAL_MEM_FENCE);
     
     // set boundary condition (constant extrapolation)
-    if ( get_local_id(1) == 0 ) {
+    if ( get_local_id(2) == 0 ) {
         ev[0] = ev[2];
         ev[1] = ev[2];
         ev[NZ+3] = ev[NZ+1];
@@ -322,16 +315,17 @@ __kernel void visc_src_alongz(
         
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
-                  pimn[(i-2)*10+mn], pimn[(i-1)*10+mn], pimn[i*10+mn],
-                  pimn[(i+1)*10+mn], pimn[(i+2)*10+mn],
-                  u0_im2, u0_im1, u0_i, u0_ip1, u0_ip2,
-                  pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Y)/(tau*DZ);
+               u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
+               u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
+               u0_ip2*pimn[(i+2)*10+mn],
+               pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Z)/(tau*DZ);
         }
     }
 }
 
 /** update d_pinew with d_pi1 and d_Src*/
 __kernel void update_pimn(
+	__global real4 * d_checkpi,
 	__global real4 * d_pinew,
 	__global real4 * d_pi1,
     __global real4 * d_ev1,
@@ -387,13 +381,22 @@ __kernel void update_pimn(
 
         // d_pinew[10*I + mn] = pi_old/umu_new;
     }
+
+    // u[0]*sigma[0][0]-u[1]*sigma[1][0]-u[2]*sigma[2][0]-u[3]*sigma[3][0],
+    d_checkpi[I] = (real4)(sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3],
+    u[0]*sigma[0][1]-u[1]*sigma[1][1]-u[2]*sigma[2][1]-u[3]*sigma[3][1],
+    u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
+    u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
     
-    if ( I == (10)*(10)*(NZ/2) ) {
-        printf("traceless: %f - %f - %f - %f = %f \n",
-               sigma[0][0], sigma[1][1], sigma[2][2], sigma[3][3],
-           sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3]);
-        printf("umu=(%f,%f,%f,%f)\n", u[0], u[1], u[2], u[3]);
-        printf("theta=%f\n", theta);
-        printf("dtdu=(%f, %f, %f, %f)", udt.s0, udt.s1, udt.s2, udt.s3);
-    }
+    // if ( I == NX*NY*NZ/8 ) {
+    //     printf("ev1.s0=%f\n", e_v1.s0);
+    //     printf("traceless: %f - %f - %f - %f = %f \n",
+    //            sigma[0][0], sigma[1][1], sigma[2][2], sigma[3][3],
+    //        sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3]);
+    //     printf("umu=(%f,%f,%f,%f)\n", u[0], u[1], u[2], u[3]);
+    //     printf("unew(%f,%f,%f,%f)\n", u_new.s0, u_new.s1, u_new.s2, u_new.s3);
+    //     printf("theta=%f\n", theta);
+    //     printf("dtdu=(%f, %f, %f, %f)", udt.s0, udt.s1, udt.s2, udt.s3);
+    //     printf("dxdu=(%f, %f, %f, %f)", udx.s0, udx.s1, udx.s2, udx.s3);
+    // }
 }
