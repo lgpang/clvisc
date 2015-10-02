@@ -25,12 +25,13 @@ class CLVisc(object):
         self.__loadAndBuildCLPrg()
 
         self.size =self.ideal.size
-        self.h_pi0  = np.empty(10*self.size, self.cfg.real)
+        #self.h_pi0  = np.empty(10*self.size, self.cfg.real)
+        self.h_pi0  = np.zeros(10*self.size, self.cfg.real)
 
         mf = cl.mem_flags
         self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
                      cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
-                    cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes) ]
+                     cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes) ]
         self.d_IS_src = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
         # datatypes are real4
@@ -40,6 +41,8 @@ class CLVisc(object):
         self.d_udz = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
         # traceless and transverse check
         self.d_checkpi = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+
+        cl.enqueue_copy(self.queue, self.d_pi[1], self.h_pi0).wait()
 
 
     def __loadAndBuildCLPrg(self):
@@ -61,6 +64,10 @@ class CLVisc(object):
 
         print "ideal update finished"
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+
+        self.kernel_visc.visc_src_christoffel(self.queue, (NX*NY*NZ,), None,
+                self.d_IS_src, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau, np.int32(step));
+
         self.kernel_visc.visc_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
                 self.d_IS_src, self.d_udx, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau).wait()
 
@@ -75,8 +82,8 @@ class CLVisc(object):
 
         print "udz along z"
         self.kernel_visc.update_pimn(self.queue, (NX*NY*NZ,), None,
-                self.d_checkpi, self.d_pi[2], self.d_pi[1],
-                self.ideal.d_ev[1], self.ideal.d_ev[3-step],
+                self.d_checkpi, self.d_pi[3-step], self.d_pi[1],
+                self.ideal.d_ev[0], self.ideal.d_ev[3-step],
                 self.d_udx, self.d_udy, self.d_udz, self.ideal.d_Src,
                 self.ideal.tau, np.int32(step)
                 ).wait()
@@ -87,7 +94,15 @@ class CLVisc(object):
     def __output(self, nt):
         pass
 
+    def plot_sigma_traceless(self):
+        cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.d_checkpi).wait()
+        edxy = self.ideal.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,55]
+        plt.imshow(edxy.T)
+        plt.colorbar()
+        plt.show()
+
     def evolve(self, max_loops=1000, ntskip=10):
+        '''The main loop of hydrodynamic evolution '''
         for loop in xrange(max_loops):
             cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
                             self.ideal.d_ev[1]).wait()
@@ -97,15 +112,9 @@ class CLVisc(object):
             self.ideal.tau = self.cfg.real(self.cfg.TAU0 +
                     (loop+1)*self.cfg.DT)
             self.stepUpdate(step=2)
+            if loop % ntskip == 0:
+                self.plot_sigma_traceless()
 
-            cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.d_checkpi).wait()
-            edxy = self.ideal.h_ev1[:,3].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,55]
-            plt.imshow(edxy.T)
-            plt.colorbar()
-            plt.show()
-
-
-        '''The main loop of hydrodynamic evolution '''
 
 
 
@@ -121,7 +130,7 @@ if __name__ == '__main__':
     #dat = pd.read_csv(cfg.fPathIni, sep=' ', skiprows=1,
     #        header=None, dtype=cfg.real).values
     visc.ideal.load_ini(dat)
-    visc.evolve(max_loops=20)
+    visc.evolve(max_loops=40)
     #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)

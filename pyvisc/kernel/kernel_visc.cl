@@ -50,7 +50,6 @@ real kt1d_pimn(
    return src;
 }
 
-
 // christoffel terms from d;mu pi^{\alpha \beta}
 __kernel void visc_src_christoffel(
              __global real * d_Src,
@@ -326,14 +325,14 @@ __kernel void visc_src_alongz(
 /** update d_pinew with d_pi1 and d_Src*/
 __kernel void update_pimn(
 	__global real4 * d_checkpi,
-	__global real4 * d_pinew,
-	__global real4 * d_pi1,
+	__global real * d_pinew,
+	__global real * d_pi1,
     __global real4 * d_ev1,
     __global real4 * d_ev2,
     __global real4 * d_udx,
     __global real4 * d_udy,
     __global real4 * d_udz,
-	__global real4 * d_Src,
+	__global real * d_Src,
 	const real tau,
 	const int  step)
 {
@@ -365,6 +364,13 @@ __kernel void update_pimn(
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
     real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
+    real etav = ETAOS * S(e_v2.s0) * hbarc;
+
+    real pi1[10];
+    for ( int mn=0; mn < 10; mn ++ ) {
+        pi1[mn] = d_pi1[10*I+mn];
+    }
+
     for ( int mu = 0; mu < 4; mu ++ )
         for ( int nu = 0; nu < 4; nu ++ ) {
             sigma[mu][nu] = dot(gm[mu], dalpha_u[nu]) + 
@@ -372,18 +378,29 @@ __kernel void update_pimn(
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
 
-        // real pi_old = d_pi1[10*I+mn] * umu_old.s0;
+            int mn = idx(mu, nu);
+            real pi_old = pi1[mn] * u_old.s0;
 
         // /** step==1: Q' = Q0 + Src*DT
         //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
         // */
-        // pi_old = pi_old + d_Src[I]*DT/step;
 
-        // d_pinew[10*I + mn] = pi_old/umu_new;
+            real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/0.3f;
+            real src = d_Src[I] + stiff_term - pi1[mn]*theta/3.0f - u_old.s0/tau;
+            src -= (u[mu]*pi1[idx(nu,0)] + u[nu]*pi1[idx(mu,0)])*DU[0];
+            src -= (u[mu]*pi1[idx(nu,1)] + u[nu]*pi1[idx(mu,1)])*DU[1];
+            src -= (u[mu]*pi1[idx(nu,2)] + u[nu]*pi1[idx(mu,2)])*DU[2];
+            src -= (u[mu]*pi1[idx(nu,3)] + u[nu]*pi1[idx(mu,3)])*DU[3];
+
+            pi_old = pi_old + src*DT/step;
+
+            d_pinew[10*I + mn] = pi_old/u_new.s0;
     }
 
     // u[0]*sigma[0][0]-u[1]*sigma[1][0]-u[2]*sigma[2][0]-u[3]*sigma[3][0],
-    d_checkpi[I] = (real4)(sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3],
+    //d_checkpi[I] = (real4)(sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3],
+    d_checkpi[I] = (real4)(d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
+                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)],
     u[0]*sigma[0][1]-u[1]*sigma[1][1]-u[2]*sigma[2][1]-u[3]*sigma[3][1],
     u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
     u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
