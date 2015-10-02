@@ -90,6 +90,7 @@ def read_config():
     
     args, unknown = parser.parse_known_args()
 
+    args.sz_int = np.dtype('int32').itemsize   #==sizeof(int) in c
     if args.use_float32 == True :
         args.real = np.float32
         args.real4 = array.vec.float4

@@ -55,6 +55,12 @@ class CLIdeal(object):
 
         self.submax = np.empty(64, self.cfg.real)
         self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
+        # d_ev_old: for hypersf calculation; 
+        self.d_ev_old = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
+        # d_hypersf: store the dSigma^{mu}, vx, vy, veta, tau, x, y, eta
+        # on freeze out hyper surface
+        self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=11*1000000*self.cfg.sz_real)
+        self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.cfg.sz_int)
 
         self.history = []
  
@@ -106,6 +112,19 @@ class CLIdeal(object):
             src_maxEd = f.read()
             self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(
                                                  options=self.gpu_defines)
+
+        hypersf_defines = list(self.gpu_defines)
+        hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
+        hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
+        hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
+        hypersf_defines.append('-D {key}={value}'.format(key='EFRZ', value=0.25))
+        print(hypersf_defines)
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_hypersf.cl'), 'r') as f:
+            src_hypersf = f.read()
+            self.kernel_hypersf = cl.Program(self.ctx, src_hypersf).build(
+                                                 options=hypersf_defines)
+
+
 
     @classmethod
     def roundUp(cls, value, multiple):
@@ -169,15 +188,36 @@ class CLIdeal(object):
             plt.imshow(edxy)
             plt.show()
 
+    def get_hypersf(self, n, ntskip):
+        '''get the freeze out hyper surface from d_ev_old and d_ev_new
+        global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
+        nx = self.cfg.NX//self.cfg.nxskip
+        ny = self.cfg.NY//self.cfg.nyskip
+        nz = self.cfg.NZ//self.cfg.nzskip
+        if ( n % ntskip == 0 and n != 0 ):
+            time_interval = self.cfg.ntskip*self.cfg.DT
+            self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
+                    self.d_hypersf, self.d_num_of_sf, self.d_ev_old,
+                    self.d_ev[1], self.cfg.real(time_interval)).wait()
+
+            cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
+            num_of_sf = np.zeros(1, dtype=np.int32)
+            cl.enqueue_copy(self.queue, num_of_sf, self.d_num_of_sf).wait()
+            print("num of sf=", num_of_sf)
+
+
+
 
 
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
+        cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.output(n)
+            self.get_hypersf(n, ntskip)
+            #self.output(n)
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
