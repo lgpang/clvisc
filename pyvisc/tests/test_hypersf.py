@@ -28,16 +28,23 @@ class TestHypersf(unittest.TestCase):
         ed=3 at (n=1, i,j,k=*) and EFRZ=2.5 to calc the volumn of
         3D cube at ed=2.5 freeze out hypersurface in 4D space.
         '''
-        with open('../kernel/kernel_hyperfs.cl', 'r') as f:
+        with open('../kernel/kernel_hypersf.cl', 'r') as f:
             kernel_src = f.read()
 
         cwd, cwf = os.path.split(__file__)
     
         compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
         compile_options.append('-D USE_SINGLE_PRECISION')
-        compile_options.append('-D nx_skip=10')
-        compile_options.append('-D ny_skip=10')
-        compile_options.append('-D nz_skip=10')
+        compile_options.append('-D NX=205')
+        compile_options.append('-D NY=205')
+        compile_options.append('-D NZ=85')
+        compile_options.append('-D nxskip=10')
+        compile_options.append('-D nyskip=10')
+        compile_options.append('-D nzskip=10')
+        compile_options.append('-D DT=0.02')
+        compile_options.append('-D DX=0.16')
+        compile_options.append('-D DY=0.16')
+        compile_options.append('-D DZ=0.3')
         compile_options.append('-D EFRZ=2.5f')
         compile_options.append('-D EOSI')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)

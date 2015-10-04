@@ -67,10 +67,11 @@ real rand(int* seed);
 void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
                            real4 * mass_center);
 
-// contribute to the energy flow vector
+// contribute of the energy density at cube corner to the energy flow vector
 void contribution_from(__private real ed_cube[16], int n, int i, int j, int k,
                    real4 *vl, real4 *vh, real *elsum, real *ehsum);
 
+// get the energy flow direction
 real4 energy_flow(__private real ed_cube[16]);
 
 // get the total area of all the hypersurface on the convex hull whose norm
@@ -168,28 +169,19 @@ bool is_on_convex_hull(hypersf sf, real4 * mass_center,
 }
 
 // get the weight of energy from each corner of the cube
+// n, i, j, k can only be 0 or 1
 void contribution_from(__private real ed_cube[16], int n, int i, int j, int k,
                               real4 *vl, real4 *vh, real *elsum, real *ehsum) {
     int id = 8*n + 4*k + 2*j + i;
-    real vl_tmp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    real vh_tmp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     real dek = EFRZ - ed_cube[id];
     real adek = fabs(dek);
     if ( dek > 0.0f ) {
         *elsum += adek;
-        if ( n == 1 ) vl_tmp[0] = adek;
-        if ( i == 1 ) vl_tmp[1] = adek;
-        if ( j == 1 ) vl_tmp[2] = adek;
-        if ( k == 1 ) vl_tmp[3] = adek;
+        *vl +=  (real4)(n, i, j, k)*adek;
     } else {
         *ehsum += adek;
-        if ( n == 1 ) vh_tmp[0] = adek;
-        if ( i == 1 ) vh_tmp[1] = adek;
-        if ( j == 1 ) vh_tmp[2] = adek;
-        if ( k == 1 ) vh_tmp[3] = adek;
+        *vh +=  (real4)(n, i, j, k)*adek;
     }
-    *vl +=  (real4)(vl_tmp[0], vl_tmp[1], vl_tmp[2], vl_tmp[3]);
-    *vh +=  (real4)(vh_tmp[0], vh_tmp[1], vh_tmp[2], vh_tmp[3]);
 }
 
 // get the energy flow vector
