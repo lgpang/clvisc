@@ -342,14 +342,37 @@ __kernel void test_hypersf(__global real4 * result) {
 }
 
 
-// // return the index in the global array
-// // I, J, K: thread id along x, y, z
-// // i, j, k: 3d pos in d_ev[] array
+// return the index in the global array
+// I, J, K: thread id along x, y, z
+// i, j, k: 3d pos in d_ev[] array
 inline int idn(int I, int J, int K) {
     int i = I*nxskip;
     int j = J*nyskip;
     int k = K*nzskip;
     return i*NY*NZ + j*NZ + k;
+}
+
+// get the ed, v at the mass center by 4d interpolation
+// mc means mass_center
+real4 centroid_ev(__private real4 ev_cube[16], real4 mc){
+    real4 centroid;
+    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[0]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[1]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*ev_cube[2]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*ev_cube[3]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*ev_cube[4]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*ev_cube[5]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*ev_cube[6]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*ev_cube[7]
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[8]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[9]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*ev_cube[10]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*ev_cube[11]
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*ev_cube[12]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*ev_cube[13]
+             + mc.s0*mc.s1*mc.s2*mc.s3*ev_cube[14]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*ev_cube[15];
+    return centroid;
 }
 
 // calc the hypersf and store them in one buffer DA0, DA1, DA2, DA3,
@@ -358,7 +381,8 @@ __kernel void get_hypersf(__global real  * d_sf,
                           __global int * num_of_sf,
                           __global real4 * d_ev_old,
                           __global real4 * d_ev_new,
-                          const real time_interval) {
+                          const real time_old,
+                          const real time_new) {
     __private real4 ev_cube[16];
     __private real ed_cube[16];
     int i = get_global_id(0);
@@ -405,23 +429,35 @@ __kernel void get_hypersf(__global real  * d_sf,
     }
     
     if ( is_surf ) {
-        real dtd = time_interval;
+        real dtd = time_new - time_old;
         real dxd = nxskip*DX;
         real dyd = nyskip*DY;
         real dzd = nzskip*DZ;
+
+        // space-time centroid of the freeze out hyper-surface
+        real tau = time_old + mass_center.s0*dtd;
+        real x = i*DX + mass_center.s1*dxd;
+        real y = j*DY + mass_center.s2*dyd;
+        real eta = k*DZ + mass_center.s3*dzd;
+
         d_sf[11*num_of_sf[0]+0] = tau*dxd*dyd*dzd*d_Sigma.s0;
         d_sf[11*num_of_sf[0]+1] = tau*dtd*dyd*dzd*d_Sigma.s1;
         d_sf[11*num_of_sf[0]+2] = tau*dtd*dxd*dzd*d_Sigma.s2;
         d_sf[11*num_of_sf[0]+3] = tau*dtd*dxd*dyd*d_Sigma.s3;
 
-        //d_sf[11*num_of_sf[0]+4] = vx;
-        //d_sf[11*num_of_sf[0]+5] = vy;
-        //d_sf[11*num_of_sf[0]+6] = vz;
-        //d_sf[11*num_of_sf[0]+7] = tau;
-        //d_sf[11*num_of_sf[0]+8] = x;
-        //d_sf[11*num_of_sf[0]+9] = y;
-        //d_sf[11*num_of_sf[0]+10] = z;
-        atomic_add(num_of_sf, 1);
-    }
+        real4 ev = centroid_ev(ev_cube, mass_center);
 
+        d_sf[11*num_of_sf[0]+4] = ev.s1;
+        d_sf[11*num_of_sf[0]+5] = ev.s2;
+        d_sf[11*num_of_sf[0]+6] = ev.s3;
+        d_sf[11*num_of_sf[0]+7] = tau;
+        d_sf[11*num_of_sf[0]+8] = x;
+        d_sf[11*num_of_sf[0]+9] = y;
+        d_sf[11*num_of_sf[0]+10] = eta;
+        atomic_add(num_of_sf, 1);
+        if ( get_global_id(0) == 0 ) {
+            printf("dtd=%f, dxd=%f, dyd=%f, dzd=%f, tau=%f, EFRZ=%f",
+                   dtd, dxd, dyd, dzd, tau, EFRZ);
+        }
+    }
 }

@@ -188,41 +188,47 @@ class CLIdeal(object):
             plt.imshow(edxy)
             plt.show()
 
-    def get_hypersf(self, n, ntskip):
+    def get_hypersf(self, n, ntskip, tau_old):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
         global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
+        tau_new = self.cfg.TAU0 + n*self.cfg.DT
         nx = self.cfg.NX//self.cfg.nxskip
         ny = self.cfg.NY//self.cfg.nyskip
         nz = self.cfg.NZ//self.cfg.nzskip
         if ( n % ntskip == 0 and n != 0 ):
             time_interval = self.cfg.ntskip*self.cfg.DT
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
-                    self.d_hypersf, self.d_num_of_sf, self.d_ev_old,
-                    self.d_ev[1], self.cfg.real(time_interval)).wait()
+                    self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
+                    self.cfg.real(tau_old), self.cfg.real(tau_new)).wait()
 
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
-            num_of_sf = np.zeros(1, dtype=np.int32)
-            cl.enqueue_copy(self.queue, num_of_sf, self.d_num_of_sf).wait()
-            print("num of sf=", num_of_sf)
-
-
-
+            self.num_of_sf = np.zeros(1, dtype=np.int32)
+            cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
+            print("num of sf=", self.num_of_sf)
 
 
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
         cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
+        tau_old = self.cfg.TAU0
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.get_hypersf(n, ntskip)
+            self.get_hypersf(n, ntskip, tau_old)
             #self.output(n)
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.stepUpdate(step=2)
+
+        hypersf = np.empty(11*self.num_of_sf, dtype=self.cfg.real)
+        cl.enqueue_copy(self.queue, hypersf, self.d_hypersf)
+        out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
+        np.savetxt(out_path, hypersf.reshape(self.num_of_sf, 11),
+            header = 'dS0, dS1, dS2, dS3, vx, vy, veta, tau, x, y, etas')
+            
  
 
 
@@ -239,7 +245,7 @@ def main():
     #dat = pd.read_csv(cfg.fPathIni, sep=' ', header=0, dtype=cfg.real).values
     print(dat)
     ideal.load_ini(dat)
-    ideal.evolve()
+    ideal.evolve(max_loops = 40)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
