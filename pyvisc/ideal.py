@@ -59,7 +59,7 @@ class CLIdeal(object):
         self.d_ev_old = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
         # d_hypersf: store the dSigma^{mu}, vx, vy, veta, tau, x, y, eta
         # on freeze out hyper surface
-        self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=11*1000000*self.cfg.sz_real)
+        self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1000000*self.cfg.sz_real8)
         self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.cfg.sz_int)
 
         self.history = []
@@ -223,10 +223,11 @@ class CLIdeal(object):
             self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.stepUpdate(step=2)
 
-        hypersf = np.empty(11*self.num_of_sf, dtype=self.cfg.real)
+        hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
         cl.enqueue_copy(self.queue, hypersf, self.d_hypersf)
         out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-        np.savetxt(out_path, hypersf.reshape(self.num_of_sf, 11),
+        #np.savetxt(out_path, hypersf.reshape(self.num_of_sf, 8),
+        np.savetxt(out_path, hypersf,
             header = 'dS0, dS1, dS2, dS3, vx, vy, veta, tau, x, y, etas')
             
  

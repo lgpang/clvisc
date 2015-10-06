@@ -94,13 +94,17 @@ def read_config():
     if args.use_float32 == True :
         args.real = np.float32
         args.real4 = array.vec.float4
+        args.real8 = array.vec.float8
         args.sz_real = np.dtype('float32').itemsize   #==sizeof(float) in c
         args.sz_real4 = array.vec.float4.itemsize
+        args.sz_real8 = array.vec.float8.itemsize
     else :
         args.real = np.float64
         args.real4 = array.vec.double4
+        args.real8 = array.vec.double8
         args.sz_real = np.dtype('float64').itemsize   #==sizeof(double) in c
         args.sz_real4= array.vec.double4.itemsize
+        args.sz_real8= array.vec.double8.itemsize
 
     return args
 

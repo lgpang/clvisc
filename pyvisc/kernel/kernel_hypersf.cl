@@ -369,7 +369,7 @@ real4 centroid_ev(__private real4 ev_cube[16], real4 mc){
 
 // calc the hypersf and store them in one buffer DA0, DA1, DA2, DA3,
 // vx, vy, veta, tau, x, y, eta
-__kernel void get_hypersf(__global real  * d_sf,
+__kernel void get_hypersf(__global real8  * d_sf,
                           __global int * num_of_sf,
                           __global real4 * d_ev_old,
                           __global real4 * d_ev_new,
@@ -432,24 +432,21 @@ __kernel void get_hypersf(__global real  * d_sf,
         real y = j*DY + mass_center.s2*dyd;
         real eta = k*DZ + mass_center.s3*dzd;
 
-        d_sf[11*num_of_sf[0]+0] = tau*dxd*dyd*dzd*d_Sigma.s0;
-        d_sf[11*num_of_sf[0]+1] = tau*dtd*dyd*dzd*d_Sigma.s1;
-        d_sf[11*num_of_sf[0]+2] = tau*dtd*dxd*dzd*d_Sigma.s2;
-        d_sf[11*num_of_sf[0]+3] = tau*dtd*dxd*dyd*d_Sigma.s3;
-
         real4 ev = centroid_ev(ev_cube, mass_center);
 
-        d_sf[11*num_of_sf[0]+4] = ev.s1;
-        d_sf[11*num_of_sf[0]+5] = ev.s2;
-        d_sf[11*num_of_sf[0]+6] = ev.s3;
-        d_sf[11*num_of_sf[0]+7] = tau;
-        d_sf[11*num_of_sf[0]+8] = x;
-        d_sf[11*num_of_sf[0]+9] = y;
-        d_sf[11*num_of_sf[0]+10] = eta;
-        atomic_add(num_of_sf, 1);
-        if ( get_global_id(0) == 0 ) {
-            printf("dtd=%f, dxd=%f, dyd=%f, dzd=%f, tau=%f, EFRZ=%f",
-                   dtd, dxd, dyd, dzd, tau, EFRZ);
-        }
+        real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
+                               tau*dtd*dyd*dzd*d_Sigma.s1,
+                               tau*dtd*dxd*dzd*d_Sigma.s2,
+                               tau*dtd*dxd*dyd*d_Sigma.s3,
+                               ev.s1, ev.s2, ev.s3, eta);
+                               
+
+        // atomic_add(num_of_sf, 1);
+        d_sf[atomic_inc(num_of_sf)] = result;
+
+        //if ( get_global_id(0) == 0 ) {
+        //    printf("dtd=%f, dxd=%f, dyd=%f, dzd=%f, tau=%f, EFRZ=%f",
+        //           dtd, dxd, dyd, dzd, tau, EFRZ);
+        //}
     }
 }
