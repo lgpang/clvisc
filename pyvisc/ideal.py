@@ -195,8 +195,9 @@ class CLIdeal(object):
         nx = self.cfg.NX//self.cfg.nxskip
         ny = self.cfg.NY//self.cfg.nyskip
         nz = self.cfg.NZ//self.cfg.nzskip
-        if ( n % ntskip == 0 and n != 0 ):
-            time_interval = self.cfg.ntskip*self.cfg.DT
+        is_finished = self.edmax < 0.25
+
+        if ( (n % ntskip == 0 and n != 0) or is_finished):
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
                     self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
                     self.cfg.real(tau_old), self.cfg.real(tau_new)).wait()
@@ -205,6 +206,9 @@ class CLIdeal(object):
             self.num_of_sf = np.zeros(1, dtype=np.int32)
             cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
             print("num of sf=", self.num_of_sf)
+
+        if ( is_finished ):
+            exit()
 
 
     def evolve(self, max_loops=1000, ntskip=10):
@@ -226,9 +230,7 @@ class CLIdeal(object):
         hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
         cl.enqueue_copy(self.queue, hypersf, self.d_hypersf)
         out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-        #np.savetxt(out_path, hypersf.reshape(self.num_of_sf, 8),
-        np.savetxt(out_path, hypersf,
-            header = 'dS0, dS1, dS2, dS3, vx, vy, veta, tau, x, y, etas')
+        np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
             
  
 
@@ -246,7 +248,7 @@ def main():
     #dat = pd.read_csv(cfg.fPathIni, sep=' ', header=0, dtype=cfg.real).values
     print(dat)
     ideal.load_ini(dat)
-    ideal.evolve(max_loops = 40)
+    ideal.evolve()
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 

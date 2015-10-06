@@ -435,9 +435,9 @@ __kernel void get_hypersf(__global real8  * d_sf,
         real4 ev = centroid_ev(ev_cube, mass_center);
 
         real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
-                               tau*dtd*dyd*dzd*d_Sigma.s1,
-                               tau*dtd*dxd*dzd*d_Sigma.s2,
-                               tau*dtd*dxd*dyd*d_Sigma.s3,
+                              -tau*dtd*dyd*dzd*d_Sigma.s1,
+                              -tau*dtd*dxd*dzd*d_Sigma.s2,
+                              -tau*dtd*dxd*dyd*d_Sigma.s3,
                                ev.s1, ev.s2, ev.s3, eta);
                                
 
