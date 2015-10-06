@@ -9,7 +9,7 @@ from pyopencl import array
 import os
 import sys
 from time import time
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 
 def get_device_info(devices):
@@ -185,8 +185,8 @@ class CLIdeal(object):
             edxy = self.h_ev1[:,1].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,self.cfg.NZ//2]
             #np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
             #        [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed, vx, vy, veta')
-            plt.imshow(edxy)
-            plt.show()
+            #plt.imshow(edxy)
+            #plt.show()
 
     def get_hypersf(self, n, ntskip, tau_old):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
@@ -240,7 +240,7 @@ def main():
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
     from config import cfg
-    import pandas as pd
+    #import pandas as pd
     print('start ...')
     t0 = time()
     ideal = CLIdeal(cfg)
