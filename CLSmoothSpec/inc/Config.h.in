@@ -1,0 +1,11 @@
+#define BSZ @BSZ@
+
+#define DUMPDATA_FROM_GPU @DUMPDATA_FROM_GPU@
+
+#define SWITCH_OFF_DECAY @SWITCH_OFF_DECAY@
+
+#cmakedefine USE_DEVICE_GPU
+#cmakedefine USE_SINGLE_PRECISION
+#cmakedefine CL_USE_DEPRECATED_OPENCL_1_1_APIS
+
+#cmakedefine LOEWE_CSC
