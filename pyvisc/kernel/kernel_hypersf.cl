@@ -428,9 +428,9 @@ __kernel void get_hypersf(__global real8  * d_sf,
 
         // space-time centroid of the freeze out hyper-surface
         real tau = time_old + mass_center.s0*dtd;
-        real x = i*DX + mass_center.s1*dxd;
-        real y = j*DY + mass_center.s2*dyd;
-        real eta = k*DZ + mass_center.s3*dzd;
+        real x = -0.5f*NX*DX + i*dxd + mass_center.s1*dxd;
+        real y = -0.5f*NY*DY + j*dyd + mass_center.s2*dyd;
+        real eta = -0.5f*NZ*DZ + k*dzd + mass_center.s3*dzd;
 
         real4 ev = centroid_ev(ev_cube, mass_center);
 
