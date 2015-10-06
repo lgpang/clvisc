@@ -60,7 +60,8 @@ class CLIdeal(object):
         # d_hypersf: store the dSigma^{mu}, vx, vy, veta, tau, x, y, eta
         # on freeze out hyper surface
         self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1000000*self.cfg.sz_real8)
-        self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.cfg.sz_int)
+        h_num_of_sf = np.zeros(1, np.int32)
+        self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
 
         self.history = []
  
@@ -208,6 +209,11 @@ class CLIdeal(object):
             print("num of sf=", self.num_of_sf)
 
         if ( is_finished ):
+            hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
+            cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
+            out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
+            print("hypersf save to ", out_path)
+            np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
             exit()
 
 
@@ -227,11 +233,7 @@ class CLIdeal(object):
             self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.stepUpdate(step=2)
 
-        hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
-        cl.enqueue_copy(self.queue, hypersf, self.d_hypersf)
-        out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-        np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
-            
+           
  
 
 
