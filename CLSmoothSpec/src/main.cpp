@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     std::stringstream hypsfDataFile;
     std::stringstream pathout;
     pathout<<pathin;
-    hypsfDataFile<<pathin<<"/Hypersf.dat";
+    hypsfDataFile<<pathin<<"/hypersf.dat";
 
     spec.ReadHyperSF( hypsfDataFile.str() );
 

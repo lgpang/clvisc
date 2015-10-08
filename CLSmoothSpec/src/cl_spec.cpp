@@ -174,9 +174,11 @@ void Spec::ReadHyperSF( const std::string & dataFile )
 {
     cl_real dA0, dA1, dA2, dA3, vx, vy, vh, tau, x, y, etas;
     std::ifstream fin( dataFile );
-    if( fin.is_open() ){
+    char buf[256];
+    if ( fin.is_open() ) {
+        fin.getline(buf, 256);  // readin the comment
         while( fin.good() ){
-            fin>>dA0>>dA1>>dA2>>dA3>>vx>>vy>>vh>>tau>>x>>y>>etas;
+            fin>>dA0>>dA1>>dA2>>dA3>>vx>>vy>>vh>>etas;
             if( fin.eof() )break;  // eof() repeat the last line
             h_SF.push_back( (cl_real8){ dA0, dA1, dA2, dA3, vx, vy, vh, etas } );
         }
