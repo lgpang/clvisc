@@ -28,23 +28,23 @@ constant real4 cube[16] = {
     // tau = tau_old, 8 corners cube
     (real4)(0.0f, 0.0f, 0.0f, 0.0f),
     (real4)(0.0f, 1.0f, 0.0f, 0.0f),
-    (real4)(0.0f, 1.0f, 1.0f, 0.0f),
     (real4)(0.0f, 0.0f, 1.0f, 0.0f),
+    (real4)(0.0f, 1.0f, 1.0f, 0.0f),
     
     (real4)(0.0f, 0.0f, 0.0f, 1.0f),
     (real4)(0.0f, 1.0f, 0.0f, 1.0f),
-    (real4)(0.0f, 1.0f, 1.0f, 1.0f),
     (real4)(0.0f, 0.0f, 1.0f, 1.0f),
+    (real4)(0.0f, 1.0f, 1.0f, 1.0f),
     // tau = tau_new, 8 corners cube
     (real4)(1.0f, 0.0f, 0.0f, 0.0f),
     (real4)(1.0f, 1.0f, 0.0f, 0.0f),
-    (real4)(1.0f, 1.0f, 1.0f, 0.0f),
     (real4)(1.0f, 0.0f, 1.0f, 0.0f),
+    (real4)(1.0f, 1.0f, 1.0f, 0.0f),
     
     (real4)(1.0f, 0.0f, 0.0f, 1.0f),
     (real4)(1.0f, 1.0f, 0.0f, 1.0f),
-    (real4)(1.0f, 1.0f, 1.0f, 1.0f),
-    (real4)(1.0f, 0.0f, 1.0f, 1.0f)
+    (real4)(1.0f, 0.0f, 1.0f, 1.0f),
+    (real4)(1.0f, 1.0f, 1.0f, 1.0f)
 };
 
 typedef struct {
@@ -154,7 +154,6 @@ void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
 bool is_on_convex_hull(hypersf sf, real4 * mass_center,
                        __private real4 * ints,
                        int size_of_ints){
-    int seed = 11135111;
     for ( int n = 0; n < size_of_ints; n++ ) {
         if ( n != sf.id[0] && n != sf.id[1] && n != sf.id[2] && n != sf.id[3] ) {
             real4 test_vector = ints[n] - sf.center;
@@ -279,11 +278,11 @@ void get_all_intersections(__private real ed[16],
     for (int start = 0; start < 16; start += 4) {
         ints_between(ed[start+0], ed[start+1], cube[start+0], cube[start+1],
                      all_ints, size_of_ints);
-        ints_between(ed[start+1], ed[start+2], cube[start+1], cube[start+2],
+        ints_between(ed[start+0], ed[start+2], cube[start+0], cube[start+2],
                      all_ints, size_of_ints);
         ints_between(ed[start+2], ed[start+3], cube[start+2], cube[start+3],
                      all_ints, size_of_ints);
-        ints_between(ed[start+3], ed[start+0], cube[start+3], cube[start+0],
+        ints_between(ed[start+1], ed[start+3], cube[start+1], cube[start+3],
                      all_ints, size_of_ints);
     }
     // 8 edges with the same (x, y, tau)
@@ -388,33 +387,37 @@ __kernel void get_hypersf(__global real8  * d_sf,
     if ( (i+1)*nxskip < NX && (j+1)*nyskip < NY && (k+1)*nzskip < NZ ) {
         ev_cube[0] = d_ev_old[idn(i, j, k)];
         ev_cube[1] = d_ev_old[idn(i+1, j, k)];
-        ev_cube[2] = d_ev_old[idn(i+1, j+1, k)];
-        ev_cube[3] = d_ev_old[idn(i, j+1, k)];
+        ev_cube[2] = d_ev_old[idn(i, j+1, k)];
+        ev_cube[3] = d_ev_old[idn(i+1, j+1, k)];
+
         ev_cube[4] = d_ev_old[idn(i, j, k+1)];
         ev_cube[5] = d_ev_old[idn(i+1, j, k+1)];
-        ev_cube[6] = d_ev_old[idn(i+1, j+1, k+1)];
-        ev_cube[7] = d_ev_old[idn(i, j+1, k+1)];
-        ev_cube[8+0] = d_ev_new[idn(i, j, k)];
-        ev_cube[8+1] = d_ev_new[idn(i+1, j, k)];
-        ev_cube[8+2] = d_ev_new[idn(i+1, j+1, k)];
-        ev_cube[8+3] = d_ev_new[idn(i, j+1, k)];
-        ev_cube[8+4] = d_ev_new[idn(i, j, k+1)];
-        ev_cube[8+5] = d_ev_new[idn(i+1, j, k+1)];
-        ev_cube[8+6] = d_ev_new[idn(i+1, j+1, k+1)];
-        ev_cube[8+7] = d_ev_new[idn(i, j+1, k+1)];
+        ev_cube[6] = d_ev_old[idn(i, j+1, k+1)];
+        ev_cube[7] = d_ev_old[idn(i+1, j+1, k+1)];
+
+        ev_cube[8] = d_ev_new[idn(i, j, k)];
+        ev_cube[9] = d_ev_new[idn(i+1, j, k)];
+        ev_cube[10] = d_ev_new[idn(i, j+1, k)];
+        ev_cube[11] = d_ev_new[idn(i+1, j+1, k)];
+
+        ev_cube[12] = d_ev_new[idn(i, j, k+1)];
+        ev_cube[13] = d_ev_new[idn(i+1, j, k+1)];
+        ev_cube[14] = d_ev_new[idn(i, j+1, k+1)];
+        ev_cube[15] = d_ev_new[idn(i+1, j+1, k+1)];
+
         for ( int grid = 0; grid < 16; grid ++ ) {
             ed_cube[grid] = ev_cube[grid].s0;
         }
 
        
-        if ( (ed_cube[0] - EFRZ)*(ed_cube[14] - EFRZ) > 0 && 
-             (ed_cube[1] - EFRZ)*(ed_cube[15] - EFRZ) > 0 &&
-             (ed_cube[2] - EFRZ)*(ed_cube[12] - EFRZ) > 0 &&
-             (ed_cube[3] - EFRZ)*(ed_cube[13] - EFRZ) > 0 &&
-             (ed_cube[4] - EFRZ)*(ed_cube[10] - EFRZ) > 0 &&
-             (ed_cube[5] - EFRZ)*(ed_cube[11] - EFRZ) > 0 &&
-             (ed_cube[6] - EFRZ)*(ed_cube[8] - EFRZ) > 0 &&
-             (ed_cube[7] - EFRZ)*(ed_cube[9] - EFRZ) > 0 ) {
+        if ( (ed_cube[0] - EFRZ)*(ed_cube[15] - EFRZ) > 0 && 
+             (ed_cube[1] - EFRZ)*(ed_cube[14] - EFRZ) > 0 &&
+             (ed_cube[2] - EFRZ)*(ed_cube[13] - EFRZ) > 0 &&
+             (ed_cube[3] - EFRZ)*(ed_cube[12] - EFRZ) > 0 &&
+             (ed_cube[4] - EFRZ)*(ed_cube[11] - EFRZ) > 0 &&
+             (ed_cube[5] - EFRZ)*(ed_cube[10] - EFRZ) > 0 &&
+             (ed_cube[6] - EFRZ)*(ed_cube[9] - EFRZ) > 0 &&
+             (ed_cube[7] - EFRZ)*(ed_cube[8] - EFRZ) > 0 ) {
             is_surf = false;
         }
     
