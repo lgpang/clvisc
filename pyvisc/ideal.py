@@ -184,8 +184,8 @@ class CLIdeal(object):
             fout = '{pathout}/Ed{nstep}.dat'.format(
                     pathout=self.cfg.fPathOut, nstep=nstep)
             edxy = self.h_ev1[:,1].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,self.cfg.NZ//2]
-            #np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
-            #        [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed, vx, vy, veta')
+            np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
+                    [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed, vx, vy, veta')
             #plt.imshow(edxy)
             #plt.show()
 

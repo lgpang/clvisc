@@ -6,28 +6,29 @@ fPathOut = /home/hyihp/pang/PyVisc/results/event0
 [glauber]
 ########### Params for Glauber initial condition 
 ## the maximum energy density for most central collisions
-Edmax =  225.0          
+Edmax =  30.0          
 #Edmax = 55.0          # the maximum energy density for most central collisions
-#A = 197               # for Au 
+## for Au 
+A = 197
 ## for Pb
-A = 208                
+#A = 208                
 # with which the woodsaxon integrate = 197
 NucleonDensity = 0.17 
 ## radius of the Au nucleus
-#Ra = 6.38             
+Ra = 6.38             
 ## radius of the Pb nucleus
-Ra = 6.62             
+#Ra = 6.62             
 ## woodsaxon tail parameter for Au
-#Eta = 0.535           
+Eta = 0.535           
 ## woodsaxon tail parameter for Pb
 ## inelastic scattering cross section
-Eta = 0.546           
-#Si0 = 4.0             
+#Eta = 0.546           
+Si0 = 4.0             
 ## inelastic scattering cross section for PbPb 30TeV
-Si0 = 6.4             
+#Si0 = 6.4             
 
 ## impact parameter
-b = 10.0              
+b = 7.0              
 # dNdY \prop Hwn*Npart+(1-Hwn)*Nbinary 
 Hwn = 0.95            
 # the width of the plateu in the initial energy density distribution along eta_s
@@ -44,9 +45,9 @@ NY = 205
 # etas range [ -NZ/2, NZ/2] * dz
 NZ = 85              
 # time step
-dt = 0.02             
-dx = 0.16            
-dy = 0.16
+dt = 0.01             
+dx = 0.08            
+dy = 0.08
 dz = 0.3
 # do output every 0.4 fm
 ntskip = 20           
