@@ -71,11 +71,11 @@ PHI = np.zeros( NPHI )
 PHI[0:NPHI/2] = np.pi*(1.0-gaulep48)
 PHI[NPHI-1:NPHI/2-1:-1] = np.pi*(1.0+gaulep48)
 
-print "Y=", Y
+print("Y=", Y)
 
-print "Pt=", PT
+print("Pt=", PT)
 
-print "Phi=", PHI
+print("Phi=", PHI)
 
 def pt_integral(spec_along_pt):
     '''1D integration along transverse momentum'''

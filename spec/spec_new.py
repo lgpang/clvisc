@@ -4,7 +4,6 @@ import numpy as np
 import os
 from const import *
 import cmath
-import matplotlib.pyplot as plt
 
 class Spec:
     '''Calc dN/dY, 1/(2pi)dN/dYptdpt, v2(pt)
@@ -55,7 +54,7 @@ class Spec:
         '''
         self.get_event_planes(ylo=event_plane_window[0], 
                               yhi=event_plane_window[1])
-        print 'psi[23456]=', self.event_plane[1:6]
+        print('psi[23456]=', self.event_plane[1:6])
         self.get_Vn_vs_pt(ylo, yhi)
         pass
 
@@ -89,7 +88,7 @@ class Spec:
             rapidity = self.rapidity_kind) + self.strout
 
         np.savetxt(fout_name, np.array(zip(Y, dNdY)), \
-            header='#{rapidity} dN/d{rapidity}'.format( \
+            header='#rapidity dN/d{rapidity}'.format( \
             rapidity=self.rapidity_kind))
 
     ######################################################################
