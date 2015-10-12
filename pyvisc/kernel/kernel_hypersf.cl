@@ -154,9 +154,8 @@ void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
 bool is_on_convex_hull(hypersf sf, real4 * mass_center,
                        __private real4 * ints,
                        int size_of_ints){
-    int seed = 11135335111;
+    int seed = 11135111;
     for ( int n = 0; n < size_of_ints; n++ ) {
-        real4 point = ints[n];
         if ( n != sf.id[0] && n != sf.id[1] && n != sf.id[2] && n != sf.id[3] ) {
             real4 test_vector = ints[n] - sf.center;
             // if there are points beyond sf, sf is not on convex
@@ -312,7 +311,6 @@ void get_all_intersections(__private real ed[16],
 // output: global d_hypersf array;
 __kernel void test_hypersf(__global real4 * result) {
     __private real ed_cube[16];
-    real4 mass_center;
     for (int i = 0; i < 8; i++) {
         ed_cube[i] = 3.0f;
         ed_cube[8+i] = 2.0f;
@@ -326,7 +324,8 @@ __kernel void test_hypersf(__global real4 * result) {
     
     real4 energy_flow_vector = energy_flow(ed_cube);
 
-    mass_center = get_mass_center(all_ints, num_of_intersection);
+    // real4 mass_center;
+    // mass_center = get_mass_center(all_ints, num_of_intersection);
 
     real4 d_Sigma = calc_area(all_ints, energy_flow_vector, num_of_intersection);
 
@@ -408,14 +407,14 @@ __kernel void get_hypersf(__global real8  * d_sf,
         }
 
        
-        if ( (ev_cube[0] - EFRZ)*(ev_cube[14] - EFRZ) > 0 && 
-             (ev_cube[1] - EFRZ)*(ev_cube[15] - EFRZ) > 0 &&
-             (ev_cube[2] - EFRZ)*(ev_cube[12] - EFRZ) > 0 &&
-             (ev_cube[3] - EFRZ)*(ev_cube[13] - EFRZ) > 0 &&
-             (ev_cube[4] - EFRZ)*(ev_cube[10] - EFRZ) > 0 &&
-             (ev_cube[5] - EFRZ)*(ev_cube[11] - EFRZ) > 0 &&
-             (ev_cube[6] - EFRZ)*(ev_cube[8] - EFRZ) > 0 &&
-             (ev_cube[7] - EFRZ)*(ev_cube[9] - EFRZ) > 0 ) {
+        if ( (ed_cube[0] - EFRZ)*(ed_cube[14] - EFRZ) > 0 && 
+             (ed_cube[1] - EFRZ)*(ed_cube[15] - EFRZ) > 0 &&
+             (ed_cube[2] - EFRZ)*(ed_cube[12] - EFRZ) > 0 &&
+             (ed_cube[3] - EFRZ)*(ed_cube[13] - EFRZ) > 0 &&
+             (ed_cube[4] - EFRZ)*(ed_cube[10] - EFRZ) > 0 &&
+             (ed_cube[5] - EFRZ)*(ed_cube[11] - EFRZ) > 0 &&
+             (ed_cube[6] - EFRZ)*(ed_cube[8] - EFRZ) > 0 &&
+             (ed_cube[7] - EFRZ)*(ed_cube[9] - EFRZ) > 0 ) {
             is_surf = false;
         }
     
@@ -443,7 +442,7 @@ __kernel void get_hypersf(__global real8  * d_sf,
             real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
                                   -tau*dtd*dyd*dzd*d_Sigma.s1,
                                   -tau*dtd*dxd*dzd*d_Sigma.s2,
-                                  -tau*dtd*dxd*dyd*d_Sigma.s3,
+                                  -dtd*dxd*dyd*d_Sigma.s3,
                                    ev.s1, ev.s2, ev.s3, eta);
                                    
             d_sf[atomic_inc(num_of_sf)] = result;
