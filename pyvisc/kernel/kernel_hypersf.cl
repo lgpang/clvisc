@@ -385,7 +385,7 @@ __kernel void get_hypersf(__global real8  * d_sf,
     int num_of_intersection;
     real4 d_Sigma;
 
-    bool is_surf = false;
+    bool is_surf = true;
     if ( (i+1)*nxskip < NX && (j+1)*nyskip < NY && (k+1)*nzskip < NZ ) {
         ev_cube[0] = d_ev_old[idn(i, j, k)];
         ev_cube[1] = d_ev_old[idn(i+1, j, k)];
@@ -408,45 +408,45 @@ __kernel void get_hypersf(__global real8  * d_sf,
         }
 
        
-        __private real4 all_ints[32];
+        if ( (ev_cube[0] - EFRZ)*(ev_cube[14] - EFRZ) > 0 && 
+             (ev_cube[1] - EFRZ)*(ev_cube[15] - EFRZ) > 0 &&
+             (ev_cube[2] - EFRZ)*(ev_cube[12] - EFRZ) > 0 &&
+             (ev_cube[3] - EFRZ)*(ev_cube[13] - EFRZ) > 0 &&
+             (ev_cube[4] - EFRZ)*(ev_cube[10] - EFRZ) > 0 &&
+             (ev_cube[5] - EFRZ)*(ev_cube[11] - EFRZ) > 0 &&
+             (ev_cube[6] - EFRZ)*(ev_cube[8] - EFRZ) > 0 &&
+             (ev_cube[7] - EFRZ)*(ev_cube[9] - EFRZ) > 0 ) {
+            is_surf = false;
+        }
+    
+        if ( is_surf ) {
+            __private real4 all_ints[32];
 
-        get_all_intersections(ed_cube, all_ints, &num_of_intersection);
-
-        if ( num_of_intersection >= 4 ) {
+            get_all_intersections(ed_cube, all_ints, &num_of_intersection);
             real4 energy_flow_vector = energy_flow(ed_cube);
             mass_center = get_mass_center(all_ints, num_of_intersection);
             d_Sigma = calc_area(all_ints, energy_flow_vector, num_of_intersection);
-            is_surf = true;
-        }
-    }
-    
-    if ( is_surf ) {
-        real dtd = time_new - time_old;
-        real dxd = nxskip*DX;
-        real dyd = nyskip*DY;
-        real dzd = nzskip*DZ;
 
-        // space-time centroid of the freeze out hyper-surface
-        real tau = time_old + mass_center.s0*dtd;
-        real x = -0.5f*NX*DX + i*dxd + mass_center.s1*dxd;
-        real y = -0.5f*NY*DY + j*dyd + mass_center.s2*dyd;
-        real eta = -0.5f*NZ*DZ + k*dzd + mass_center.s3*dzd;
+            real dtd = time_new - time_old;
+            real dxd = nxskip*DX;
+            real dyd = nyskip*DY;
+            real dzd = nzskip*DZ;
 
-        real4 ev = centroid_ev(ev_cube, mass_center);
+            // space-time centroid of the freeze out hyper-surface
+            real tau = time_old + mass_center.s0*dtd;
+            real x = -0.5f*NX*DX + i*dxd + mass_center.s1*dxd;
+            real y = -0.5f*NY*DY + j*dyd + mass_center.s2*dyd;
+            real eta = -0.5f*NZ*DZ + k*dzd + mass_center.s3*dzd;
 
-        real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
-                              -tau*dtd*dyd*dzd*d_Sigma.s1,
-                              -tau*dtd*dxd*dzd*d_Sigma.s2,
-                              -tau*dtd*dxd*dyd*d_Sigma.s3,
-                               ev.s1, ev.s2, ev.s3, eta);
-                               
+            real4 ev = centroid_ev(ev_cube, mass_center);
 
-        // atomic_add(num_of_sf, 1);
-        d_sf[atomic_inc(num_of_sf)] = result;
-
-        //if ( get_global_id(0) == 0 ) {
-        //    printf("dtd=%f, dxd=%f, dyd=%f, dzd=%f, tau=%f, EFRZ=%f",
-        //           dtd, dxd, dyd, dzd, tau, EFRZ);
-        //}
-    }
+            real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
+                                  -tau*dtd*dyd*dzd*d_Sigma.s1,
+                                  -tau*dtd*dxd*dzd*d_Sigma.s2,
+                                  -tau*dtd*dxd*dyd*d_Sigma.s3,
+                                   ev.s1, ev.s2, ev.s3, eta);
+                                   
+            d_sf[atomic_inc(num_of_sf)] = result;
+        } // end surface calculation
+    } // end boundary check
 }
