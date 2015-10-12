@@ -37,6 +37,8 @@ class CLIdeal(object):
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
+        self.efrz = 0.25
+
         # set viscous on to cal fluid velocity gradients
         self.viscous_on = viscous_on
         self.gpu_defines = self.__compile_options()
@@ -118,7 +120,7 @@ class CLIdeal(object):
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
-        hypersf_defines.append('-D {key}={value}f'.format(key='EFRZ', value=0.25))
+        hypersf_defines.append('-D {key}={value}f'.format(key='EFRZ', value=self.efrz))
         print(hypersf_defines)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_hypersf.cl'), 'r') as f:
             src_hypersf = f.read()
@@ -193,10 +195,10 @@ class CLIdeal(object):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
         global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
         tau_new = self.cfg.TAU0 + n*self.cfg.DT
-        nx = self.cfg.NX//self.cfg.nxskip
-        ny = self.cfg.NY//self.cfg.nyskip
-        nz = self.cfg.NZ//self.cfg.nzskip
-        is_finished = self.edmax < 0.25
+        nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
+        ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
+        nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
+        is_finished = self.edmax < self.efrz
 
         if ( (n % ntskip == 0 and n != 0) or is_finished):
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
