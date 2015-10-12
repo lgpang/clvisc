@@ -20,12 +20,45 @@ def read_config():
     
     config = {}
     
+    # working directory
     config['fPathIni'] = (_parser.get('path', 'fPathIni'), 
             'The absolute path for initial conditions')
 
     config['fPathOut'] = (_parser.get('path', 'fPathOut'), 
             'The absolute path for output directory')
+
+    # parameters for glauber initial conditions
+    config['Edmax'] = (_parser.getfloat( 'glauber', 'Edmax'),
+            'maximum energy density for most central collisions')
+
+    config['A'] = (_parser.getfloat( 'glauber', 'A'),
+            'Number of nucleons, A=197 for Au; A=208 for Pb')
+
+    config['NucleonDensity'] = (_parser.getfloat( 'glauber', 'NucleonDensity'),
+            'With which the woods-saxon integration = 197 for A=197')
+
+    config['Ra'] = (_parser.getfloat( 'glauber', 'Ra'),
+            'Radius of the nucleus')
+
+    config['Eta'] = (_parser.getfloat( 'glauber', 'Eta'),
+            'woods-saxon diffusiveness parameter')
+
+    config['Si0'] = (_parser.getfloat( 'glauber', 'Si0'),
+            'inelastic scattering cross section')
+
+    config['ImpactParameter'] = (_parser.getfloat( 'glauber', 'b'),
+            'average impact parameter')
+
+    config['Hwn'] = (_parser.getfloat( 'glauber', 'Hwn'),
+            'in range [0,1), energy density contribution from number of wounded nucleons')
+
+    config['Eta_flat'] = (_parser.getfloat( 'glauber', 'Eta_flat'),
+            'The width of the plateau along etas at mid rapidity')
+
+    config['Eta_gw'] = (_parser.getfloat( 'glauber', 'Eta_gw'),
+            'the gaussian fall off at large etas where fabs(etas)>Eta_flat/2')
     
+    # Grid sizes, hyper surface grain
     config['NX'] = (_parser.getint( 'geometry', 'NX'),
             'Grid size along x direction')
 

@@ -118,7 +118,7 @@ class CLIdeal(object):
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
-        hypersf_defines.append('-D {key}={value}'.format(key='EFRZ', value=0.25))
+        hypersf_defines.append('-D {key}={value}f'.format(key='EFRZ', value=0.25))
         print(hypersf_defines)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_hypersf.cl'), 'r') as f:
             src_hypersf = f.read()
@@ -246,10 +246,11 @@ def main():
     print('start ...')
     t0 = time()
     ideal = CLIdeal(cfg)
-    dat = np.loadtxt(cfg.fPathIni)
-    #dat = pd.read_csv(cfg.fPathIni, sep=' ', header=0, dtype=cfg.real).values
-    print(dat)
-    ideal.load_ini(dat)
+    from glauber import Glauber
+    ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
+                  ideal.d_ev[1])
+    #dat = np.loadtxt(cfg.fPathIni)
+    #ideal.load_ini(dat)
     ideal.evolve()
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
