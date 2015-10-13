@@ -37,7 +37,8 @@ class CLIdeal(object):
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
-        self.efrz = 0.25
+        self.efrz = 0.280594
+        # correponding to TFRZ=0.137
 
         # set viscous on to cal fluid velocity gradients
         self.viscous_on = viscous_on
