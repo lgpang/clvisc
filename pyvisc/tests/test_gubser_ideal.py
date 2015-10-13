@@ -63,20 +63,30 @@ class TestGubser(unittest.TestCase):
         cwd, cwf = os.path.split(__file__)
     
         q = 0.25
-        compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        compile_options = list(self.ideal.gpu_defines)
+        compile_options.append('-I %s'%os.path.join(cwd, '..', 'kernel'))
         compile_options.append('-D USE_SINGLE_PRECISION')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
         prg.init_ev(self.queue, (self.cfg.NX, self.cfg.NY), None,
-                    self.ideal.d_ev[1], self.cfg.real(self.cfg.TAU),
+                    self.ideal.d_ev[1], self.cfg.real(self.cfg.TAU0),
                     self.cfg.real(q)).wait()
 
-        self.ideal.evolve(max_loops=200)
-        history = np.array(self.ideal.history)
-        tau, edmax = history[:,0], history[:,1]
+        max_loops = 200
+        for n in range(max_loops):
+            self.ideal.stepUpdate(step=1)
+            self.ideal.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
+            self.ideal.stepUpdate(step=2)
+            cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.ideal.d_ev[1]).wait()
+            edr = self.ideal.h_ev1[:,0].reshape(NX, NY, NZ)[:, NY/2, NZ/2]
 
-        a = gubser_ed(tau, 0.0, q)/gubser_ed(tau[0], 0.0, q)
-        b = edmax/edmax[0]
-        np.testing.assert_almost_equal(a, b, 2)
+            x = np.linspace(-NX/2*self.cfg.DX, NX/2*self.cfg.DX, NX)
+            a = gubser_ed(self.ideal.tau, x, q)
+            b = edr[:]
+            #plt.plot(x, a)
+            #plt.plot(x, b)
+            np.testing.assert_almost_equal(a, b, 2)
+        #plt.show()
     
 
 if __name__ == '__main__':
