@@ -65,7 +65,7 @@ real rand(int* seed);
 
 // do tiny move if any of 5 intersections coplanar
 void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
-                           real4 * mass_center);
+                           real4 * mass_center, int gid);
 
 // contribute of the energy density at cube corner to the energy flow vector
 void contribution_from(__private real ed_cube[16], int n, int i, int j, int k,
@@ -77,7 +77,7 @@ real4 energy_flow(__private real ed_cube[16]);
 // get the total area of all the hypersurface on the convex hull whose norm
 // vector is in the same direction of energy flow
 real4 calc_area(__private real4 *ints, real4 energy_flow,
-                int size_of_ints);
+                int size_of_ints, int gid);
 
 void get_all_intersections(__private real ed[16],
                __private real4 all_ints[32],
@@ -125,9 +125,9 @@ real rand(int* seed) // 1 <= *seed < m
 
 
 void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
-                           real4 * mass_center) {
+                           real4 * mass_center, int gid) {
    hypersf sf;
-   int seed = 323577791;
+   int seed = 32117 + gid;
    for ( int i = 0; i < size_of_ints-4; i ++ )
    for ( int j = i+1; j < size_of_ints-3; j ++ )
    for ( int k = j+1; k < size_of_ints-2; k ++ )
@@ -226,7 +226,7 @@ inline real4 get_mass_center(__private real4 * ints, int size_of_ints) {
 // calc the area for all the selected hypersf on the convex hull
 // notice that no dx, dy, dz, dt, tau yet, dimensionless 
 real4 calc_area(__private real4 *ints, real4 energy_flow, 
-                int size_of_ints) {
+                int size_of_ints, int gid) {
     real4 mass_center = get_mass_center(ints, size_of_ints);
     real4 area = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
     hypersf sf;
@@ -237,7 +237,7 @@ real4 calc_area(__private real4 *ints, real4 energy_flow,
         area = sf.norm;
     } else if ( size_of_ints > 4 ) {
         // do tiny move if any 4 points coplanar
-        tiny_move_if_coplanar(ints, size_of_ints, & mass_center);
+        tiny_move_if_coplanar(ints, size_of_ints, & mass_center, gid);
 
         // get all hyper surfaces, remove those not on convex hull
         for ( int i = 0; i < size_of_ints-3; i ++ )
@@ -326,7 +326,9 @@ __kernel void test_hypersf(__global real4 * result) {
     // real4 mass_center;
     // mass_center = get_mass_center(all_ints, num_of_intersection);
 
-    real4 d_Sigma = calc_area(all_ints, energy_flow_vector, num_of_intersection);
+    int gid = get_global_id(0);
+    real4 d_Sigma = calc_area(all_ints, energy_flow_vector,
+                              num_of_intersection, gid);
 
     result[0] = d_Sigma;
 }
@@ -427,7 +429,8 @@ __kernel void get_hypersf(__global real8  * d_sf,
             get_all_intersections(ed_cube, all_ints, &num_of_intersection);
             real4 energy_flow_vector = energy_flow(ed_cube);
             mass_center = get_mass_center(all_ints, num_of_intersection);
-            d_Sigma = calc_area(all_ints, energy_flow_vector, num_of_intersection);
+            d_Sigma = calc_area(all_ints, energy_flow_vector,
+                                num_of_intersection, i*j*k);
 
             real dtd = time_new - time_old;
             real dxd = nxskip*DX;
