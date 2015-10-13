@@ -191,21 +191,24 @@ class CLIdeal(object):
             #plt.imshow(edxy)
             #plt.show()
 
-    def get_hypersf(self, n, ntskip, tau_old):
+    def get_hypersf(self, n, ntskip):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
         global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
-        tau_new = self.cfg.TAU0 + n*self.cfg.DT
-        nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
-        ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
-        nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
         is_finished = self.edmax < self.efrz
 
         if ( (n % ntskip == 0 and n != 0) or is_finished):
+            nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
+            ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
+            nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
+            tau_new = self.tau
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
                     self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
-                    self.cfg.real(tau_old), self.cfg.real(tau_new)).wait()
+                    self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
+            # update with current tau and d_ev[1]
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
+            self.tau_old = tau_new
+
             self.num_of_sf = np.zeros(1, dtype=np.int32)
             cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
             print("num of sf=", self.num_of_sf)
@@ -222,12 +225,12 @@ class CLIdeal(object):
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
         cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
-        tau_old = self.cfg.TAU0
+        self.tau_old = self.cfg.TAU0
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.get_hypersf(n, ntskip, tau_old)
+            self.get_hypersf(n, ntskip)
             #self.output(n)
 
             self.stepUpdate(step=1)

@@ -183,8 +183,8 @@ __kernel void update_ev(
     }
 
     real ed_find;
-    rootFinding_newton(&ed_find, T00, M);
-    //rootFinding(&ed_find, T00, M);
+    //rootFinding_newton(&ed_find, T00, M);
+    rootFinding(&ed_find, T00, M);
     ed_find = max(0.0f, ed_find);
 
     real pr = P(ed_find);
