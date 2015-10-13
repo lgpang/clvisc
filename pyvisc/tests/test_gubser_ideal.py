@@ -20,7 +20,7 @@ from config import cfg
 
 
 def gubser_ed(tau, r, q):
-    return (2.0*q)**(8.0/3.0)/(1+2*q*q*(tau*tau+r*r)+q**4*(tau*tau-r*r)**2)**(4.0/3.0)
+    return (2.0*q)**(8.0/3.0)/(tau*(1+2*q*q*(tau*tau+r*r)+q**4*(tau*tau-r*r)**2))**(4.0/3.0)
 
 def gubser_vr(tau, r, q):
     return 2.0*q*q*tau*r/(1.0+q*q*tau*tau+q*q*r*r)
@@ -28,6 +28,7 @@ def gubser_vr(tau, r, q):
 class TestGubser(unittest.TestCase):
     def setUp(self):
         self.cfg = cfg
+        #self.cfg.NZ = 6
         self.ideal = CLIdeal(self.cfg)
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
@@ -48,8 +49,8 @@ class TestGubser(unittest.TestCase):
           real x = (i-0.5*NX)*DX;
           real y = (j-0.5*NY)*DY;
           real r = sqrt(x*x + y*y);
-          real ed = pow(2.0f*q, 8.0f/3.0f) / pow(1.0f + 2.0f*q*q*(tau*tau+r*r) + 
-                    q*q*q*q*(tau*tau-r*r)*(tau*tau-r*r), 4.0f/3.0f);
+          real ed = pow(2.0f*q, 8.0f/3.0f) / pow((1.0f + 2.0f*q*q*(tau*tau+r*r) + 
+                    q*q*q*q*(tau*tau-r*r)*(tau*tau-r*r))*tau, 4.0f/3.0f);
 
           real vx = 2.0f*q*q*tau*x/(1.0f + q*q*tau*tau + q*q*r*r);
           real vy = 2.0f*q*q*tau*y/(1.0f + q*q*tau*tau + q*q*r*r);
@@ -72,41 +73,31 @@ class TestGubser(unittest.TestCase):
                     self.ideal.d_ev[1], self.cfg.real(self.cfg.TAU0),
                     self.cfg.real(q)).wait()
 
-        max_loops = 200
+        max_loops = 1000
         for n in range(max_loops):
             self.ideal.stepUpdate(step=1)
             self.ideal.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.ideal.stepUpdate(step=2)
-            cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.ideal.d_ev[1]).wait()
-            edr = self.ideal.h_ev1[:,0].reshape(NX, NY, NZ)[:, NY/2, NZ/2]
+            print('n=', n)
+            if n%100 == 0:
+                cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.ideal.d_ev[1]).wait()
+                edr = self.ideal.h_ev1[:,0].reshape(NX, NY, NZ)[:, NY//2, NZ//2]
+                vr = self.ideal.h_ev1[:,1].reshape(NX, NY, NZ)[:, NY//2, NZ//2]
 
-            x = np.linspace(-NX/2*self.cfg.DX, NX/2*self.cfg.DX, NX)
-            a = gubser_ed(self.ideal.tau, x, q)
-            b = edr[:]
-            #plt.plot(x, a)
-            #plt.plot(x, b)
-            np.testing.assert_almost_equal(a, b, 2)
-        #plt.show()
+                x = np.linspace(-NX//2*self.cfg.DX, NX//2*self.cfg.DX, NX)
+
+                a = gubser_ed(self.ideal.tau, x, q)
+                b = edr[:]
+                c = gubser_vr(self.ideal.tau, x, q)
+                d = vr[:]
+
+                plt.semilogy(x, a, 'r-')
+                plt.semilogy(x, b, 'b--')
+                plt.xlabel('r [fm]')
+                plt.ylabel('ed')
+                #np.testing.assert_almost_equal(a, b, 2)
+        plt.show()
     
 
 if __name__ == '__main__':
     unittest.main()
-
-
-
-
-#def plot():
-#    tau_list = np.array( [1.0, 1.2, 1.4, 1.6, 2.0, 3.0 ] )
-#    x = np.linspace(-4, 4, 100)
-#    
-#    for tau in tau_list:
-#        y = gubser_ed(tau, x, 0.25)
-#        txt = plt.text(-0.5, y+0.01, "tau=%s"%tau, fontsize=20)
-#        plt.plot(x, y, 'k-')
-#    plt.legend( loc='best' )
-#    plt.xlabel( r'$r_T$ [fm]' )
-#    plt.ylabel( r'T' )
-#    plt.show()
-
-
-
