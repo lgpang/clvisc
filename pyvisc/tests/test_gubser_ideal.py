@@ -41,25 +41,40 @@ class TestGubser(unittest.TestCase):
         kernel_src = """
         # include "real_type.h"
         __kernel void init_ev(global real4 * d_ev1,
-                   const int size) {
-          int gid = (int) get_global_id(0);
-          if ( gid < size ) {
-             d_ev1[gid] = (real4)(30.0f, 0.0f, 0.0f, 0.0f);
+                   const real tau,
+                   const real q) {
+          int i = (int) get_global_id(0);
+          int j = (int) get_global_id(1);
+          real x = (i-0.5*NX)*DX;
+          real y = (j-0.5*NY)*DY;
+          real r = sqrt(x*x + y*y);
+          real ed = pow(2.0f*q, 8.0f/3.0f) / pow(1.0f + 2.0f*q*q*(tau*tau+r*r) + 
+                    q*q*q*q*(tau*tau-r*r)*(tau*tau-r*r), 4.0f/3.0f);
+
+          real vx = 2.0f*q*q*tau*x/(1.0f + q*q*tau*tau + q*q*r*r);
+          real vy = 2.0f*q*q*tau*y/(1.0f + q*q*tau*tau + q*q*r*r);
+
+          for ( int k = 0; k < NZ; k ++ ) {
+             int gid = i*NY*NZ + j*NZ + k;
+             d_ev1[gid] = (real4)(ed, vx, vy, 0.0);
           }
         }
         """
         cwd, cwf = os.path.split(__file__)
     
+        q = 0.25
         compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
         compile_options.append('-D USE_SINGLE_PRECISION')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)
-        prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev[1],
-                    np.int32(self.ideal.size)).wait()
+        prg.init_ev(self.queue, (self.cfg.NX, self.cfg.NY), None,
+                    self.ideal.d_ev[1], self.cfg.real(self.cfg.TAU),
+                    self.cfg.real(q)).wait()
 
         self.ideal.evolve(max_loops=200)
         history = np.array(self.ideal.history)
         tau, edmax = history[:,0], history[:,1]
-        a = (tau/tau[0])**(-4.0/3.0)
+
+        a = gubser_ed(tau, 0.0, q)/gubser_ed(tau[0], 0.0, q)
         b = edmax/edmax[0]
         np.testing.assert_almost_equal(a, b, 2)
     
@@ -70,18 +85,18 @@ if __name__ == '__main__':
 
 
 
-def plot():
-    tau_list = np.array( [1.0, 1.2, 1.4, 1.6, 2.0, 3.0 ] )
-    x = np.linspace(-4, 4, 100)
-    
-    for tau in tau_list:
-        y = gubser_ed(tau, x, 0.25)
-        txt = plt.text(-0.5, y+0.01, "tau=%s"%tau, fontsize=20)
-        plt.plot(x, y, 'k-')
-    plt.legend( loc='best' )
-    plt.xlabel( r'$r_T$ [fm]' )
-    plt.ylabel( r'T' )
-    plt.show()
+#def plot():
+#    tau_list = np.array( [1.0, 1.2, 1.4, 1.6, 2.0, 3.0 ] )
+#    x = np.linspace(-4, 4, 100)
+#    
+#    for tau in tau_list:
+#        y = gubser_ed(tau, x, 0.25)
+#        txt = plt.text(-0.5, y+0.01, "tau=%s"%tau, fontsize=20)
+#        plt.plot(x, y, 'k-')
+#    plt.legend( loc='best' )
+#    plt.xlabel( r'$r_T$ [fm]' )
+#    plt.ylabel( r'T' )
+#    plt.show()
 
 
 
