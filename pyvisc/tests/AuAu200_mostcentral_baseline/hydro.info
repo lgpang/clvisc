@@ -1,7 +1,7 @@
 # comments start with '#'
 [path]
-fPathIni = /home/lgpang/PyVisc/results/event0/edv0.txt
-fPathOut = /home/lgpang/PyVisc/results/event0
+fPathIni = /home/hyihp/pang/PyVisc/results/event0/edv0.txt
+fPathOut = /home/hyihp/pang/PyVisc/results/event0
 
 [glauber]
 ########### Params for Glauber initial condition 
@@ -28,7 +28,7 @@ Si0 = 4.0
 #Si0 = 6.4             
 
 ## impact parameter
-b = 7.0              
+b = 0.0              
 # dNdY \prop Hwn*Npart+(1-Hwn)*Nbinary 
 Hwn = 0.95            
 # the width of the plateu in the initial energy density distribution along eta_s

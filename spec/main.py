@@ -19,16 +19,16 @@ if __name__=='__main__':
     ylo, yhi = -0.5, 0.5
     ep_window = (3.3, 4.8)
 
-    #charged = spec.Spec(event_path, pid='Charged', rapidity_kind='Eta')
-    #charged.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
+    charged = spec.Spec(event_path, pid='Charged', rapidity_kind='Eta')
+    charged.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
 
-    pion = spec.Spec(event_path, pid='211', reso=False, rapidity_kind='Eta') 
+    pion = spec.Spec(event_path, pid='211', reso=True, rapidity_kind='Eta') 
     pion.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
 
-    kaon = spec.Spec(event_path, pid='321', reso=False, rapidity_kind='Eta')
+    kaon = spec.Spec(event_path, pid='321', reso=True, rapidity_kind='Eta')
     kaon.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
 
-    proton = spec.Spec(event_path, pid='2212', reso=False, rapidity_kind='Eta')
+    proton = spec.Spec(event_path, pid='2212', reso=True, rapidity_kind='Eta')
     proton.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
 
     #D0 = spec.Spec(event_path, pid='99999', reso=False, rapidity_kind='Eta')

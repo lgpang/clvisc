@@ -9,6 +9,7 @@ from pyopencl import array
 import os
 import sys
 from time import time
+from eos.eos import Eos
 #import matplotlib.pyplot as plt
 
 
@@ -39,13 +40,20 @@ class CLIdeal(object):
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
-        self.efrz = 0.000001
+        self.efrz = 0.280594
+        # correponding to TFRZ=0.137
 
         # set viscous on to cal fluid velocity gradients
         self.viscous_on = viscous_on
         self.gpu_defines = self.__compile_options()
-        self.__loadAndBuildCLPrg()
 
+        # set eos, create eos table for interpolation
+        eos = Eos(self.cfg, self.ctx, self.queue, self.gpu_defines)
+        self.eos_table, nrows, ncols = eos.create_image2d(200, 1000)
+        self.gpu_defines.append('-D EOS_NUM_OF_ROWS=%s'%nrows)
+        self.gpu_defines.append('-D EOS_NUM_OF_COLS=%s'%ncols)
+
+        self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
         self.h_ev1 = np.zeros((self.size, 4), self.cfg.real)
@@ -100,7 +108,9 @@ class CLIdeal(object):
         elif self.cfg.IEOS==1:
             gpu_defines.append( '-D EOSLCE' )
         elif self.cfg.IEOS==2:
-            gpu_defines.append( '-D EOSLPCE' )
+            gpu_defines.append( '-D EOS_TABLE' ) # WB2014
+        elif self.cfg.IEOS==3:
+            gpu_defines.append( '-D EOS_TABLE' ) # GlueBall
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
         return gpu_defines
@@ -119,6 +129,8 @@ class CLIdeal(object):
                                                  options=self.gpu_defines)
 
         hypersf_defines = list(self.gpu_defines)
+        ## use higher precision for hyper surface calculation
+        # hypersf_defines.remove('-D USE_SINGLE_PRECISION')
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
@@ -153,17 +165,21 @@ class CLIdeal(object):
         # output: self.d_Src
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
         self.kernel_ideal.kt_src_christoffel(self.queue, (NX*NY*NZ, ), None,
-                         self.d_Src, self.d_ev[step], self.tau, np.int32(step)
+                         self.d_Src, self.d_ev[step], self.eos_table,
+                         self.tau, np.int32(step)
                          ).wait()
 
         self.kernel_ideal.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
-                self.d_Src, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.eos_table,
+                self.tau).wait()
 
         self.kernel_ideal.kt_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
-                self.d_Src, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.eos_table,
+                self.tau).wait()
 
         self.kernel_ideal.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
-                self.d_Src, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.eos_table,
+                self.tau).wait()
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
@@ -172,7 +188,7 @@ class CLIdeal(object):
         # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
         self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ, ), None,
                               self.d_ev[3-step], self.d_ev[1], self.d_Src,
-                              self.tau, np.int32(step)).wait()
+                              self.eos_table, self.tau, np.int32(step)).wait()
 
     def max_energy_density(self):
         '''Calc the maximum energy density on GPU and output the value '''
@@ -193,21 +209,24 @@ class CLIdeal(object):
             #plt.imshow(edxy)
             #plt.show()
 
-    def get_hypersf(self, n, ntskip, tau_old):
+    def get_hypersf(self, n, ntskip):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
         global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
-        tau_new = self.cfg.TAU0 + n*self.cfg.DT
-        nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
-        ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
-        nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
         is_finished = self.edmax < self.efrz
 
         if ( (n % ntskip == 0 and n != 0) or is_finished):
+            nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
+            ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
+            nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
+            tau_new = self.tau
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
                     self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
-                    self.cfg.real(tau_old), self.cfg.real(tau_new)).wait()
+                    self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
+            # update with current tau and d_ev[1]
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
+            self.tau_old = tau_new
+
             self.num_of_sf = np.zeros(1, dtype=np.int32)
             cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
             print("num of sf=", self.num_of_sf)
@@ -221,15 +240,15 @@ class CLIdeal(object):
             exit()
 
 
-    def evolve(self, max_loops=1000, ntskip=10):
+    def evolve(self, max_loops=3000):
         '''The main loop of hydrodynamic evolution '''
         cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
-        tau_old = self.cfg.TAU0
+        self.tau_old = self.cfg.TAU0
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.get_hypersf(n, ntskip, tau_old)
+            self.get_hypersf(n, self.cfg.ntskip)
             #self.output(n)
 
             self.stepUpdate(step=1)
@@ -243,7 +262,7 @@ class CLIdeal(object):
 
 def main():
     '''set default platform and device in opencl'''
-    #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
+    os.environ[ 'PYOPENCL_CTX' ] = '1:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
     from config import cfg
     #import pandas as pd

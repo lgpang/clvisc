@@ -2,18 +2,19 @@
 #define __HELPERH__
 
 #include"real_type.h"
-#include"EosPCEv0.cl"
+//#include"EosPCEv0.cl"
+#include"eos_table.h"
 
 #define THETA 1.1f
 #define hbarc 0.19733f
-#define acu 1.0E-8f
 
 //#define cl_khr_global_int32_base_atomics
 
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
 // kt1d to calc H(i+1/2)-H(i-1/2), along=0,1,2 for x, y, z
-real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2, real tau, int along);
+real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2,
+           real tau, int along, read_only image2d_t eos_table);
 
 // g^{tau mu}, g^{x mu}, g^{y mu}, g^{eta mu} without tau*tau
 constant real4 gm[4] = 
@@ -85,14 +86,14 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
  * 0.001% fail if absolute error < 0.01
  * What happens to these testing events?
  * */
-inline void rootFinding(real* EdFind, real T00, real M){
+inline void rootFinding(real* EdFind, real T00, real M, read_only image2d_t eos_table){
     real E0, E1;
     E1 = T00;   /*predict */
     real K2 = M*M;
     int i = 0;
     while ( true ) {
         E0 = E1;
-        E1 = T00 - K2/(T00 + P(E1)) ; 
+        E1 = T00 - K2/(T00 + P(E1, eos_table)) ; 
         i ++ ;
         if( i>100 || fabs(E1-E0)/max(fabs(E1), (real)acu)<acu ) break;
     }
@@ -101,13 +102,15 @@ inline void rootFinding(real* EdFind, real T00, real M){
 }
 
 // bisection and newton method for the root finding
-inline void rootFinding_newton(real* ed_find, real T00, real M){
+inline void rootFinding_newton(real* ed_find, real T00, real M,
+                               read_only image2d_t eos_table){
+             
     real vl = 0.0f;
     real vh = 1.0f;
     real dpe = 1.0f/3.0f;
     real v = 0.5f*(vl+vh);
     real ed = T00 - M*v;
-    real pr = P(ed);
+    real pr = P(ed, eos_table);
     real f = (T00 + pr)*v - M;
     real df = (T00+pr) - M*v*dpe;
     real dvold = vh-vl;
@@ -128,7 +131,7 @@ inline void rootFinding_newton(real* ed_find, real T00, real M){
         if ( fabs(dv) < 0.00001f || i > 100 ) break;
 
         ed = T00 - M*v;
-        pr = P(ed);
+        pr = P(ed, eos_table);
         f = (T00 + pr)*v - M;
         df = (T00+pr) - M*v*dpe;
         if ( f > 0.0f ) {
@@ -151,11 +154,12 @@ inline real4 t0m(real4 edv, real pr) {
 }
 
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
-           real4 ev_ip2, real tau, int along) {
-   real pr_im1 = P(ev_im1.s0);
-   real pr_i = P(ev_i.s0);
-   real pr_ip1 = P(ev_ip1.s0);
-   real pr_ip2 = P(ev_ip2.s0);
+           real4 ev_ip2, real tau, int along,
+           read_only image2d_t eos_table) {
+   real pr_im1 = P(ev_im1.s0, eos_table);
+   real pr_i = P(ev_i.s0, eos_table);
+   real pr_ip1 = P(ev_ip1.s0, eos_table);
+   real pr_ip2 = P(ev_ip2.s0, eos_table);
 
    real4 T0m_im1 = tau*t0m(ev_im1, pr_im1);
    real4 T0m_i = tau*t0m(ev_i, pr_i);
@@ -189,7 +193,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    // first part of kt1d; the final results = src[i]-src[i-1]
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
 
-   real pr_im2 = P(ev_im2.s0);
+   real pr_im2 = P(ev_im2.s0, eos_table);
    real4 T0m_im2 = tau*t0m(ev_im2, pr_im2);
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod4(0.5f*(T0m_i-T0m_im2),
