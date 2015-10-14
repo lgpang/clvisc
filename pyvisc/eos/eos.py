@@ -20,7 +20,8 @@ class Eos(object):
             ed_start = wb.ed_start
             ed_step = wb.ed_step
             num_of_ed = wb.num_ed
-        elif cfg.IEOS == 3:
+        else:
+        #else cfg.IEOS == 3:
             import glueball
             self.ed = glueball.ed
             self.pr = glueball.pr
@@ -39,7 +40,6 @@ class Eos(object):
                                                  value=ed_step))
         compile_options.append('-D EOS_NUM_ED={value}f'.format(
                                                  value=num_of_ed))
-
         self.compile_options = compile_options
 
         

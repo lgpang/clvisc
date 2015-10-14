@@ -106,9 +106,9 @@ class CLIdeal(object):
         elif self.cfg.IEOS==1:
             gpu_defines.append( '-D EOSLCE' )
         elif self.cfg.IEOS==2:
-            gpu_defines.append( '-D EOSLPCE' )
+            gpu_defines.append( '-D EOS_TABLE' ) # WB2014
         elif self.cfg.IEOS==3:
-            gpu_defines.append( '-D GLUEBALL' )
+            gpu_defines.append( '-D EOS_TABLE' ) # GlueBall
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
         return gpu_defines

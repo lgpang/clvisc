@@ -12,26 +12,27 @@
 #define  hbarc3  pow(0.1973269631f, 3.0f)
 #define  coef  (M_PI_F*M_PI_F/30.0f)
 
-inline real P(real eps){
+inline real P(real eps, read_only image2d_t eos_table){
      return eps/3.0f;
 }
 
-inline real T( real eps ){
+inline real T(real eps, read_only image2d_t eos_table){
      return  hbarc1*pow( (real)1.0f/(dof*coef)*eps/hbarc1, (real)0.25f);
 }
 
-inline real S( real eps ){
-     return  ( eps + P(eps) ) / fmax((real)1.0E-10f, T(eps));
+inline real S(real eps, read_only image2d_t eos_table){
+     return  ( eps + P(eps, eos_table)) / fmax((real)1.0E-10f, T(eps, eos_table));
 }
 
 #endif
 
-#ifdef EOSLPCE
+#ifdef EOS_TABLE
 
 constant const sampler_t sampler =  CLK_NORMALIZED_COORDS_FALSE
           | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
-inline real P(real eps, read_only image2d_t eos_table){
+// read e, p, T, s from eos_table
+inline real4 eos(real eps, read_only image2d_t eos_table){
     real ed_per_row = EOS_ED_STEP*EOS_NUM_OF_COLS;
     int row = eps/ed_per_row;
     int col = (eps - EOS_ED_START - row*ed_per_row)
@@ -49,11 +50,15 @@ inline real P(real eps, read_only image2d_t eos_table){
     real r = (eps - eos_low.s0)/EOS_ED_STEP;
     
     // eos.s0123 = (ed, pr, T, entropy density)
-    real4 eos = (1.0f - r)*eos_low + r*eos_high;
+    real4 epTs = (1.0f - r)*eos_low + r*eos_high;
 
-    return eos.s1;
+    return epTs;
 }
 
+// get the pressure from eos_table
+inline real P(real eps, read_only image2d_t eos_table){
+    return eos(eps, eos_table).s1;
+}
 
 #endif
 
