@@ -33,11 +33,11 @@ class Eos(object):
         self.ctx = ctx
         self.queue = queue
 
-        compile_options.append('-D EOS_ED_START={value}'.format(
+        compile_options.append('-D EOS_ED_START={value}f'.format(
                                                  value=ed_start))
-        compile_options.append('-D EOS_ED_STEP={value}'.format(
+        compile_options.append('-D EOS_ED_STEP={value}f'.format(
                                                  value=ed_step))
-        compile_options.append('-D EOS_NUM_ED={value}'.format(
+        compile_options.append('-D EOS_NUM_ED={value}f'.format(
                                                  value=num_of_ed))
 
         self.compile_options = compile_options

@@ -8,6 +8,7 @@
 __kernel void kt_src_christoffel(
              __global real4 * d_Src,
 		     __global real4 * d_ev,
+             read_only image2d_t eos_table,
 		     const real tau,
              const int step) {
     int I = get_global_id(0);
@@ -21,7 +22,7 @@ __kernel void kt_src_christoffel(
         real vx = e_v.s1;
         real vy = e_v.s2;
         real vz = e_v.s3;
-        real pressure = P(ed);
+        real pressure = P(ed, eos_table);
         real u0 = gamma(vx, vy, vz);
 
         // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
@@ -35,6 +36,7 @@ __kernel void kt_src_christoffel(
 __kernel void kt_src_alongx(
              __global real4 * d_Src,
 		     __global real4 * d_ev,
+             read_only image2d_t eos_table,
 		     const real tau) {
     int J = get_global_id(1);
     int K = get_global_id(2);
@@ -62,7 +64,7 @@ __kernel void kt_src_alongx(
         int IND = I*NY*NZ + J*NZ + K;
         int i = I + 2;
         d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1],
-                     ev[i], ev[i+1], ev[i+2], tau, ALONG_X)/DX;
+                     ev[i], ev[i+1], ev[i+2], tau, ALONG_X, eos_table)/DX;
     }
 }
 
@@ -71,6 +73,7 @@ __kernel void kt_src_alongx(
 __kernel void kt_src_alongy(
              __global real4 * d_Src,
 		     __global real4 * d_ev,
+             read_only image2d_t eos_table,
 		     const real tau) {
     int I = get_global_id(0);
     int K = get_global_id(2);
@@ -98,7 +101,7 @@ __kernel void kt_src_alongy(
         int IND = I*NY*NZ + J*NZ + K;
         int j = J + 2;
         d_Src[IND] = d_Src[IND] - kt1d(ev[j-2], ev[j-1],
-                     ev[j], ev[j+1], ev[j+2], tau, ALONG_Y)/DY;
+                     ev[j], ev[j+1], ev[j+2], tau, ALONG_Y, eos_table)/DY;
     }
 }
 
@@ -106,6 +109,7 @@ __kernel void kt_src_alongy(
 __kernel void kt_src_alongz(
              __global real4 * d_Src,
 		     __global real4 * d_ev,
+             read_only image2d_t eos_table,
 		     const real tau) {
     int I = get_global_id(0);
     int J = get_global_id(1);
@@ -133,7 +137,7 @@ __kernel void kt_src_alongz(
         int IND = I*NY*NZ + J*NZ + K;
         int k = K + 2;
         d_Src[IND] = d_Src[IND] - kt1d(ev[k-2], ev[k-1],
-                     ev[k], ev[k+1], ev[k+2], tau, ALONG_Z)/(tau*DZ);
+                     ev[k], ev[k+1], ev[k+2], tau, ALONG_Z, eos_table)/(tau*DZ);
     }
 }
 
@@ -144,6 +148,7 @@ __kernel void update_ev(
 	__global real4 * d_evnew,
 	__global real4 * d_ev1,
 	__global real4 * d_Src,
+    read_only image2d_t eos_table,
 	const real tau,
 	const int  step)
 {
@@ -154,7 +159,7 @@ __kernel void update_ev(
     real vx = e_v.s1;
     real vy = e_v.s2;
     real vz = e_v.s3;
-    real pressure = P(ed);
+    real pressure = P(ed, eos_table);
     real u0 = gamma(vx, vy, vz);
     real4 umu = u0*(real4)(1.0f, vx, vy, vz);
 
@@ -184,10 +189,10 @@ __kernel void update_ev(
 
     real ed_find;
     //rootFinding_newton(&ed_find, T00, M);
-    rootFinding(&ed_find, T00, M);
+    rootFinding(&ed_find, T00, M, eos_table);
     ed_find = max(0.0f, ed_find);
 
-    real pr = P(ed_find);
+    real pr = P(ed_find, eos_table);
 
     // vi = T0i/(T00+pr) = (e+p)u0*u0*vi/((e+p)*u0*u0)
     real epv = max(acu, T00 + pr);

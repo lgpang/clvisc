@@ -9,6 +9,7 @@ from pyopencl import array
 import os
 import sys
 from time import time
+from eos.eos import Eos
 #import matplotlib.pyplot as plt
 
 
@@ -43,8 +44,14 @@ class CLIdeal(object):
         # set viscous on to cal fluid velocity gradients
         self.viscous_on = viscous_on
         self.gpu_defines = self.__compile_options()
-        self.__loadAndBuildCLPrg()
 
+        # set eos, create eos table for interpolation
+        eos = Eos(self.cfg, self.ctx, self.queue, self.gpu_defines)
+        self.eos_table, nrows, ncols = eos.create_image2d(200, 1000)
+        self.gpu_defines.append('-D EOS_NUM_OF_ROWS=%s'%nrows)
+        self.gpu_defines.append('-D EOS_NUM_OF_COLS=%s'%ncols)
+
+        self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
         mf = cl.mem_flags
         self.h_ev1 = np.zeros((self.size, 4), self.cfg.real)
@@ -100,6 +107,8 @@ class CLIdeal(object):
             gpu_defines.append( '-D EOSLCE' )
         elif self.cfg.IEOS==2:
             gpu_defines.append( '-D EOSLPCE' )
+        elif self.cfg.IEOS==3:
+            gpu_defines.append( '-D GLUEBALL' )
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
         return gpu_defines
@@ -154,17 +163,21 @@ class CLIdeal(object):
         # output: self.d_Src
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
         self.kernel_ideal.kt_src_christoffel(self.queue, (NX*NY*NZ, ), None,
-                         self.d_Src, self.d_ev[step], self.tau, np.int32(step)
+                         self.d_Src, self.d_ev[step], self.eos_table,
+                         self.tau, np.int32(step)
                          ).wait()
 
         self.kernel_ideal.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
-                self.d_Src, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.eos_table,
+                self.tau).wait()
 
         self.kernel_ideal.kt_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
-                self.d_Src, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.eos_table,
+                self.tau).wait()
 
         self.kernel_ideal.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
-                self.d_Src, self.d_ev[step], self.tau).wait()
+                self.d_Src, self.d_ev[step], self.eos_table,
+                self.tau).wait()
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
@@ -173,7 +186,7 @@ class CLIdeal(object):
         # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
         self.kernel_ideal.update_ev(self.queue, (NX*NY*NZ, ), None,
                               self.d_ev[3-step], self.d_ev[1], self.d_Src,
-                              self.tau, np.int32(step)).wait()
+                              self.eos_table, self.tau, np.int32(step)).wait()
 
     def max_energy_density(self):
         '''Calc the maximum energy density on GPU and output the value '''
