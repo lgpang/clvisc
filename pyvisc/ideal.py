@@ -118,6 +118,8 @@ class CLIdeal(object):
                                                  options=self.gpu_defines)
 
         hypersf_defines = list(self.gpu_defines)
+        ## use higher precision for hyper surface calculation
+        # hypersf_defines.remove('-D USE_SINGLE_PRECISION')
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
