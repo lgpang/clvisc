@@ -17,8 +17,10 @@ queue = cl.CommandQueue(ctx)
 
 print cfg.IEOS
 
-cfg.IEOS = 3
+cfg.IEOS = 2
 
 eos = Eos(cfg, ctx, queue, compile_options)
 
 eos.test_eos(cfg, 3.0)
+
+print('EFRZ(Tfrz=0.137)=', eos.efrz(0.137))

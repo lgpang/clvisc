@@ -22,7 +22,8 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     real mass = HadronInfo.s0;
     real gspin = HadronInfo.s1;
     real fermi_boson = HadronInfo.s2;
-    real muB = HadronInfo.s3;
+    //real muB = HadronInfo.s3;
+    real muB = 0.0f;
     real dof = gspin / pown(2.0*M_PI_F, 3);
     
     int k = id_Y_PT_PHI / NPT;

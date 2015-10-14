@@ -42,8 +42,17 @@ class Eos(object):
                                                  value=num_of_ed))
         self.compile_options = compile_options
 
+    def efrz(self, Tfrz=0.137):
+        '''return the freeze out energy density for the corresponding
+        freezeout temperature Tfrz'''
+        from scipy.interpolate import interp1d
+        fEd = interp1d(self.T, self.ed)
+        return fEd(Tfrz)
+
         
     def create_image2d(self, num_of_rows=200, num_of_cols=1000):
+        '''store the eos (ed, pr, T, s) in image2d_t table for fast
+        linear interpolation '''
         fmt = cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT)
         src = np.array(zip(self.ed, self.pr, self.T, self.s),
                  dtype=np.float32).reshape(num_of_rows, num_of_cols, 4)
