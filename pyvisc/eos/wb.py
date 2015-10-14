@@ -108,7 +108,7 @@ eos = EosWB()
 
 ed, pr, T = eos.create_table()
 
-ed_low = 0.0
+ed_start = 0.0
 ed_step = 0.01
 num_ed = 200000
 

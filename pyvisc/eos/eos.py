@@ -1,126 +1,91 @@
 #/usr/bin/env python
 #author: lgpang
 #email: lgpang@qq.com
-#createTime: Sat 25 Oct 2014 04:40:15 PM CST
 
-import matplotlib.pyplot as plt
+import pyopencl as cl
 import numpy as np
-import sympy as sp
-from scipy.integrate import quad
-import math
-from numba import jit
-from scipy import interpolate
 
-hbarc = 0.19732
+class Eos(object):
+    '''create eos table for hydrodynamic simulation;
+    the (ed, pr, T, s) is stored in image2d buffer
+    for fast linear interpolation'''
+    def __init__(self, cfg, ctx, queue, compile_options):
+        # information of the eos table
+        ed_start, ed_step, num_of_ed = None, None, None
+        if cfg.IEOS == 2:
+            import wb
+            self.ed = wb.ed
+            self.pr = wb.pr
+            self.T = wb.T
+            ed_start = wb.ed_start
+            ed_step = wb.ed_step
+            num_of_ed = wb.num_ed
+        elif cfg.IEOS == 3:
+            import glueball
+            self.ed = glueball.ed
+            self.pr = glueball.pr
+            self.T = glueball.T
+            ed_start = glueball.ed_start
+            ed_step = glueball.ed_step
+            num_of_ed = glueball.num_ed
 
-class EosWB(object):
-    '''EOS from WuppertalBudapest Group 2014.
-    $p/T^4 = p(T*)/T*^4 + \int_{T_*}^{T} I(T')/T'^5 dT'$
-    e = I(T) + 3p
-    I(T)/T^5 is not analytically integratable, so numerical
-    integration is used here'''
-    def __init__(self, Tstar=0.214, P_over_Tstar4=1.842):
-        self.Tstar = Tstar
-        self.P_over_Tstar4 = P_over_Tstar4
+        self.s = (self.ed + self.pr)/self.T
+        self.ctx = ctx
+        self.queue = queue
 
-    def trace_anomaly(self, T):
-        '''trace anomaly as a function of temperature
+        compile_options.append('-D EOS_ED_START={value}'.format(
+                                                 value=ed_start))
+        compile_options.append('-D EOS_ED_STEP={value}'.format(
+                                                 value=ed_step))
+        compile_options.append('-D EOS_NUM_ED={value}'.format(
+                                                 value=num_of_ed))
 
-        Args:
-             T [GeV]: temperature 
+        self.compile_options = compile_options
 
-        Returns:
-            The value of I(T)/T^4= (e(T)-3*P(T))/T^4 in formula
-        '''
-        # hi, fi, gi are parameters for LatticeQCD Eos
-        h0, h1, h2 = 0.1396, -0.18, 0.035
-        f0, f1, f2 = 1.05, 6.39, -4.72
-        g1, g2 = -0.92, 0.57
-
-        t = T/0.2
-        return math.exp(-h1/t-h2/(t*t))*(h0+f0*(math.tanh(f1*t+f2)+1.0) \
-                /(1.0+g1*t+g2*t*t))
-
-
-    def P_over_T4(self, T):
-        '''pressure / T^4
-
-        Args:
-           T Symbol('T'): temperature
-        Returns:
-           P/T^4 = \int_{T*}^T I(T')/T'^5 dT' + P*/T*^4
-        '''
-        f = lambda x: self.trace_anomaly(x)/x
-        # g = \int I(T')/T'^5 dT'
-        #g = sp.integrate(f, x)
-        #return g.subs(x, T) - g.subs(x, self.Tstar) + self.P_over_Tstar4
-        f_intg = quad(f, self.Tstar, T)[0] + self.P_over_Tstar4
-        return f_intg
-
-    def E_over_T4(self, T):
-        '''energy_density / T^4
-
-        Args:
-           T Symbol('T'): temperature
-        Returns:
-           E/T^4 = 3*P/T^4 + trace_anomaly
-        '''
-        return 3*self.P_over_T4(T) + self.trace_anomaly(T)
-
-    def cs2_T(self, T):
-        ''' speed of sound square '''
-        pot4 = eos.P_over_T4(T)
-        eot4 = 3*pot4 + self.trace_anomaly(T)
-        return pot4/eot4
-
-    def energy_density(self, T):
-        return self.E_over_T4(T)*(T**4)/(hbarc**3)
-
-    @jit
-    def create_table(self):
-        T_table = np.linspace(0.03, 1.13, 2000)
-        ed_table = np.empty_like(T_table)
-        cs2_table = np.empty_like(T_table)
-        for i, T in enumerate(T_table):
-            ed_table[i] = self.energy_density(T)
-            cs2_table[i] = self.cs2_T(T)
-
-        #plt.plot(ed_table, cs2_table*ed_table)
-        tck = interpolate.splrep(ed_table, T_table, s=0)
-        ed_new = np.linspace(0.01, 2000, 199999)
-        T_new = interpolate.splev(ed_new, tck, der=0)
-        tck = interpolate.splrep(ed_table, cs2_table, s=0)
-        cs2_new = interpolate.splev(ed_new, tck, der=0)
-
-        cs2_ed0 = -(cs2_new[1]-cs2_new[0])/(ed_new[1]-ed_new[0])*ed_new[0] + cs2_new[0]
-
-        # Set the eos for ed=0.0, where T=Tmin, cs2=1/3
-        ed_new = np.insert(ed_new, 0, 0.0)
-        T_new = np.insert(T_new, 0, 0.001)
-        cs2_new = np.insert(cs2_new, 0, cs2_ed0)
         
-        return ed_new, cs2_new, T_new
+    def create_image2d(self, num_of_rows=200, num_of_cols=1000):
+        fmt = cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT)
+        src = np.array(zip(self.ed, self.pr, self.T, self.s),
+                 dtype=np.float32).reshape(num_of_rows, num_of_cols, 4)
 
+        eos_table = cl.image_from_array(self.ctx, src, 4)
+        return eos_table, num_of_rows, num_of_cols
 
-if __name__ == '__main__':
-    eos = EosWB()
-    ed, cs2, T = eos.create_table()
-    pr = ed*cs2
-    pr = np.diff(pr[:])
-    plt.plot(pr[:100], 'ro')
+    def test_eos(self, cfg, test_ed):
+        CL_SOURCE = '''//CL//
+        __kernel void interpolate(
+            read_only image2d_t src,
+            __global float4 * result,
+            const float test_ed)
+        {
+            float ed_per_row = EOS_ED_STEP*EOS_NUM_OF_COLS;
+            int row = test_ed/ed_per_row;
+            int col = (test_ed - EOS_ED_START - row*ed_per_row)
+                       /EOS_ED_STEP;
 
-    T_test = T[1001]
-    ed_test = ed[1001]
-    print('ed=', ed_test, 'T=', T_test, 'cs2=', cs2[1001])
-    print('ed_=', eos.energy_density(T_test))
-    print('cs2_=', eos.cs2_T(T_test))
+            const sampler_t sampler =  CLK_NORMALIZED_COORDS_FALSE
+                  | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
-    #plt.plot(ed[:100], cs2[:100])
-    #plt.xlim(0, 1)
-    #I_o_T5 = []
-    #T_table = np.linspace(0.03, 1.13, 2000)
-    #for i, T in enumerate(T_table):
-    #    I_o_T5.append(eos.trace_anomaly(T))
-    #plt.plot(T_table, I_o_T5)
-    plt.show()
+            if ( get_global_id(0) == 0 ) {
+                float4 result4;
+                result4 = read_imagef(src, sampler, (int2)(col, row));
+                *result = result4;
+            }
+        }
+        '''
 
+        eos_table, nrows, ncols = self.create_image2d()
+        self.compile_options.append('-D EOS_NUM_OF_ROWS=%s'%nrows)
+        self.compile_options.append('-D EOS_NUM_OF_COLS=%s'%ncols)
+        prg = cl.Program(self.ctx, CL_SOURCE).build(self.compile_options)
+        print self.compile_options
+
+        mf = cl.mem_flags
+
+        h_result = np.empty(1, dtype=cfg.real4)
+        result = cl.Buffer(self.ctx, mf.WRITE_ONLY | mf.COPY_HOST_PTR, hostbuf=h_result)
+        prg.interpolate(self.queue, (1,), None, eos_table, result, np.float32(test_ed))
+        cl.enqueue_copy(self.queue, h_result, result)
+
+        print('result at (', test_ed, ')=', h_result)
+     
