@@ -6,7 +6,6 @@
 
 #define THETA 1.1f
 #define hbarc 0.19733f
-#define acu 1.0E-8f
 
 //#define cl_khr_global_int32_base_atomics
 
