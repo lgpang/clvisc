@@ -469,7 +469,9 @@ void Spec::CalcSpec(bool switch_off_decay)
 
             // if switch_off_decay, only calc direct spec for pi, K, proton
             if ( switch_off_decay ) {
-                if ( !(monval == 211 || monval == 321 || monval == 2212) ) continue;
+                if ( !(monval == 211 || monval == 321 || monval == 2212
+                            || monval == 999) ) continue;
+                // 999 is D0
             }
 
             if ( ! particles[pid].antibaryon_spec_exists ) {
@@ -538,9 +540,9 @@ void Spec::CalcSpec(bool switch_off_decay)
             }
 
             // Only output pion, kaon and proton before resonance decay
-            if( monval == 211 || monval == 321 || monval == 2212 )
-            {
-                queue.enqueueReadBuffer( d_Spec, CL_TRUE, pid*NY*NPT*NPHI*sizeof(cl_real), NY*NPT*NPHI*sizeof(cl_real), h_Spec.data() );
+            if ( monval == 211 || monval == 321 || monval == 2212 || monval == 999) {
+                queue.enqueueReadBuffer(d_Spec, CL_TRUE, pid*NY*NPT*NPHI*sizeof(cl_real),
+                        NY*NPT*NPHI*sizeof(cl_real), h_Spec.data() );
                 for ( int i = 0; i < NY; i++ ) 
                     for ( int j = 0; j < NPT; j++ ) 
                         for ( int k = 0; k < NPHI; k++ ) {

@@ -17,7 +17,7 @@ if __name__=='__main__':
         event_path = sys.argv[1]
 
     ylo, yhi = -0.5, 0.5
-    ep_window = (3.3, 4.8)
+    ep_window = (-0.5, 0.5)
 
     #charged = spec.Spec(event_path, pid='Charged', rapidity_kind='Eta')
     #charged.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
@@ -31,8 +31,8 @@ if __name__=='__main__':
     proton = spec.Spec(event_path, pid='2212', reso=False, rapidity_kind='Eta')
     proton.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
 
-    #D0 = spec.Spec(event_path, pid='99999', reso=False, rapidity_kind='Eta')
-    #D0.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
+    D0 = spec.Spec(event_path, pid='999', reso=False, rapidity_kind='Eta')
+    D0.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)
 
     # Get (1/2pi)dNdYPtdPt
     ylo_ptspec, yhi_ptspec = -0.8, 0.8
@@ -46,3 +46,5 @@ if __name__=='__main__':
     proton = spec.Spec(event_path, pid='2212', reso=False, rapidity_kind='Y')
     proton.get_ptspec(ylo_ptspec, yhi_ptspec)
 
+    D0 = spec.Spec(event_path, pid='999', reso=False, rapidity_kind='Y')
+    D0.get_ptspec(ylo_ptspec, yhi_ptspec)
