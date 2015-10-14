@@ -6,7 +6,7 @@ fPathOut = /home/lgpang/PyVisc/results/event0
 [glauber]
 ########### Params for Glauber initial condition 
 ## the maximum energy density for most central collisions
-Edmax =  20.0          
+Edmax =  18.0          
 #Edmax = 55.0          # the maximum energy density for most central collisions
 ## for Au 
 A = 197
