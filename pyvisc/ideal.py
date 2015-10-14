@@ -225,7 +225,7 @@ class CLIdeal(object):
             exit()
 
 
-    def evolve(self, max_loops=1000, ntskip=10):
+    def evolve(self, max_loops=3000):
         '''The main loop of hydrodynamic evolution '''
         cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
         self.tau_old = self.cfg.TAU0
@@ -233,7 +233,7 @@ class CLIdeal(object):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.get_hypersf(n, ntskip)
+            self.get_hypersf(n, self.cfg.ntskip)
             #self.output(n)
 
             self.stepUpdate(step=1)
