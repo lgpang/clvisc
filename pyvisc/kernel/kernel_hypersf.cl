@@ -1,4 +1,4 @@
-#include<helper.h>
+#include<real_type.h>
 
 /* Author: LongGang Pang, 2015 
 The idea of 3D hypersuface calculation in 4D time-space is based on
@@ -127,7 +127,7 @@ real rand(int* seed) // 1 <= *seed < m
 void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
                            real4 * mass_center, int gid) {
    hypersf sf;
-   int seed = 32117 + gid;
+   int seed = 32117*gid;
    for ( int i = 0; i < size_of_ints-4; i ++ )
    for ( int j = i+1; j < size_of_ints-3; j ++ )
    for ( int k = j+1; k < size_of_ints-2; k ++ )
@@ -304,36 +304,6 @@ void get_all_intersections(__private real ed[16],
  }
 
 
-
-
-// unit test for hypersf calc with a test cube
-// output: global d_hypersf array;
-__kernel void test_hypersf(__global real4 * result) {
-    __private real ed_cube[16];
-    for (int i = 0; i < 8; i++) {
-        ed_cube[i] = 3.0f;
-        ed_cube[8+i] = 2.0f;
-    }
-    
-    int num_of_intersection;
-    
-    __private real4 all_ints[32];
-
-    get_all_intersections(ed_cube, all_ints, &num_of_intersection);
-    
-    real4 energy_flow_vector = energy_flow(ed_cube);
-
-    // real4 mass_center;
-    // mass_center = get_mass_center(all_ints, num_of_intersection);
-
-    int gid = get_global_id(0);
-    real4 d_Sigma = calc_area(all_ints, energy_flow_vector,
-                              num_of_intersection, gid);
-
-    result[0] = d_Sigma;
-}
-
-
 // return the index in the global array
 // I, J, K: thread id along x, y, z
 // i, j, k: 3d pos in d_ev[] array
@@ -455,3 +425,35 @@ __kernel void get_hypersf(__global real8  * d_sf,
         } // end surface calculation
     } // end boundary check
 }
+
+
+
+// unit test for hypersf calc with a test cube
+// output: global d_hypersf array;
+__kernel void test_hypersf(__global real4 * result) {
+    __private real ed_cube[16];
+    for (int i = 0; i < 8; i++) {
+        ed_cube[i] = 3.0f;
+        ed_cube[8+i] = 2.0f;
+    }
+    
+    int num_of_intersection;
+    
+    __private real4 all_ints[32];
+
+    get_all_intersections(ed_cube, all_ints, &num_of_intersection);
+    
+    real4 energy_flow_vector = energy_flow(ed_cube);
+
+    // real4 mass_center;
+    // mass_center = get_mass_center(all_ints, num_of_intersection);
+
+    int gid = get_global_id(0);
+    real4 d_Sigma = calc_area(all_ints, energy_flow_vector,
+                              num_of_intersection, gid);
+
+    result[0] = d_Sigma;
+}
+
+
+
