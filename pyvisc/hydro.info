@@ -6,7 +6,7 @@ fPathOut = /home/lgpang/PyVisc/results/event0
 [glauber]
 ########### Params for Glauber initial condition 
 ## the maximum energy density for most central collisions
-Edmax =  30.0          
+Edmax =  20.0          
 #Edmax = 55.0          # the maximum energy density for most central collisions
 ## for Au 
 A = 197
@@ -28,7 +28,7 @@ Si0 = 4.0
 #Si0 = 6.4             
 
 ## impact parameter
-b = 7.0              
+b = 2.4              
 # dNdY \prop Hwn*Npart+(1-Hwn)*Nbinary 
 Hwn = 0.95            
 # the width of the plateu in the initial energy density distribution along eta_s
@@ -45,12 +45,12 @@ NY = 205
 # etas range [ -NZ/2, NZ/2] * dz
 NZ = 85              
 # time step
-dt = 0.01             
-dx = 0.08            
-dy = 0.08
+dt = 0.02             
+dx = 0.15            
+dy = 0.15
 dz = 0.3
 # do output every 0.4 fm
-ntskip = 20           
+ntskip = 15           
 # DX = 0.4 in output file
 nxskip = 3           
 # DY = 0.4 in output file
@@ -69,7 +69,8 @@ tau0 = 0.6
 IEOS = 2              
 # IEOS = 0 for p = e/3
 # IEOS = 1 for s95p_v1 CE lattice QCD EOS
-# IEOS = 2 for s95p_PCE_v0 lattice QCD EOS
+# IEOS = 2 for Wuppertal-Budapest 2014 lattice QCD EOS
+# IEOS = 3 for Wuppertal-Budapest glueball lattice QCD EOS
 
 #in units GeV
 TFRZ = 0.137          
