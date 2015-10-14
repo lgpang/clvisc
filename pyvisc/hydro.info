@@ -1,7 +1,7 @@
 # comments start with '#'
 [path]
-fPathIni = /home/hyihp/pang/PyVisc/results/event0/edv0.txt
-fPathOut = /home/hyihp/pang/PyVisc/results/event0
+fPathIni = /home/lgpang/PyVisc/results/event0/edv0.txt
+fPathOut = /home/lgpang/PyVisc/results/event0
 
 [glauber]
 ########### Params for Glauber initial condition 

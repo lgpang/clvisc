@@ -28,16 +28,18 @@ class CLIdeal(object):
         self.cfg = configs
         self.cwd, cwf = os.path.split(__file__)
 
-        from backend_opencl import OpenCLBackend
-        backend = OpenCLBackend(self.cfg, gpu_id)
+        #from backend_opencl import OpenCLBackend
+        #backend = OpenCLBackend(self.cfg, gpu_id)
 
-        self.ctx = backend.ctx
-        self.queue = backend.default_queue
+        #self.ctx = backend.ctx
+        #self.queue = backend.default_queue
 
+        self.ctx = cl.create_some_context()
+        self.queue = cl.CommandQueue(self.ctx)
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
-        self.efrz = 0.25
+        self.efrz = 0.000001
 
         # set viscous on to cal fluid velocity gradients
         self.viscous_on = viscous_on
