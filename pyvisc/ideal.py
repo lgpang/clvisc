@@ -38,8 +38,6 @@ class CLIdeal(object):
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
-        self.efrz = 0.280594
-        # correponding to TFRZ=0.137
 
         # set viscous on to cal fluid velocity gradients
         self.viscous_on = viscous_on
@@ -50,6 +48,8 @@ class CLIdeal(object):
         self.eos_table, nrows, ncols = eos.create_image2d(200, 1000)
         self.gpu_defines.append('-D EOS_NUM_OF_ROWS=%s'%nrows)
         self.gpu_defines.append('-D EOS_NUM_OF_COLS=%s'%ncols)
+
+        self.efrz = eos.efrz(self.cfg.TFRZ)
 
         self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
