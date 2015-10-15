@@ -4,63 +4,68 @@
 
 import pyopencl as cl
 import numpy as np
+from scipy.interpolate import interp1d
 
 class Eos(object):
     '''create eos table for hydrodynamic simulation;
     the (ed, pr, T, s) is stored in image2d buffer
     for fast linear interpolation'''
-    def __init__(self, cfg, ctx, queue, compile_options):
+    def __init__(self, cfg):
         # information of the eos table
-        ed_start, ed_step, num_of_ed = None, None, None
         if cfg.IEOS == 2:
             import wb
             self.ed = wb.ed
             self.pr = wb.pr
             self.T = wb.T
-            ed_start = wb.ed_start
-            ed_step = wb.ed_step
-            num_of_ed = wb.num_ed
+            self.ed_start = wb.ed_start
+            self.ed_step = wb.ed_step
+            self.num_of_ed = wb.num_ed
         else:
         #else cfg.IEOS == 3:
             import glueball
             self.ed = glueball.ed
             self.pr = glueball.pr
             self.T = glueball.T
-            ed_start = glueball.ed_start
-            ed_step = glueball.ed_step
-            num_of_ed = glueball.num_ed
+            self.ed_start = glueball.ed_start
+            self.ed_step = glueball.ed_step
+            self.num_of_ed = glueball.num_ed
 
+        self.cfg = cfg
         self.s = (self.ed + self.pr)/self.T
-        self.ctx = ctx
-        self.queue = queue
 
-        compile_options.append('-D EOS_ED_START={value}f'.format(
-                                                 value=ed_start))
-        compile_options.append('-D EOS_ED_STEP={value}f'.format(
-                                                 value=ed_step))
-        compile_options.append('-D EOS_NUM_ED={value}f'.format(
-                                                 value=num_of_ed))
-        self.compile_options = compile_options
+        # interpolation functions
+        self.f_ed = interp1d(self.T, self.ed)
+        self.f_T = interp1d(self.ed, self.T)
+        self.f_P = interp1d(self.ed, self.T)
 
-    def efrz(self, Tfrz=0.137):
-        '''return the freeze out energy density for the corresponding
-        freezeout temperature Tfrz'''
-        from scipy.interpolate import interp1d
-        fEd = interp1d(self.T, self.ed)
-        return fEd(Tfrz)
-
-        
-    def create_image2d(self, num_of_rows=200, num_of_cols=1000):
+    def create_table(self, ctx, compile_options, nrow=200, ncol=1000):
         '''store the eos (ed, pr, T, s) in image2d_t table for fast
-        linear interpolation '''
+        linear interpolation,
+        add some information to compile_options for EOS table'''
         fmt = cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT)
         src = np.array(zip(self.ed, self.pr, self.T, self.s),
-                 dtype=np.float32).reshape(num_of_rows, num_of_cols, 4)
+                 dtype=np.float32).reshape(nrow, ncol, 4)
 
-        eos_table = cl.image_from_array(self.ctx, src, 4)
-        return eos_table, num_of_rows, num_of_cols
+        eos_table = cl.image_from_array(ctx, src, 4)
+        compile_options.append('-D EOS_ED_START={value}f'.format(
+                                                 value=self.ed_start))
+        compile_options.append('-D EOS_ED_STEP={value}f'.format(
+                                                 value=self.ed_step))
+        compile_options.append('-D EOS_NUM_ED={value}'.format(
+                                                 value=self.num_of_ed))
+        compile_options.append('-D EOS_NUM_OF_ROWS=%s'%nrow)
+        compile_options.append('-D EOS_NUM_OF_COLS=%s'%ncol)
+        self.compile_options = compile_options
+        return eos_table
 
-    def test_eos(self, cfg, test_ed):
+    def test_eos(self, test_ed):
+        '''test eos table in the form of interpolating from data stored
+        in the 2d image buffer image2d_t'''
+        ctx = cl.create_some_context()
+        queue = cl.CommandQueue(ctx)
+        compile_options = []
+        eos_table = self.create_table(ctx, compile_options)
+
         CL_SOURCE = '''//CL//
         __kernel void interpolate(
             read_only image2d_t src,
@@ -83,18 +88,14 @@ class Eos(object):
         }
         '''
 
-        eos_table, nrows, ncols = self.create_image2d()
-        self.compile_options.append('-D EOS_NUM_OF_ROWS=%s'%nrows)
-        self.compile_options.append('-D EOS_NUM_OF_COLS=%s'%ncols)
-        prg = cl.Program(self.ctx, CL_SOURCE).build(self.compile_options)
-        print self.compile_options
+        prg = cl.Program(ctx, CL_SOURCE).build(self.compile_options)
 
         mf = cl.mem_flags
 
-        h_result = np.empty(1, dtype=cfg.real4)
-        result = cl.Buffer(self.ctx, mf.WRITE_ONLY | mf.COPY_HOST_PTR, hostbuf=h_result)
-        prg.interpolate(self.queue, (1,), None, eos_table, result, np.float32(test_ed))
-        cl.enqueue_copy(self.queue, h_result, result)
+        h_result = np.empty(4, dtype=self.cfg.real)
+        result = cl.Buffer(ctx, mf.WRITE_ONLY | mf.COPY_HOST_PTR, hostbuf=h_result)
+        prg.interpolate(queue, (1,), None, eos_table, result, np.float32(test_ed))
+        cl.enqueue_copy(queue, h_result, result)
 
-        print('result at (', test_ed, ')=', h_result)
+        print('result at (', test_ed, ')=', h_result[0])
      
