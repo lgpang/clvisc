@@ -54,7 +54,6 @@ class CLIdeal(object):
 
         self.efrz = eos.f_ed(self.cfg.TFRZ)
 
-        self.cfg.Edmax = eos.f_ed(0.6)
 
         self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
@@ -254,7 +253,7 @@ class CLIdeal(object):
             self.get_hypersf(n, self.cfg.ntskip)
             #self.output(n)
             if n % self.cfg.ntskip == 0:
-                self.bulkinfo.get(self.tau, self.d_ev[1])
+                self.bulkinfo.get(self.tau, self.d_ev[1], self.edmax)
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
@@ -275,13 +274,17 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
+
+    eos = Eos(cfg)
+    cfg.Edmax = eos.f_ed(0.6)
+
     ideal = CLIdeal(cfg)
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
                   ideal.d_ev[1])
     #dat = np.loadtxt(cfg.fPathIni)
     #ideal.load_ini(dat)
-    ideal.evolve(max_loops=100)
+    ideal.evolve(max_loops=1000)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 

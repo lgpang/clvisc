@@ -29,7 +29,7 @@ class BulkInfo(object):
         self.ecc_x = []
         self.ecc_p = []
         self.time = []
-        self.Tmax = []
+        self.edmax = []
         self.__loadAndBuildCLPrg()
         self.eos = Eos(cfg)
 
@@ -124,10 +124,14 @@ class BulkInfo(object):
         self.vx_xy.append(h_evxy[:,1].reshape(NX, NY))
         self.vy_xy.append(h_evxy[:,2].reshape(NX, NY))
 
-    def eccx(self, tau, ed, vx, vy):
+    def eccp(self, ed, vx, vy):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
-        with weight gamma*eps '''
-        pass
+            eccp = <Txx-Tyy>/<Txx+Tyy> '''
+        pre = self.eos.f_P(ed)
+        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy)
+        Tyy = (ed + pre)*u0*u0*vy*vy + pre
+        Txx = (ed + pre)*u0*u0*vx*vx + pre
+        return (Txx - Tyy).sum() / (Txx + Tyy).sum()
 
     def save(self):
         np.savetxt(self.cfg.fPathOut+'/ex.dat', np.array(self.ex).T)
@@ -150,13 +154,7 @@ class BulkInfo(object):
             np.savetxt(self.cfg.fPathOut+'/vx_xy%d.dat'%idx, vx)
             np.savetxt(self.cfg.fPathOut+'/vy_xy%d.dat'%idx, vy)
 
-            pre = self.eos.f_P(exy)
-            u0 = 1.0/np.sqrt(vx*vx + vy*vy)
-            Tyy = (exy + pre)*u0*u0*vy*vy + pre
-            Txx = (exy + pre)*u0*u0*vx*vx + pre
-            ecc = (Txx - Tyy).sum() / (Txx + Tyy).sum()
-            eccp.append(ecc)
-
+            eccp.append(self.eccp(exy, vx, vy))
         
         np.savetxt(self.cfg.fPathOut + '/eccp.dat',
                    np.array(zip(self.time, eccp)))
