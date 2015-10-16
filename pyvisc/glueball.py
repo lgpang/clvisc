@@ -21,6 +21,8 @@ def glueball(Tmax = 0.6, outdir = '../results/event0'):
     cfg.Edmax = eos.f_ed(Tmax)
     cfg.fPathOut = outdir
 
+    # set IEOS = 2 for (2+1)-flavor QCD EOS
+    # set IEOS = 3 for GlueBall EOS
     cfg.IEOS = 2
 
     ideal = CLIdeal(cfg)

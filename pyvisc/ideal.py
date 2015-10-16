@@ -229,17 +229,20 @@ class CLIdeal(object):
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
             self.tau_old = tau_new
 
-            self.num_of_sf = np.zeros(1, dtype=np.int32)
-            cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
-            print("num of sf=", self.num_of_sf)
+        return is_finished
 
-        if ( is_finished ):
-            hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
-            cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
-            out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-            print("hypersf save to ", out_path)
-            np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
-            exit()
+    def save(self):
+        self.num_of_sf = np.zeros(1, dtype=np.int32)
+        cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
+        print("num of sf=", self.num_of_sf)
+        hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
+        cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
+        out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
+        print("hypersf save to ", out_path)
+        np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
+        self.bulkinfo.save()
+        # exit after save everything to disk
+        exit()
 
 
     def evolve(self, max_loops=2000):
@@ -250,8 +253,10 @@ class CLIdeal(object):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.get_hypersf(n, self.cfg.ntskip)
-            #self.output(n)
+            is_finished = self.get_hypersf(n, self.cfg.ntskip)
+            if is_finished:
+                break
+
             if n % self.cfg.ntskip == 0:
                 self.bulkinfo.get(self.tau, self.d_ev[1], self.edmax)
 
@@ -260,10 +265,7 @@ class CLIdeal(object):
             self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.stepUpdate(step=2)
 
-        self.bulkinfo.save()
-
-           
- 
+        self.save()
 
 
 def main():
