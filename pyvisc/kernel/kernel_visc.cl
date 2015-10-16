@@ -343,8 +343,8 @@ __kernel void update_pimn(
     
     real4 e_v1 = d_ev1[I];
     real4 e_v2 = d_ev2[I];
-    real4 u_old = gamma_real4(e_v1)*(real4)(1.0f, e_v1.s123);
-    real4 u_new = gamma_real4(e_v2)*(real4)(1.0f, e_v2.s123);
+    real4 u_old = umu4(e_v1);
+    real4 u_new = umu4(e_v2);
     real4 udt = (u_new - u_old)/DT;
 
     real sigma[4][4];
