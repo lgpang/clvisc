@@ -407,15 +407,4 @@ __kernel void update_pimn(
     u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
     u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
     
-    // if ( I == NX*NY*NZ/8 ) {
-    //     printf("ev1.s0=%f\n", e_v1.s0);
-    //     printf("traceless: %f - %f - %f - %f = %f \n",
-    //            sigma[0][0], sigma[1][1], sigma[2][2], sigma[3][3],
-    //        sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3]);
-    //     printf("umu=(%f,%f,%f,%f)\n", u[0], u[1], u[2], u[3]);
-    //     printf("unew(%f,%f,%f,%f)\n", u_new.s0, u_new.s1, u_new.s2, u_new.s3);
-    //     printf("theta=%f\n", theta);
-    //     printf("dtdu=(%f, %f, %f, %f)", udt.s0, udt.s1, udt.s2, udt.s3);
-    //     printf("dxdu=(%f, %f, %f, %f)", udx.s0, udx.s1, udx.s2, udx.s3);
-    // }
 }
