@@ -6,8 +6,8 @@ fPathOut = /home/lgpang/PyVisc/results/event0
 [glauber]
 ########### Params for Glauber initial condition 
 ## the maximum energy density for most central collisions
-Edmax =  18.0          
-#Edmax = 55.0          # the maximum energy density for most central collisions
+#Edmax =  30.0          
+Edmax = 55.0
 ## for Au 
 A = 197
 ## for Pb
@@ -28,13 +28,13 @@ Si0 = 4.0
 #Si0 = 6.4             
 
 ## impact parameter
-b = 2.4              
+b = 10.0
 # dNdY \prop Hwn*Npart+(1-Hwn)*Nbinary 
 Hwn = 0.95            
 # the width of the plateu in the initial energy density distribution along eta_s
 Eta_flat = 2.95          
 # the width of the gaussian falloff at fabs( eta_s ) > Eta_flat/2
-Eta_gw = 0.5          
+Eta_gw = 0.4          
 
 [geometry]
 ############# Params for hydro grid setting 
@@ -64,7 +64,7 @@ nzskip = 1
 ## starting proper time for hydro in units fm
 #tau0 = 1.0            
 ## starting proper time for hydro in units fm
-tau0 = 0.6            
+tau0 = 0.4            
 
 IEOS = 2              
 # IEOS = 0 for p = e/3

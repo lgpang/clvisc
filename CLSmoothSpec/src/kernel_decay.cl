@@ -200,7 +200,7 @@ real dnpir2N (real phi, real costh, real w2, real y, real pt, real phi1, real m1
     plR = mr * sume * (pl - p0 * costh) /D;
     ptR = (eR * eR - plR * plR - mr * mr);
 
-    if (ptR < 1.0E-6f) ptR = 1.0E-6f;
+    if (ptR < 1.0E-15f) ptR = 1.0E-15f;
     else ptR = sqrt (ptR);
 
     //yR = 0.5 * log (max(ACU, eR + plR)/max(ACU, (eR - plR)));
