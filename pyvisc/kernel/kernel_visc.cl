@@ -90,6 +90,7 @@ __kernel void visc_src_alongx(
              __global real4 * d_udx,
              __global real * d_pi1,
 		     __global real4 * d_ev,
+             read_only image2d_t eos_table,
 		     const real tau) {
     int J = get_global_id(1);
     int K = get_global_id(2);
@@ -139,8 +140,8 @@ __kernel void visc_src_alongx(
         real u0_i = gamma_real4(ev_i);
         real u0_ip1 = gamma_real4(ev_ip1);
         real u0_ip2 = gamma_real4(ev_ip2);
-        real pr_mh = 0.5f*(P(ev_im1.s0) + P(ev_i.s0));
-        real pr_ph = 0.5f*(P(ev_ip1.s0) + P(ev_i.s0));
+        real pr_mh = 0.5f*(P(ev_im1.s0, eos_table) + P(ev_i.s0, eos_table));
+        real pr_ph = 0.5f*(P(ev_ip1.s0, eos_table) + P(ev_i.s0, eos_table));
         // .s1 -> .s2 or .s3 in other directions
         real v_mh = 0.5f*(ev_im1.s1 + ev_i.s1);
         real v_ph = 0.5f*(ev_ip1.s1 + ev_i.s1);
@@ -169,6 +170,7 @@ __kernel void visc_src_alongy(
                               __global real4 * d_udy,
                               __global real * d_pi1,
                               __global real4 * d_ev,
+                              read_only image2d_t eos_table,
                               const real tau) {
     int I = get_global_id(0);
     int K = get_global_id(2);
@@ -218,8 +220,8 @@ __kernel void visc_src_alongy(
         real u0_i = gamma_real4(ev_i);
         real u0_ip1 = gamma_real4(ev_ip1);
         real u0_ip2 = gamma_real4(ev_ip2);
-        real pr_mh = 0.5f*(P(ev_im1.s0) + P(ev_i.s0));
-        real pr_ph = 0.5f*(P(ev_ip1.s0) + P(ev_i.s0));
+        real pr_mh = 0.5f*(P(ev_im1.s0, eos_table) + P(ev_i.s0, eos_table));
+        real pr_ph = 0.5f*(P(ev_ip1.s0, eos_table) + P(ev_i.s0, eos_table));
         // .s1 -> .s2 or .s3 in other directions
         real v_mh = 0.5f*(ev_im1.s2 + ev_i.s2);
         real v_ph = 0.5f*(ev_ip1.s2 + ev_i.s2);
@@ -244,11 +246,11 @@ __kernel void visc_src_alongy(
 // output: d_Src kt src for pimn evolution;
 // output: d_udy the velocity gradient along x
 // all the others are input
-__kernel void visc_src_alongz(
-                              __global real * d_Src,
+__kernel void visc_src_alongz(__global real * d_Src,
                               __global real4 * d_udz,
                               __global real * d_pi1,
                               __global real4 * d_ev,
+                              read_only image2d_t eos_table,
                               const real tau) {
     int I = get_global_id(0);
     int J = get_global_id(1);
@@ -298,8 +300,8 @@ __kernel void visc_src_alongz(
         real u0_i = gamma_real4(ev_i);
         real u0_ip1 = gamma_real4(ev_ip1);
         real u0_ip2 = gamma_real4(ev_ip2);
-        real pr_mh = 0.5f*(P(ev_im1.s0) + P(ev_i.s0));
-        real pr_ph = 0.5f*(P(ev_ip1.s0) + P(ev_i.s0));
+        real pr_mh = 0.5f*(P(ev_im1.s0, eos_table) + P(ev_i.s0, eos_table));
+        real pr_ph = 0.5f*(P(ev_ip1.s0, eos_table) + P(ev_i.s0, eos_table));
         // .s1 -> .s2 or .s3 in other directions
         real v_mh = 0.5f*(ev_im1.s3 + ev_i.s3);
         real v_ph = 0.5f*(ev_ip1.s3 + ev_i.s3);
@@ -333,16 +335,16 @@ __kernel void update_pimn(
     __global real4 * d_udy,
     __global real4 * d_udz,
 	__global real * d_Src,
+    read_only image2d_t eos_table,
 	const real tau,
 	const int  step)
 {
     int I = get_global_id(0);
-
     
     real4 e_v1 = d_ev1[I];
     real4 e_v2 = d_ev2[I];
-    real4 u_old = gamma_real4(e_v1)*(real4)(1.0f, e_v1.s123);
-    real4 u_new = gamma_real4(e_v2)*(real4)(1.0f, e_v2.s123);
+    real4 u_old = umu4(e_v1);
+    real4 u_new = umu4(e_v2);
     real4 udt = (u_new - u_old)/DT;
 
     real sigma[4][4];
@@ -364,7 +366,7 @@ __kernel void update_pimn(
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
     real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
-    real etav = ETAOS * S(e_v2.s0) * hbarc;
+    real etav = ETAOS * S(e_v2.s0, eos_table) * hbarc;
 
     real pi1[10];
     for ( int mn=0; mn < 10; mn ++ ) {
@@ -405,15 +407,4 @@ __kernel void update_pimn(
     u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
     u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
     
-    // if ( I == NX*NY*NZ/8 ) {
-    //     printf("ev1.s0=%f\n", e_v1.s0);
-    //     printf("traceless: %f - %f - %f - %f = %f \n",
-    //            sigma[0][0], sigma[1][1], sigma[2][2], sigma[3][3],
-    //        sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3]);
-    //     printf("umu=(%f,%f,%f,%f)\n", u[0], u[1], u[2], u[3]);
-    //     printf("unew(%f,%f,%f,%f)\n", u_new.s0, u_new.s1, u_new.s2, u_new.s3);
-    //     printf("theta=%f\n", theta);
-    //     printf("dtdu=(%f, %f, %f, %f)", udt.s0, udt.s1, udt.s2, udt.s3);
-    //     printf("dxdu=(%f, %f, %f, %f)", udx.s0, udx.s1, udx.s2, udx.s3);
-    // }
 }

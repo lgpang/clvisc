@@ -42,7 +42,7 @@ inline real4 eos(real eps, read_only image2d_t eos_table){
     // normal case, do interpolation between col and (col+1)
     col = col + 1;
     // when col is the last one in one row, row+=1
-    if ( col == EOS_NUM_OF_COLS - 1 ) {
+    if ( col == EOS_NUM_OF_COLS ) {
         row += 1;
         col = 0;
     }
@@ -59,6 +59,17 @@ inline real4 eos(real eps, read_only image2d_t eos_table){
 inline real P(real eps, read_only image2d_t eos_table){
     return eos(eps, eos_table).s1;
 }
+
+// get the pressure from eos_table
+inline real T(real eps, read_only image2d_t eos_table){
+    return eos(eps, eos_table).s2;
+}
+
+// get the pressure from eos_table
+inline real S(real eps, read_only image2d_t eos_table){
+    return eos(eps, eos_table).s3;
+}
+
 
 #endif
 

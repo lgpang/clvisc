@@ -33,6 +33,11 @@ inline real gamma_real4(real4 ev){
     return 1.0f/sqrt(max(1.0f-ev.s1*ev.s1-ev.s2*ev.s2-ev.s3*ev.s3, acu));
 }
 
+/** get (real4) umu4 from (real4) ev */
+inline real4 umu4(real4 ev){
+    return gamma_real4(ev)*(real4)(1.0, ev.s123);
+}
+
 /** 1D linear interpolation */
 inline real lin_int( real x1, real x2, real y1, real y2, real x )
 {

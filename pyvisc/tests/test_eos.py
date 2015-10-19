@@ -9,18 +9,10 @@ sys.path.append(os.path.join(cwd, '..'))
 from config import cfg
 from eos.eos import Eos
 
-compile_options = []
+cfg.IEOS = 3
 
+eos = Eos(cfg)
 
-ctx = cl.create_some_context()
-queue = cl.CommandQueue(ctx)
+eos.test_eos(3.0)
 
-print cfg.IEOS
-
-cfg.IEOS = 2
-
-eos = Eos(cfg, ctx, queue, compile_options)
-
-eos.test_eos(cfg, 3.0)
-
-print('EFRZ(Tfrz=0.137)=', eos.efrz(0.137))
+print('EFRZ(Tfrz=0.137)=', eos.f_ed(0.137))

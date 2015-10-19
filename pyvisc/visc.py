@@ -12,7 +12,6 @@ from time import time
 
 from ideal import CLIdeal
 
-import matplotlib.pyplot as plt
 
 class CLVisc(object):
     '''The pyopencl version for 3+1D visc hydro dynamic simulation'''
@@ -24,8 +23,9 @@ class CLVisc(object):
         self.compile_options = self.ideal.gpu_defines
         self.__loadAndBuildCLPrg()
 
+        self.eos_table = self.ideal.eos_table
+
         self.size =self.ideal.size
-        #self.h_pi0  = np.empty(10*self.size, self.cfg.real)
         self.h_pi0  = np.zeros(10*self.size, self.cfg.real)
 
         mf = cl.mem_flags
@@ -47,7 +47,6 @@ class CLVisc(object):
 
     def __loadAndBuildCLPrg(self):
         self.cwd, cwf = os.path.split(__file__)
-        print self.cwd
         #load and build *.cl programs with compile options
         with open(os.path.join(self.cwd, 'kernel', 'kernel_visc.cl'), 'r') as f:
             src = f.read()
@@ -66,26 +65,30 @@ class CLVisc(object):
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
 
         self.kernel_visc.visc_src_christoffel(self.queue, (NX*NY*NZ,), None,
-                self.d_IS_src, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau, np.int32(step));
+                self.d_IS_src, self.d_pi[1], self.ideal.d_ev[1],
+                self.ideal.tau, np.int32(step));
 
         self.kernel_visc.visc_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
-                self.d_IS_src, self.d_udx, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau).wait()
+                self.d_IS_src, self.d_udx, self.d_pi[1], self.ideal.d_ev[1],
+                self.eos_table, self.ideal.tau).wait()
 
         print "udx along x"
 
         self.kernel_visc.visc_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
-                self.d_IS_src, self.d_udy, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau).wait()
+                self.d_IS_src, self.d_udy, self.d_pi[1], self.ideal.d_ev[1],
+                self.eos_table, self.ideal.tau).wait()
 
         print "udy along y"
         self.kernel_visc.visc_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
-                self.d_IS_src, self.d_udz, self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau).wait()
+                self.d_IS_src, self.d_udz, self.d_pi[1], self.ideal.d_ev[1],
+                self.eos_table, self.ideal.tau).wait()
 
         print "udz along z"
         self.kernel_visc.update_pimn(self.queue, (NX*NY*NZ,), None,
                 self.d_checkpi, self.d_pi[3-step], self.d_pi[1],
                 self.ideal.d_ev[0], self.ideal.d_ev[3-step],
                 self.d_udx, self.d_udy, self.d_udz, self.ideal.d_Src,
-                self.ideal.tau, np.int32(step)
+                self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
 
         print "sigma"
@@ -97,6 +100,7 @@ class CLVisc(object):
     def plot_sigma_traceless(self):
         cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.d_checkpi).wait()
         edxy = self.ideal.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,55]
+        import matplotlib.pyplot as plt
         plt.imshow(edxy.T)
         plt.colorbar()
         plt.show()
@@ -118,20 +122,21 @@ class CLVisc(object):
 
 
 
-if __name__ == '__main__':
+def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    import pandas as pd
     visc = CLVisc(cfg)
-    dat = np.loadtxt(cfg.fPathIni)
-    #dat = pd.read_csv(cfg.fPathIni, sep=' ', skiprows=1,
-    #        header=None, dtype=cfg.real).values
-    visc.ideal.load_ini(dat)
+    from glauber import Glauber
+    Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
+            visc.ideal.d_ev[1])
+
     visc.evolve(max_loops=40)
     #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
 
+if __name__ == '__main__':
+    main()

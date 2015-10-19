@@ -10,6 +10,7 @@ import os
 import sys
 from time import time
 from eos.eos import Eos
+from bulkinfo import BulkInfo
 #import matplotlib.pyplot as plt
 
 
@@ -45,13 +46,16 @@ class CLIdeal(object):
         self.viscous_on = viscous_on
         self.gpu_defines = self.__compile_options()
 
-        # set eos, create eos table for interpolation
-        eos = Eos(self.cfg, self.ctx, self.queue, self.gpu_defines)
-        self.eos_table, nrows, ncols = eos.create_image2d(200, 1000)
-        self.gpu_defines.append('-D EOS_NUM_OF_ROWS=%s'%nrows)
-        self.gpu_defines.append('-D EOS_NUM_OF_COLS=%s'%ncols)
+        # store 1D and 2d bulk info at each time step
+        self.bulkinfo = BulkInfo(self.cfg, self.ctx, self.queue,
+                self.gpu_defines)
 
-        self.efrz = eos.efrz(self.cfg.TFRZ)
+        # set eos, create eos table for interpolation
+        eos = Eos(self.cfg)
+        self.eos_table = eos.create_table(self.ctx, self.gpu_defines)
+
+        self.efrz = eos.f_ed(self.cfg.TFRZ)
+
 
         self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
@@ -227,20 +231,23 @@ class CLIdeal(object):
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
             self.tau_old = tau_new
 
-            self.num_of_sf = np.zeros(1, dtype=np.int32)
-            cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
-            print("num of sf=", self.num_of_sf)
+        return is_finished
 
-        if ( is_finished ):
-            hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
-            cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
-            out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-            print("hypersf save to ", out_path)
-            np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
-            exit()
+    def save(self):
+        self.num_of_sf = np.zeros(1, dtype=np.int32)
+        cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
+        print("num of sf=", self.num_of_sf)
+        hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
+        cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
+        out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
+        print("hypersf save to ", out_path)
+        np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
+        self.bulkinfo.save()
+        # exit after save everything to disk
+        exit()
 
 
-    def evolve(self, max_loops=3000):
+    def evolve(self, max_loops=2000):
         '''The main loop of hydrodynamic evolution '''
         cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
         self.tau_old = self.cfg.TAU0
@@ -248,16 +255,19 @@ class CLIdeal(object):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            self.get_hypersf(n, self.cfg.ntskip)
-            #self.output(n)
+            is_finished = self.get_hypersf(n, self.cfg.ntskip)
+            if is_finished:
+                break
+
+            if n % self.cfg.ntskip == 0:
+                self.bulkinfo.get(self.tau, self.d_ev[1], self.edmax)
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
             self.stepUpdate(step=2)
 
-           
- 
+        self.save()
 
 
 def main():
@@ -268,13 +278,17 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
+
+    eos = Eos(cfg)
+    cfg.Edmax = eos.f_ed(0.6)
+
     ideal = CLIdeal(cfg)
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
                   ideal.d_ev[1])
     #dat = np.loadtxt(cfg.fPathIni)
     #ideal.load_ini(dat)
-    ideal.evolve()
+    ideal.evolve(max_loops=1000)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
