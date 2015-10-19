@@ -241,8 +241,6 @@ class CLIdeal(object):
         print("hypersf save to ", out_path)
         np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
         self.bulkinfo.save()
-        # exit after save everything to disk
-        exit()
 
 
     def evolve(self, max_loops=2000):
