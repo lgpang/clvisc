@@ -4,6 +4,10 @@
 #define ALONG_Y 1
 #define ALONG_Z 2
 
+// IDN() return the idx of pi^{mu nu}_{i,j,k}in global mem
+// I = i*NY*NZ + j*NZ + k
+#define idn(I, mn) (I)*10+mn
+
 constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
                            {0.0f,-1.0f, 0.0f, 0.0f},
                            {0.0f, 0.0f,-1.0f, 0.0f},
@@ -12,7 +16,7 @@ constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
 // use pimn and ev at  i-2, i-1, i, i+1, i+2 to calc src term from flux
 // pr_mh = pr_{i-1/2} and pr_ph = pr_{i+1/2}
 // these mh, ph terms are calcualted 1 time and used 10 times by pimn
-real kt1d_pimn(
+real kt1d_real(
        real Q_im2, real Q_im1, real Q_i, real Q_ip1, real Q_ip2,
        real pr_mh, real pr_ph, real v_mh, real v_ph, real lam_mh, real lam_ph,
        real tau, int along)
@@ -50,6 +54,30 @@ real kt1d_pimn(
    return src;
 }
 
+
+// christoffel terms from d;mu pi^{\alpha \beta}
+__kernel void visc_initialize(
+             __global real * d_pi1,
+		     __global real4 * d_ev,
+		     const real tau,
+             read_only image2d_t eos_table) {
+    int I = get_global_id(0);
+
+    if ( I < NX*NY*NZ ) {
+       real4 ev = d_ev[I];
+       real etav = ETAOS * S(ev.s0, eos_table) * hbarc;
+       real tmp = 2.0f/3.0f * etav / tau;
+       //d_pi1[10*I+idx(1, 1)] = tmp;
+       //d_pi1[10*I+idx(2, 2)] = tmp;
+       //d_pi1[10*I+idx(3, 3)] = -2.0f*tmp;
+       d_pi1[10*I+idx(1, 1)] = 0.0f;
+       d_pi1[10*I+idx(2, 2)] = 0.0f;
+       d_pi1[10*I+idx(3, 3)] = 0.0f;
+    }
+}
+
+
+
 // christoffel terms from d;mu pi^{\alpha \beta}
 __kernel void visc_src_christoffel(
              __global real * d_Src,
@@ -82,6 +110,8 @@ __kernel void visc_src_christoffel(
     }
 }
 
+
+
 // output: d_Src kt src for pimn evolution;
 // output: d_udx the velocity gradient along x
 // all the others are input
@@ -102,9 +132,8 @@ __kernel void visc_src_alongx(
     for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[I+2] = d_ev[IND];
-        int startI = 10*I + 2;
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[startI + mn] = d_pi1[10*IND + mn];
+            pimn[idn(I+2, mn)] = d_pi1[idn(IND, mn)];
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -116,10 +145,10 @@ __kernel void visc_src_alongx(
        ev[NX+3] = ev[NX+1];
        ev[NX+2] = ev[NX+1];
        for ( int mn = 0; mn < 10; mn ++ ) {
-             pimn[mn] = pimn[20+mn];
-             pimn[10+mn] = pimn[20+mn];
-             pimn[(NX+3)*10+mn] = pimn[(NX+1)*10+mn];
-             pimn[(NX+2)*10+mn] = pimn[(NX+1)*10+mn];
+             pimn[idn(0, mn)] = pimn[idn(2, mn)];
+             pimn[idn(1, mn)] = pimn[idn(2, mn)];
+             pimn[idn(NX+3, mn)] = pimn[idn(NX+1, mn)];
+             pimn[idn(NX+2, mn)] = pimn[idn(NX+1, mn)];
        }
     }
     
@@ -152,10 +181,10 @@ __kernel void visc_src_alongx(
             -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DX);
         
         for ( int mn = 0; mn < 10; mn ++ ) {
-            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
-               u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
-               u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
-               u0_ip2*pimn[(i+2)*10+mn],
+            d_Src[idn(IND, mn)] = d_Src[idn(IND, mn)] - kt1d_real(
+               u0_im2*pimn[idn(i-2, mn)], u0_im1*pimn[idn(i-1, mn)],
+               u0_i*pimn[idn(i, mn)], u0_ip1*pimn[idn(i+1, mn)],
+               u0_ip2*pimn[idn(i+2, mn)],
                pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_X)/DX;
         }
     }
@@ -182,9 +211,8 @@ __kernel void visc_src_alongy(
     for ( int J = get_global_id(1); J < NY; J = J + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[J+2] = d_ev[IND];
-        int startJ = 10*J + 2;
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[startJ + mn] = d_pi1[10*IND + mn];
+            pimn[idn(J+2, mn)] = d_pi1[idn(IND, mn)];
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -232,7 +260,7 @@ __kernel void visc_src_alongy(
                       -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DY);
         
         for ( int mn = 0; mn < 10; mn ++ ) {
-            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
+            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
                u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
                u0_ip2*pimn[(i+2)*10+mn],
@@ -262,9 +290,8 @@ __kernel void visc_src_alongz(__global real * d_Src,
     for ( int K = get_global_id(2); K < NZ; K = K + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[K+2] = d_ev[IND];
-        int startK = 10*K + 2;
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[startK + mn] = d_pi1[10*IND + mn];
+            pimn[idn(K+2, mn)] = d_pi1[idn(IND, mn)];
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -315,7 +342,7 @@ __kernel void visc_src_alongz(__global real * d_Src,
                       + christoffel_term;
         
         for ( int mn = 0; mn < 10; mn ++ ) {
-            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_pimn(
+            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
                u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
                u0_ip2*pimn[(i+2)*10+mn],
@@ -374,7 +401,7 @@ __kernel void update_pimn(
     }
 
     for ( int mu = 0; mu < 4; mu ++ )
-        for ( int nu = 0; nu < 4; nu ++ ) {
+        for ( int nu = mu; nu < 4; nu ++ ) {
             sigma[mu][nu] = dot(gm[mu], dalpha_u[nu]) + 
                             dot(gm[nu], dalpha_u[mu]) -
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
@@ -388,7 +415,7 @@ __kernel void update_pimn(
         // */
 
             real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/0.3f;
-            real src = d_Src[I] + stiff_term - pi1[mn]*theta/3.0f - u_old.s0/tau;
+            real src = d_Src[I] + stiff_term - pi1[mn]*theta/3.0f - pi1[mn]*u_new.s0/tau;
             src -= (u[mu]*pi1[idx(nu,0)] + u[nu]*pi1[idx(mu,0)])*DU[0];
             src -= (u[mu]*pi1[idx(nu,1)] + u[nu]*pi1[idx(mu,1)])*DU[1];
             src -= (u[mu]*pi1[idx(nu,2)] + u[nu]*pi1[idx(mu,2)])*DU[2];
