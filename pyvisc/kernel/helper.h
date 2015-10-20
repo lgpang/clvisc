@@ -8,8 +8,7 @@
 #define THETA 1.1f
 #define hbarc 0.19733f
 
-//#define cl_khr_global_int32_base_atomics
-
+// represent 16 components of pi^{mu nu} in 10 elements
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
 // kt1d to calc H(i+1/2)-H(i-1/2), along=0,1,2 for x, y, z
