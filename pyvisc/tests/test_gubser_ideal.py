@@ -28,7 +28,8 @@ def gubser_vr(tau, r, q):
 class TestGubser(unittest.TestCase):
     def setUp(self):
         self.cfg = cfg
-        #self.cfg.NZ = 6
+        self.cfg.NZ = 1
+        self.cfg.IEOS = 0
         self.ideal = CLIdeal(self.cfg)
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
@@ -93,9 +94,14 @@ class TestGubser(unittest.TestCase):
 
                 plt.semilogy(x, a, 'r-')
                 plt.semilogy(x, b, 'b--')
-                plt.xlabel('r [fm]')
-                plt.ylabel('ed')
-                #np.testing.assert_almost_equal(a, b, 2)
+                #plt.plot(x, c, 'r-', label='analy')
+                #plt.plot(x, d, 'b--', label='CLVisc')
+        plt.xlabel(r'$r\ [fm]$', fontsize=30)
+        #plt.ylabel(r'$v_{\perp}$', fontsize=30)
+        plt.title(r'Gubser solution test', fontsize=30)
+        plt.ylabel('ed', fontsize=30)
+        plt.subplots_adjust(left=0.13, bottom=0.13)
+        plt.legend(loc='best')
         plt.show()
     
 
