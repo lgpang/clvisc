@@ -49,6 +49,8 @@ class CLIdeal(object):
                 self.gpu_defines)
 
         # set eos, create eos table for interpolation
+        # self.eos_table must be before __loadAndBuildCLPrg() to pass
+        # table information to definitions
         eos = Eos(self.cfg)
         self.eos_table = eos.create_table(self.ctx, self.gpu_defines)
 
@@ -246,6 +248,10 @@ class CLIdeal(object):
         if save_bulk:
             self.bulkinfo.save()
 
+    def update_time(self, loop):
+        '''update time with TAU0 and loop, convert its type to np.float32 or 
+        float64 which can be used directly as parameter in kernel functions'''
+        self.tau = self.cfg.real(self.cfg.TAU0 + (loop+1)*self.cfg.DT)
 
     def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True):
         '''The main loop of hydrodynamic evolution '''
@@ -264,7 +270,7 @@ class CLIdeal(object):
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
-            self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
+            self.update_time(loop=n)
             self.stepUpdate(step=2)
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
