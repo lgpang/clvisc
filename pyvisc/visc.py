@@ -108,7 +108,7 @@ class CLVisc(object):
         cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.d_checkpi).wait()
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
         edxy = self.ideal.h_ev1[:, 0].reshape(NX, NY, NZ)[:,:,NZ/2]
-        np.savetxt('pi_traceless%d.dat'%i, edxy)
+        np.savetxt('debug/pi_traceless%d.dat'%i, edxy)
         #import matplotlib.pyplot as plt
         #plt.imshow(edxy.T)
         #plt.colorbar()
@@ -139,7 +139,12 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    cfg.NZ = 7
+    cfg.NX = 301
+    cfg.NY = 301
+    cfg.dt = 0.01
+    cfg.dx = 0.8
+    cfg.dy = 0.8
+    cfg.NZ = 1
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,

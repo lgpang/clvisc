@@ -177,9 +177,14 @@ __kernel void visc_src_alongx(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        d_udx[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
-            -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DX);
+        //d_udx[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
+        //    -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DX);
         
+        d_udx[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
+                             minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
+                                     THETA*(umu4(ev_ip1) - umu4(ev_i))
+                                     ))/DX;
+
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[idn(IND, mn)] = d_Src[idn(IND, mn)] - kt1d_real(
                u0_im2*pimn[idn(i-2, mn)], u0_im1*pimn[idn(i-1, mn)],
@@ -256,9 +261,15 @@ __kernel void visc_src_alongy(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        d_udy[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
-                      -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DY);
-        
+        //d_udy[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
+        //              -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DY);
+
+        d_udy[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
+                             minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
+                                     THETA*(umu4(ev_ip1) - umu4(ev_i))
+                                     ))/DY;
+
+
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
@@ -337,10 +348,16 @@ __kernel void visc_src_alongz(__global real * d_Src,
         
         real4 christoffel_term = (real4)(ev_i.s3, 0.0f, 0.0f, 1.0f)*u0_i/tau;
         
-        d_udz[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
-                      -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*tau*DZ)
-                      + christoffel_term;
-        
+        //d_udz[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
+        //              -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*tau*DZ)
+        //              + christoffel_term;
+
+        d_udz[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
+                             minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
+                                     THETA*(umu4(ev_ip1) - umu4(ev_i))
+                            ))/(DZ*tau) + christoffel_term;
+
+
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
@@ -428,8 +445,10 @@ __kernel void update_pimn(
 
     // u[0]*sigma[0][0]-u[1]*sigma[1][0]-u[2]*sigma[2][0]-u[3]*sigma[3][0],
     //d_checkpi[I] = (real4)(sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3],
-    d_checkpi[I] = (real4)(d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
-                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)],
+    //d_checkpi[I] = (real4)(udx.s0,
+    d_checkpi[I] = (real4)(d_pinew[10*I + idx(0,1)],
+    //d_checkpi[I] = (real4)(d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
+    //                        d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)],
     u[0]*sigma[0][1]-u[1]*sigma[1][1]-u[2]*sigma[2][1]-u[3]*sigma[3][1],
     u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
     u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
