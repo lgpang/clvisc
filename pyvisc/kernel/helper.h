@@ -34,7 +34,7 @@ inline real gamma_real4(real4 ev){
 
 /** get (real4) umu4 from (real4) ev */
 inline real4 umu4(real4 ev){
-    return gamma_real4(ev)*(real4)(1.0, ev.s123);
+    return gamma_real4(ev)*(real4)(1.0f, ev.s123);
 }
 
 /** 1D linear interpolation */

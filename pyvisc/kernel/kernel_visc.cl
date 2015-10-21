@@ -229,10 +229,10 @@ __kernel void visc_src_alongy(
         ev[NY+3] = ev[NY+1];
         ev[NY+2] = ev[NY+1];
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[mn] = pimn[20+mn];
-            pimn[10+mn] = pimn[20+mn];
-            pimn[(NY+3)*10+mn] = pimn[(NY+1)*10+mn];
-            pimn[(NY+2)*10+mn] = pimn[(NY+1)*10+mn];
+            pimn[idn(0, mn)] = pimn[idn(2, mn)];
+            pimn[idn(1, mn)] = pimn[idn(2, mn)];
+            pimn[idn(NY+3, mn)] = pimn[idn(NY+1, mn)];
+            pimn[idn(NY+2, mn)] = pimn[idn(NY+1, mn)];
         }
     }
     
@@ -316,8 +316,8 @@ __kernel void visc_src_alongz(__global real * d_Src,
         for ( int mn = 0; mn < 10; mn ++ ) {
             pimn[mn] = pimn[20+mn];
             pimn[10+mn] = pimn[20+mn];
-            pimn[(NZ+3)*10+mn] = pimn[(NZ+1)*10+mn];
-            pimn[(NZ+2)*10+mn] = pimn[(NZ+1)*10+mn];
+            pimn[idn(NZ+3, mn)] = pimn[idn(NZ+1, mn)];
+            pimn[idn(NZ+2, mn)] = pimn[idn(NZ+1, mn)];
         }
     }
     
@@ -424,12 +424,18 @@ __kernel void update_pimn(
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
 
+            // set the sigma^{mu nu} and theta 0 when ed is too small
+            if ( u[0] > 10 ) {
+                sigma[mu][nu] = 0.0f;
+                theta = 0.0f;
+            }
+
             int mn = idx(mu, nu);
             real pi_old = pi1[mn] * u_old.s0;
 
-        // /** step==1: Q' = Q0 + Src*DT
-        //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
-        // */
+            // /** step==1: Q' = Q0 + Src*DT
+            //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
+            // */
 
             real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/0.3f;
             real src = d_Src[I] + stiff_term - pi1[mn]*theta/3.0f - pi1[mn]*u_new.s0/tau;

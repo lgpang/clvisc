@@ -125,6 +125,7 @@ class CLVisc(object):
             self.stepUpdate(step=1)
             self.ideal.tau = self.cfg.real(self.cfg.TAU0 +
                     (loop+1)*self.cfg.DT)
+            self.ideal.update_time(loop)
             self.stepUpdate(step=2)
             #if loop % ntskip == 0:
             self.plot_sigma_traceless(loop)
@@ -139,18 +140,18 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    cfg.NX = 301
-    cfg.NY = 301
+    cfg.NX = 201
+    cfg.NY = 201
     cfg.dt = 0.01
-    cfg.dx = 0.8
-    cfg.dy = 0.8
-    cfg.NZ = 1
+    cfg.dx = 0.08
+    cfg.dy = 0.08
+    cfg.NZ = 61
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
 
-    visc.evolve(max_loops=40)
+    visc.evolve(max_loops=4)
     #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
