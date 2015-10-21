@@ -181,10 +181,11 @@ __kernel void update_ev(
     real M = sqrt(T01*T01 + T02*T02 + T03*T03);
     real SCALE_COEF = 0.99999f;
     if ( M > T00 ) {
-	    T01 *= SCALE_COEF * T00 / M;
-	    T02 *= SCALE_COEF * T00 / M;
-	    T03 *= SCALE_COEF * T00 / M;
-        M = SCALE_COEF * T00;
+	    //T01 *= SCALE_COEF * T00 / M;
+	    //T02 *= SCALE_COEF * T00 / M;
+	    //T03 *= SCALE_COEF * T00 / M;
+        //M = SCALE_COEF * T00;
+        M = 0.0f;
     }
 
     real ed_find;
