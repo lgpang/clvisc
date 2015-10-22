@@ -438,13 +438,14 @@ __kernel void update_pimn(
             // */
 
             real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/0.3f;
-            real src = d_Src[I] + stiff_term - pi1[mn]*theta/3.0f - pi1[mn]*u_new.s0/tau;
+            real src = stiff_term - pi1[mn]*theta/3.0f - pi1[mn]*u_new.s0/tau;
             src -= (u[mu]*pi1[idx(nu,0)] + u[nu]*pi1[idx(mu,0)])*DU[0];
             src -= (u[mu]*pi1[idx(nu,1)] + u[nu]*pi1[idx(mu,1)])*DU[1];
             src -= (u[mu]*pi1[idx(nu,2)] + u[nu]*pi1[idx(mu,2)])*DU[2];
             src -= (u[mu]*pi1[idx(nu,3)] + u[nu]*pi1[idx(mu,3)])*DU[3];
 
-            pi_old = pi_old + src*DT/step;
+            d_Src[idn(I, mn)] += src;
+            pi_old = pi_old + d_Src[idn(I, mn)]*DT/step;
 
             d_pinew[10*I + mn] = pi_old/u_new.s0;
     }

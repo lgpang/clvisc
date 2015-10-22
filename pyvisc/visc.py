@@ -96,7 +96,7 @@ class CLVisc(object):
         self.kernel_visc.update_pimn(self.queue, (NX*NY*NZ,), None,
                 self.d_checkpi, self.d_pi[3-step], self.d_pi[1],
                 self.ideal.d_ev[0], self.ideal.d_ev[3-step],
-                self.d_udx, self.d_udy, self.d_udz, self.ideal.d_Src,
+                self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
 
@@ -123,8 +123,6 @@ class CLVisc(object):
                             
             print(self.ideal.max_energy_density())
             self.stepUpdate(step=1)
-            self.ideal.tau = self.cfg.real(self.cfg.TAU0 +
-                    (loop+1)*self.cfg.DT)
             self.ideal.update_time(loop)
             self.stepUpdate(step=2)
             #if loop % ntskip == 0:
@@ -145,7 +143,7 @@ def main():
     cfg.dt = 0.01
     cfg.dx = 0.08
     cfg.dy = 0.08
-    cfg.NZ = 61
+    cfg.NZ = 7
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
