@@ -93,7 +93,7 @@ class BulkInfo(object):
 
         self.ecc_vs_rapidity(d_ev1)
 
-        h_ev1d = np.zeros((1000, 4), self.cfg.real)
+        h_ev1d = np.zeros((2000, 4), self.cfg.real)
         h_evxy = np.zeros((NX*NY, 4), self.cfg.real)
         h_evxz = np.zeros((NX*NZ, 4), self.cfg.real)
         h_evyz = np.zeros((NY*NZ, 4), self.cfg.real)
@@ -106,7 +106,7 @@ class BulkInfo(object):
         d_evxz = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_evxz.nbytes)
         d_evyz = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_evyz.nbytes)
 
-        self.kernel_edslice.get_ed(self.queue, (1000,), None, d_ev1,
+        self.kernel_edslice.get_ed(self.queue, (2000,), None, d_ev1,
                 d_evx0, d_evy0, d_evz0, d_evxy, d_evxz, d_evyz)
 
         h_evx0 = np.zeros((NX, 4), self.cfg.real)
@@ -132,11 +132,11 @@ class BulkInfo(object):
         self.vx_xy.append(h_evxy[:,1].reshape(NX, NY))
         self.vy_xy.append(h_evxy[:,2].reshape(NX, NY))
 
-    def eccp(self, ed, vx, vy):
+    def eccp(self, ed, vx, vy, vz=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
         pre = self.eos.f_P(ed)
-        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy)
+        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
         Tyy = (ed + pre)*u0*u0*vy*vy + pre
         Txx = (ed + pre)*u0*u0*vx*vx + pre
         return (Txx - Tyy).sum() / (Txx + Tyy).sum()
@@ -151,7 +151,8 @@ class BulkInfo(object):
             ed = bulk[:,:,k,0]
             vx = bulk[:,:,k,1]
             vy = bulk[:,:,k,2]
-            eccp[k] = self.eccp(ed, vx, vy)
+            vz = bulk[:,:,k,3]
+            eccp[k] = self.eccp(ed, vx, vy, vz)
         self.ecc2_vs_rapidity.append(eccp)
         
     def save(self):
@@ -176,6 +177,7 @@ class BulkInfo(object):
             vx= self.vx_xy[idx]
             vy= self.vy_xy[idx]
             np.savetxt(self.cfg.fPathOut+'/edxy%d.dat'%idx, exy)
+            np.savetxt(self.cfg.fPathOut+'/Txy%d.dat'%idx, self.eos.f_T(exy))
             np.savetxt(self.cfg.fPathOut+'/vx_xy%d.dat'%idx, vx)
             np.savetxt(self.cfg.fPathOut+'/vy_xy%d.dat'%idx, vy)
 

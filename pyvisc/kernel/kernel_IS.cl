@@ -1,9 +1,5 @@
 #include<helper.h>
 
-#define ALONG_X 0
-#define ALONG_Y 1
-#define ALONG_Z 2
-
 // IDN() return the idx of pi^{mu nu}_{i,j,k}in global mem
 // I = i*NY*NZ + j*NZ + k
 #define idn(I, mn) (I)*10+mn
@@ -453,9 +449,10 @@ __kernel void update_pimn(
     // u[0]*sigma[0][0]-u[1]*sigma[1][0]-u[2]*sigma[2][0]-u[3]*sigma[3][0],
     //d_checkpi[I] = (real4)(sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3],
     //d_checkpi[I] = (real4)(udx.s0,
-    d_checkpi[I] = (real4)(d_pinew[10*I + idx(0,1)],
-    //d_checkpi[I] = (real4)(d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
-    //                        d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)],
+    //d_checkpi[I] = (real4)(d_pinew[10*I + idx(0,1)],
+    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
+                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
+                           /max(d_pinew[idn(I, idx(1,1))], 1.0E-6f),
     u[0]*sigma[0][1]-u[1]*sigma[1][1]-u[2]*sigma[2][1]-u[3]*sigma[3][1],
     u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
     u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
