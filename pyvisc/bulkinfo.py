@@ -33,6 +33,7 @@ class BulkInfo(object):
         self.ecc_x = []
         self.ecc_p = []
         self.ecc2_vs_rapidity = []
+        self.ecc1_vs_rapidity = []
         self.time = []
         self.edmax = []
         self.__loadAndBuildCLPrg()
@@ -139,21 +140,25 @@ class BulkInfo(object):
         u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
         Tyy = (ed + pre)*u0*u0*vy*vy + pre
         Txx = (ed + pre)*u0*u0*vx*vx + pre
-        return (Txx - Tyy).sum() / (Txx + Tyy).sum()
+        v2 = (Txx - Tyy).sum() / (Txx + Tyy).sum()
+        v1 = Txx.sum() / (Txx + Tyy).sum()
+        return v1, v2
 
 
     def ecc_vs_rapidity(self, d_ev):
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
         cl.enqueue_copy(self.queue, self.h_ev, d_ev).wait()
         bulk = self.h_ev.reshape(NX, NY, NZ, 4)
-        eccp = np.empty(NZ)
+        ecc1 = np.empty(NZ)
+        ecc2 = np.empty(NZ)
         for k in range(NZ):
             ed = bulk[:,:,k,0]
             vx = bulk[:,:,k,1]
             vy = bulk[:,:,k,2]
             vz = bulk[:,:,k,3]
-            eccp[k] = self.eccp(ed, vx, vy, vz)
-        self.ecc2_vs_rapidity.append(eccp)
+            ecc1[k], ecc2[k] = self.eccp(ed, vx, vy, vz)
+        self.ecc1_vs_rapidity.append(ecc1)
+        self.ecc2_vs_rapidity.append(ecc2)
         
     def save(self):
         np.savetxt(self.cfg.fPathOut+'/ex.dat', np.array(self.ex).T)
@@ -171,6 +176,8 @@ class BulkInfo(object):
         if len(self.ecc2_vs_rapidity) != 0:
             np.savetxt(self.cfg.fPathOut+'/ecc2.dat',
                        np.array(self.ecc2_vs_rapidity).T)
+            np.savetxt(self.cfg.fPathOut+'/ecc1.dat',
+                       np.array(self.ecc1_vs_rapidity).T)
 
         eccp = []
         for idx, exy in enumerate(self.exy):
