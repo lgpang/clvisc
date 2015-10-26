@@ -1,9 +1,5 @@
 #include<helper.h>
 
-#define ALONG_X 0
-#define ALONG_Y 1
-#define ALONG_Z 2
-
 // IDN() return the idx of pi^{mu nu}_{i,j,k}in global mem
 // I = i*NY*NZ + j*NZ + k
 #define idn(I, mn) (I)*10+mn

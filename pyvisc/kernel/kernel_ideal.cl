@@ -1,10 +1,5 @@
 #include<helper.h>
 
-#define ALONG_X 0
-#define ALONG_Y 1
-#define ALONG_Z 2
-
-
 __kernel void kt_src_christoffel(
              __global real4 * d_Src,
 		     __global real4 * d_ev,
