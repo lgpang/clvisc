@@ -11,6 +11,10 @@
 // represent 16 components of pi^{mu nu} in 10 elements
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
+#define ALONG_X 0
+#define ALONG_Y 1
+#define ALONG_Z 2
+
 // kt1d to calc H(i+1/2)-H(i-1/2), along=0,1,2 for x, y, z
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2,
            real tau, int along, read_only image2d_t eos_table);
