@@ -136,6 +136,7 @@ class BulkInfo(object):
     def eccp(self, ed, vx, vy, vz=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
+        ed[ed<1.0E-10] = 1.0E-10
         pre = self.eos.f_P(ed)
         u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
         Tyy = (ed + pre)*u0*u0*vy*vy + pre
