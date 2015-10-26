@@ -52,8 +52,8 @@ real ed_transverse(real Ta, real Tb) {
 // the rapidity twist due to forward-backward assymetry
 inline real etas0(real Ta, real Tb) {
     // gamma_n = sqrt_s / (2*m_nucleon)
-    double gamma_n = SQRTS / (2.0 * 0.938);
-    double v_n = sqrt(1.0 - 1.0/(gamma_n*gamma_n));
+    real gamma_n = SQRTS / (2.0f * 0.938f);
+    real v_n = sqrt(gamma_n*gamma_n - 1.0f)/gamma_n;
     real T1 = (Ta + Tb)*gamma_n;
     real T2 = (Ta - Tb)*gamma_n*v_n;
     return 0.5f*log((T1+T2)/(T1-T2));
@@ -84,8 +84,8 @@ __kernel void glauber_ini( __global real4 * d_ev1 )
 
     real kFactor = Edmax / ed_central;
     real b = ImpactParameter;
-    real Ta = thickness(x-0.5*b, y);
-    real Tb = thickness(x+0.5*b, y);
+    real Ta = thickness(x-0.5f*b, y);
+    real Tb = thickness(x+0.5f*b, y);
     real edxy = kFactor*ed_transverse(Ta, Tb);
     real etas0_ = etas0(Ta, Tb);
     for ( int k = 0; k < NZ; k++ ) {
@@ -93,4 +93,23 @@ __kernel void glauber_ini( __global real4 * d_ev1 )
         real heta = weight_along_eta(etas, etas0_);
         d_ev1[i*NY*NZ + j*NZ + k] = (real4)(edxy*heta, 0.0f, 0.0f, 0.0f);
     }
+}
+
+__kernel void num_of_binary_collisions( __global real * d_nbinary,
+                                        const real xlow,
+                                        const real ylow,
+                                        const real dx,
+                                        const real dy,
+                                        const int nx,
+                                        const int ny)
+{
+    int i = get_global_id(0);
+    int j = get_global_id(1);
+    real x = xlow + i*dx;
+    real y = ylow + j*dy;
+
+    real b = ImpactParameter;
+    real Ta = thickness(x-0.5f*b, y);
+    real Tb = thickness(x+0.5f*b, y);
+    d_nbinary[i*ny + j] = Nb(Ta, Tb);
 }

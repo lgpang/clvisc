@@ -292,8 +292,8 @@ def main():
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
                   ideal.d_ev[1])
-    #dat = np.loadtxt(cfg.fPathIni)
-    #ideal.load_ini(dat)
+
+    ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
     ideal.evolve(max_loops=1000, save_bulk=False)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))

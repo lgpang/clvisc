@@ -42,3 +42,13 @@ class Glauber(object):
             self.kernel_glauber = cl.Program(ctx, prg_src).build(
                                              options=glauber_defines)
 
+    def save_nbinary(self, ctx, queue, cfg, dx=0.3, dy=0.3,
+                     xlow = -9.75, ylow = -9.75, nx=66, ny=66):
+        h_nbin = np.empty(nx*ny, cfg.real)
+        mf = cl.mem_flags
+        d_nbin = cl.Buffer(ctx, mf.READ_WRITE, size=h_nbin.nbytes)
+        self.kernel_glauber.num_of_binary_collisions(queue, (nx, ny, ), None,
+                d_nbin, cfg.real(xlow), cfg.real(ylow),
+                cfg.real(dx), cfg.real(dy), np.int32(nx), np.int32(ny)).wait()
+        cl.enqueue_copy(queue, h_nbin, d_nbin).wait()
+        np.savetxt(cfg.fPathOut+'/nbin.dat', h_nbin.reshape(nx, ny))
