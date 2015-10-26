@@ -34,6 +34,9 @@ def read_config():
     config['A'] = (_parser.getfloat( 'glauber', 'A'),
             'Number of nucleons, A=197 for Au; A=208 for Pb')
 
+    config['SQRTS'] = (_parser.getfloat( 'glauber', 'SQRTS'),
+            'Beam energy in units of GeV/n; like Au+Au 200 GeV; Pb+Pb 2760 GeV, SQRTS=2760')
+
     config['NucleonDensity'] = (_parser.getfloat( 'glauber', 'NucleonDensity'),
             'With which the woods-saxon integration = 197 for A=197')
 
