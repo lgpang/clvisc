@@ -56,6 +56,15 @@ class CLVisc(object):
         #    self.kernel_src2 = cl.Program(self.ctx, src).build(options=self.compile_options)
         pass
             
+    def initialize(self):
+        '''initialize pi^{mu nu} tensor'''
+        NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+
+        self.kernel_visc.visc_initialize(self.queue, (NX*NY*NZ,), None,
+                self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau,
+                self.eos_table).wait()
+
+
     def stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
         This function is for one time step'''
@@ -66,58 +75,59 @@ class CLVisc(object):
 
         self.kernel_visc.visc_src_christoffel(self.queue, (NX*NY*NZ,), None,
                 self.d_IS_src, self.d_pi[1], self.ideal.d_ev[1],
-                self.ideal.tau, np.int32(step));
+                self.ideal.tau, np.int32(step)).wait()
 
         self.kernel_visc.visc_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
                 self.d_IS_src, self.d_udx, self.d_pi[1], self.ideal.d_ev[1],
                 self.eos_table, self.ideal.tau).wait()
 
-        print "udx along x"
+        #print "udx along x"
 
         self.kernel_visc.visc_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
                 self.d_IS_src, self.d_udy, self.d_pi[1], self.ideal.d_ev[1],
                 self.eos_table, self.ideal.tau).wait()
 
-        print "udy along y"
+        #print "udy along y"
         self.kernel_visc.visc_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
                 self.d_IS_src, self.d_udz, self.d_pi[1], self.ideal.d_ev[1],
                 self.eos_table, self.ideal.tau).wait()
 
-        print "udz along z"
+        #print "udz along z"
         self.kernel_visc.update_pimn(self.queue, (NX*NY*NZ,), None,
                 self.d_checkpi, self.d_pi[3-step], self.d_pi[1],
                 self.ideal.d_ev[0], self.ideal.d_ev[3-step],
-                self.d_udx, self.d_udy, self.d_udz, self.ideal.d_Src,
+                self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
-
-        print "sigma"
 
 
     def __output(self, nt):
         pass
 
-    def plot_sigma_traceless(self):
+    def plot_sigma_traceless(self, i):
         cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.d_checkpi).wait()
-        edxy = self.ideal.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,55]
-        import matplotlib.pyplot as plt
-        plt.imshow(edxy.T)
-        plt.colorbar()
-        plt.show()
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        edxy = self.ideal.h_ev1[:, 0].reshape(NX, NY, NZ)[:,:,NZ/2]
+        np.savetxt('debug/pi_traceless%d.dat'%i, edxy)
+        #import matplotlib.pyplot as plt
+        #plt.imshow(edxy.T)
+        #plt.colorbar()
+        #plt.show()
 
     def evolve(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
+        self.initialize()
         for loop in xrange(max_loops):
             cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
                             self.ideal.d_ev[1]).wait()
                             
             print(self.ideal.max_energy_density())
             self.stepUpdate(step=1)
-            self.ideal.tau = self.cfg.real(self.cfg.TAU0 +
-                    (loop+1)*self.cfg.DT)
+            self.ideal.update_time(loop)
             self.stepUpdate(step=2)
-            if loop % ntskip == 0:
-                self.plot_sigma_traceless()
+            #if loop % ntskip == 0:
+            self.plot_sigma_traceless(loop)
+            print('loop=', loop)
 
 
 
@@ -128,12 +138,18 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
+    cfg.NX = 201
+    cfg.NY = 201
+    cfg.dt = 0.01
+    cfg.dx = 0.08
+    cfg.dy = 0.08
+    cfg.NZ = 7
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
 
-    visc.evolve(max_loops=40)
+    visc.evolve(max_loops=80)
     #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)

@@ -19,12 +19,10 @@ from config import cfg
 class TestBjorken(unittest.TestCase):
     def setUp(self):
         self.cfg = cfg
-        #self.cfg.NX = 25
-        #self.cfg.NY = 25
-        #self.cfg.NZ = 25
-        #self.cfg.BSZ= 32
-        #self.cfg.IEOS = 0
-        #self.cfg.opencl_interactive = True
+        self.cfg.NX = 5
+        self.cfg.NY = 5
+        self.cfg.NZ = 5
+        self.cfg.IEOS = 0
         self.ideal = CLIdeal(self.cfg)
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
@@ -54,12 +52,14 @@ class TestBjorken(unittest.TestCase):
         prg.init_ev(self.queue, (self.ideal.size,), None, self.ideal.d_ev[1],
                     np.int32(self.ideal.size)).wait()
 
-        self.ideal.evolve(max_loops=200)
+        self.ideal.evolve(max_loops=200, save_bulk=False,
+                          save_hypersf=False)
+
         history = np.array(self.ideal.history)
         tau, edmax = history[:,0], history[:,1]
         a = (tau/tau[0])**(-4.0/3.0)
         b = edmax/edmax[0]
-        np.testing.assert_almost_equal(a, b, 2)
+        np.testing.assert_almost_equal(a, b, 3)
     
 
 if __name__ == '__main__':

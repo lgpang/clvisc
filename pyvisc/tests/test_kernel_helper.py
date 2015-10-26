@@ -6,6 +6,7 @@ import os, sys
 
 sys.path.append('..')
 from config import cfg
+from eos.eos import Eos
 import unittest
 
 class TestHelper(unittest.TestCase):
@@ -62,12 +63,13 @@ class TestHelper(unittest.TestCase):
     __kernel void rootfinding_test(
              global real4 * d_edv,
              global real * result,
-             const int size) {
+             const int size,
+             read_only image2d_t eos_table) {
       int gid = (int) get_global_id(0);
       if ( gid < size ) {
            real4 edv = d_edv[gid];
            real eps = edv.s0;
-           real pre = P(eps);
+           real pre = P(eps, eos_table);
            real4 umu = (real4)(1.0f, edv.s1, edv.s2, edv.s3);
            real u0 = gamma(umu.s1, umu.s2, umu.s3);
            umu = u0*umu;
@@ -75,7 +77,7 @@ class TestHelper(unittest.TestCase):
            real M = sqrt(T0m.s1*T0m.s1 + T0m.s2*T0m.s2 + T0m.s3*T0m.s3);
            real T00 = T0m.s0;
            real ed_found;
-           rootFinding(&ed_found, T00, M);
+           rootFinding(&ed_found, T00, M, eos_table);
            result[gid] = ed_found;
       }
     }
@@ -83,6 +85,8 @@ class TestHelper(unittest.TestCase):
     compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
     compile_options.append('-D USE_SINGLE_PRECISION')
     compile_options.append('-D EOSI')
+
+    eos_table = Eos(cfg).create_table(self.ctx, compile_options)
 
     prg = cl.Program(self.ctx, kernel_src ).build(compile_options)
    
@@ -103,7 +107,10 @@ class TestHelper(unittest.TestCase):
 
     edv_gpu = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf = edv)
     
-    prg.rootfinding_test(self.queue, (size,), None, edv_gpu, final_gpu, np.int32(size))
+
+    prg.rootfinding_test(self.queue, (size,), None,
+                         edv_gpu, final_gpu, np.int32(size),
+                         eos_table)
     
     cl.enqueue_copy(self.queue, final, final_gpu).wait()
 

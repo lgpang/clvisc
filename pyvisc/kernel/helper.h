@@ -8,9 +8,12 @@
 #define THETA 1.1f
 #define hbarc 0.19733f
 
-//#define cl_khr_global_int32_base_atomics
-
+// represent 16 components of pi^{mu nu} in 10 elements
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
+
+#define ALONG_X 0
+#define ALONG_Y 1
+#define ALONG_Z 2
 
 // kt1d to calc H(i+1/2)-H(i-1/2), along=0,1,2 for x, y, z
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2,
@@ -35,7 +38,7 @@ inline real gamma_real4(real4 ev){
 
 /** get (real4) umu4 from (real4) ev */
 inline real4 umu4(real4 ev){
-    return gamma_real4(ev)*(real4)(1.0, ev.s123);
+    return gamma_real4(ev)*(real4)(1.0f, ev.s123);
 }
 
 /** 1D linear interpolation */

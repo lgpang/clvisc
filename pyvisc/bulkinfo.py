@@ -23,15 +23,22 @@ class BulkInfo(object):
         self.ctx = ctx
         self.queue = queue
         self.compile_options = list(compile_options)
+
+        NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
+        self.h_ev = np.zeros((NX*NY*NZ, 4), cfg.real)
+
         self.ex, self.ey, self.ez = [], [], []
         self.vx, self.vy, self.vz = [], [], []
         self.exy, self.exz, self.vx_xy, self.vy_xy = [], [], [], []
         self.ecc_x = []
         self.ecc_p = []
+        self.ecc2_vs_rapidity = []
+        self.ecc1_vs_rapidity = []
         self.time = []
         self.edmax = []
         self.__loadAndBuildCLPrg()
         self.eos = Eos(cfg)
+
 
     def __loadAndBuildCLPrg(self):
         #load and build *.cl programs with compile self.gpu_defines
@@ -85,7 +92,9 @@ class BulkInfo(object):
         mf = cl.mem_flags
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
 
-        h_ev1d = np.zeros((1000, 4), self.cfg.real)
+        self.ecc_vs_rapidity(d_ev1)
+
+        h_ev1d = np.zeros((2000, 4), self.cfg.real)
         h_evxy = np.zeros((NX*NY, 4), self.cfg.real)
         h_evxz = np.zeros((NX*NZ, 4), self.cfg.real)
         h_evyz = np.zeros((NY*NZ, 4), self.cfg.real)
@@ -98,7 +107,7 @@ class BulkInfo(object):
         d_evxz = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_evxz.nbytes)
         d_evyz = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_evyz.nbytes)
 
-        self.kernel_edslice.get_ed(self.queue, (1000,), None, d_ev1,
+        self.kernel_edslice.get_ed(self.queue, (2000,), None, d_ev1,
                 d_evx0, d_evy0, d_evz0, d_evxy, d_evxz, d_evyz)
 
         h_evx0 = np.zeros((NX, 4), self.cfg.real)
@@ -124,37 +133,63 @@ class BulkInfo(object):
         self.vx_xy.append(h_evxy[:,1].reshape(NX, NY))
         self.vy_xy.append(h_evxy[:,2].reshape(NX, NY))
 
-    def eccp(self, ed, vx, vy):
+    def eccp(self, ed, vx, vy, vz=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
         pre = self.eos.f_P(ed)
-        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy)
+        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
         Tyy = (ed + pre)*u0*u0*vy*vy + pre
         Txx = (ed + pre)*u0*u0*vx*vx + pre
-        return (Txx - Tyy).sum() / (Txx + Tyy).sum()
+        v2 = (Txx - Tyy).sum() / (Txx + Tyy).sum()
+        v1 = Txx.sum() / (Txx + Tyy).sum()
+        return v1, v2
 
+
+    def ecc_vs_rapidity(self, d_ev):
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        cl.enqueue_copy(self.queue, self.h_ev, d_ev).wait()
+        bulk = self.h_ev.reshape(NX, NY, NZ, 4)
+        ecc1 = np.empty(NZ)
+        ecc2 = np.empty(NZ)
+        for k in range(NZ):
+            ed = bulk[:,:,k,0]
+            vx = bulk[:,:,k,1]
+            vy = bulk[:,:,k,2]
+            vz = bulk[:,:,k,3]
+            ecc1[k], ecc2[k] = self.eccp(ed, vx, vy, vz)
+        self.ecc1_vs_rapidity.append(ecc1)
+        self.ecc2_vs_rapidity.append(ecc2)
+        
     def save(self):
         np.savetxt(self.cfg.fPathOut+'/ex.dat', np.array(self.ex).T)
         np.savetxt(self.cfg.fPathOut+'/ey.dat', np.array(self.ey).T)
         np.savetxt(self.cfg.fPathOut+'/ez.dat', np.array(self.ez).T)
 
-        np.savetxt(self.cfg.fPathOut+'/Tx.dat', np.array(self.ex).T)
-        np.savetxt(self.cfg.fPathOut+'/Ty.dat', np.array(self.ey).T)
-        np.savetxt(self.cfg.fPathOut+'/Tz.dat', np.array(self.ez).T)
+        np.savetxt(self.cfg.fPathOut+'/Tx.dat', np.array(self.eos.f_T(self.ex)).T)
+        np.savetxt(self.cfg.fPathOut+'/Ty.dat', np.array(self.eos.f_T(self.ey)).T)
+        np.savetxt(self.cfg.fPathOut+'/Tz.dat', np.array(self.eos.f_T(self.ez)).T)
 
         np.savetxt(self.cfg.fPathOut+'/vx.dat', np.array(self.vx).T)
         np.savetxt(self.cfg.fPathOut+'/vy.dat', np.array(self.vy).T)
         np.savetxt(self.cfg.fPathOut+'/vz.dat', np.array(self.vz).T)
+
+        if len(self.ecc2_vs_rapidity) != 0:
+            np.savetxt(self.cfg.fPathOut+'/ecc2.dat',
+                       np.array(self.ecc2_vs_rapidity).T)
+            np.savetxt(self.cfg.fPathOut+'/ecc1.dat',
+                       np.array(self.ecc1_vs_rapidity).T)
 
         eccp = []
         for idx, exy in enumerate(self.exy):
             vx= self.vx_xy[idx]
             vy= self.vy_xy[idx]
             np.savetxt(self.cfg.fPathOut+'/edxy%d.dat'%idx, exy)
+            np.savetxt(self.cfg.fPathOut+'/Txy%d.dat'%idx, self.eos.f_T(exy))
             np.savetxt(self.cfg.fPathOut+'/vx_xy%d.dat'%idx, vx)
             np.savetxt(self.cfg.fPathOut+'/vy_xy%d.dat'%idx, vy)
 
-            eccp.append(self.eccp(exy, vx, vy))
+            eccp.append(self.eccp(exy[:, self.cfg.NY/2],
+                vx[:, self.cfg.NY/2], vy[:, self.cfg.NY/2]))
         
         np.savetxt(self.cfg.fPathOut + '/eccp.dat',
                    np.array(zip(self.time, eccp)))

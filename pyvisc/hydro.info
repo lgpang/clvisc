@@ -8,6 +8,11 @@ fPathOut = /home/lgpang/PyVisc/results/event0
 ## the maximum energy density for most central collisions
 #Edmax =  30.0          
 Edmax = 55.0
+
+## Beam energy in units of GeV per pair of nucleons
+##  Au+Au SQRTS=200 GeV/n; Pb+Pb SQRTS=2760 GeV/n;
+SQRTS = 200.0
+
 ## for Au 
 A = 197
 ## for Pb

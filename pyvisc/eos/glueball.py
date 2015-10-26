@@ -18,10 +18,10 @@ class GlueBall(object):
         glueball_dat = np.loadtxt(f_eostable)
 
         # T in units [GeV], others are dimensionless
-        T = 1.0E-3*glueball_dat[:,2]
-        e_o_T4 = glueball_dat[:,0]
-        p_o_T4 = glueball_dat[:,4]
-        s_o_T3 = glueball_dat[:,3]
+        T = 1.0E-3*glueball_dat[:,4]
+        e_o_T4 = glueball_dat[:,2]
+        p_o_T4 = glueball_dat[:,3]
+        s_o_T3 = glueball_dat[:,1]
 
         hbarc3 = hbarc**3
         self.energy_density = e_o_T4 * T**4 / hbarc3       # in units GeV/fm^3
@@ -31,24 +31,18 @@ class GlueBall(object):
 
     def create_table(self):
         fT_ed = interpolate.interp1d(self.energy_density, self.T)
-        ed_new = np.linspace(0.01, 1999.99, 199999)
+        ed_new = np.linspace(0.0, 2000, 200000, endpoint=False)
         T_new = fT_ed(ed_new)
         fP_ed = interpolate.interp1d(self.energy_density, self.pressure)
         pre_new = fP_ed(ed_new)
 
-        # Set the eos for ed=0.0, where T=Tmin, cs2=1/3
-        ed_new = np.insert(ed_new, 0, 0.0)
-        T_new = np.insert(T_new, 0, 0.001)
-        pre_new = np.insert(pre_new, 0, 0.0)
-        
         return ed_new, pre_new, T_new
 
 
 
-# 
 glueball_cwd, glueball_cwf = os.path.split(__file__)
 
-glueball_datafile = os.path.join(glueball_cwd, 'glueball_eos.dat')
+glueball_datafile = os.path.join(glueball_cwd, 'glueball_v2.dat')
 
 eos = GlueBall(glueball_datafile)
 
@@ -65,6 +59,7 @@ if __name__ == '__main__':
 
     #pr = np.diff(pr[:])
     plt.plot(ed[:200], pr[:200], 'ro')
+    #plt.xlim(0.5, 1.0)
 
     T_test = T[1001]
     ed_test = ed[1001]

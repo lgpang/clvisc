@@ -51,6 +51,8 @@ class CLIdeal(object):
                 self.gpu_defines)
 
         # set eos, create eos table for interpolation
+        # self.eos_table must be before __loadAndBuildCLPrg() to pass
+        # table information to definitions
         eos = Eos(self.cfg)
         self.eos_table = eos.create_table(self.ctx, self.gpu_defines)
 
@@ -75,7 +77,7 @@ class CLIdeal(object):
         self.d_ev_old = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
         # d_hypersf: store the dSigma^{mu}, vx, vy, veta, tau, x, y, eta
         # on freeze out hyper surface
-        self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1000000*self.cfg.sz_real8)
+        self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1500000*self.cfg.sz_real8)
         h_num_of_sf = np.zeros(1, np.int32)
         self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
 
@@ -233,19 +235,27 @@ class CLIdeal(object):
 
         return is_finished
 
-    def save(self):
+    def save(self, save_hypersf=True, save_bulk=True):
         self.num_of_sf = np.zeros(1, dtype=np.int32)
         cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
         print("num of sf=", self.num_of_sf)
-        hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
-        cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
-        out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-        print("hypersf save to ", out_path)
-        np.savetxt(out_path, hypersf, header = 'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
-        self.bulkinfo.save()
+        if save_hypersf:
+            hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
+            cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
+            out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
+            print("hypersf save to ", out_path)
+            np.savetxt(out_path, hypersf, header =
+                       'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
 
+        if save_bulk:
+            self.bulkinfo.save()
 
-    def evolve(self, max_loops=2000):
+    def update_time(self, loop):
+        '''update time with TAU0 and loop, convert its type to np.float32 or 
+        float64 which can be used directly as parameter in kernel functions'''
+        self.tau = self.cfg.real(self.cfg.TAU0 + (loop+1)*self.cfg.DT)
+
+    def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True):
         '''The main loop of hydrodynamic evolution '''
         cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
         self.tau_old = self.cfg.TAU0
@@ -262,10 +272,10 @@ class CLIdeal(object):
 
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
-            self.tau = self.cfg.real(self.cfg.TAU0 + (n+1)*self.cfg.DT)
+            self.update_time(loop=n)
             self.stepUpdate(step=2)
 
-        self.save()
+        self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
 
 def main():
@@ -283,7 +293,7 @@ def main():
                   ideal.d_ev[1])
     #dat = np.loadtxt(cfg.fPathIni)
     #ideal.load_ini(dat)
-    ideal.evolve(max_loops=1000)
+    ideal.evolve(max_loops=1000, save_bulk=False)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
