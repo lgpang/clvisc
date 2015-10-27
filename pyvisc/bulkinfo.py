@@ -179,7 +179,8 @@ class BulkInfo(object):
             np.savetxt(self.cfg.fPathOut+'/ecc1.dat',
                        np.array(self.ecc1_vs_rapidity).T)
 
-        eccp = []
+        ecc2 = []
+        ecc1 = []
         for idx, exy in enumerate(self.exy):
             vx= self.vx_xy[idx]
             vy= self.vy_xy[idx]
@@ -188,11 +189,11 @@ class BulkInfo(object):
             np.savetxt(self.cfg.fPathOut+'/vx_xy%d.dat'%idx, vx)
             np.savetxt(self.cfg.fPathOut+'/vy_xy%d.dat'%idx, vy)
 
-            eccp.append(self.eccp(exy[:, self.cfg.NY/2],
-                vx[:, self.cfg.NY/2], vy[:, self.cfg.NY/2]))
+            ecc1.append(self.eccp(exy, vx, vy)[0])
+            ecc2.append(self.eccp(exy, vx, vy)[1])
         
         np.savetxt(self.cfg.fPathOut + '/eccp.dat',
-                   np.array(zip(self.time, eccp)))
+                   np.array(zip(self.time, ecc2)))
 
         np.savetxt(self.cfg.fPathOut + '/Tmax.dat',
                    np.array(zip(self.time, self.eos.f_T(self.edmax))))
