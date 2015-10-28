@@ -50,6 +50,7 @@ real ed_transverse(real Ta, real Tb) {
 
 
 // the rapidity twist due to forward-backward assymetry
+// where Ta = T- = T(x-b/2, y) and Tb = T+ = T(x+b/2, y)
 inline real etas0(real Ta, real Tb) {
     // gamma_n = sqrt_s / (2*m_nucleon)
     real gamma_n = SQRTS / (2.0f * 0.938f);
@@ -57,6 +58,7 @@ inline real etas0(real Ta, real Tb) {
     real T1 = (Ta + Tb)*gamma_n;
     real T2 = (Ta - Tb)*gamma_n*v_n;
     return 0.5f*log((T1+T2)/(T1-T2));
+    //return 0.0f;
 }
 
 // number of wounded nucleons
