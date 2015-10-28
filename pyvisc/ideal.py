@@ -285,9 +285,6 @@ def main():
     print('start ...')
     t0 = time()
 
-    eos = Eos(cfg)
-    cfg.Edmax = eos.f_ed(0.6)
-
     ideal = CLIdeal(cfg)
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
