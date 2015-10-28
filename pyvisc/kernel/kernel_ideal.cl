@@ -174,7 +174,7 @@ __kernel void update_ev(
     real T03 = (fabs(T0m.s3) < acu) ? 0.0f : T0m.s3/tau;
 
     real M = sqrt(T01*T01 + T02*T02 + T03*T03);
-    real SCALE_COEF = 0.99999f;
+    real SCALE_COEF = 0.999f;
     if ( M > T00 ) {
 	    T01 *= SCALE_COEF * T00 / M;
 	    T02 *= SCALE_COEF * T00 / M;
@@ -184,7 +184,7 @@ __kernel void update_ev(
     }
 
     real ed_find;
-    //rootFinding_newton(&ed_find, T00, M);
+    //rootFinding_newton(&ed_find, T00, M, eos_table);
     rootFinding(&ed_find, T00, M, eos_table);
     ed_find = max(0.0f, ed_find);
 
