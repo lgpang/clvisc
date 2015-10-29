@@ -48,7 +48,7 @@ class CLVisc(object):
     def __loadAndBuildCLPrg(self):
         self.cwd, cwf = os.path.split(__file__)
         #load and build *.cl programs with compile options
-        with open(os.path.join(self.cwd, 'kernel', 'kernel_visc.cl'), 'r') as f:
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_IS.cl'), 'r') as f:
             src = f.read()
             self.kernel_visc = cl.Program(self.ctx, src).build(options=self.compile_options)
         #with open(os.path.join(self.cwd, 'kernel', 'kernel_src2.cl'), 'r') as f:
@@ -70,7 +70,7 @@ class CLVisc(object):
         This function is for one time step'''
         self.ideal.stepUpdate(step)
 
-        print "ideal update finished"
+        #print "ideal update finished"
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
 
         self.kernel_visc.visc_src_christoffel(self.queue, (NX*NY*NZ,), None,
@@ -138,11 +138,11 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    cfg.NX = 201
-    cfg.NY = 201
-    cfg.dt = 0.01
-    cfg.dx = 0.08
-    cfg.dy = 0.08
+    cfg.NX = 301
+    cfg.NY = 301
+    cfg.dt = 0.02
+    cfg.dx = 0.16
+    cfg.dy = 0.16
     cfg.NZ = 7
     visc = CLVisc(cfg)
     from glauber import Glauber
