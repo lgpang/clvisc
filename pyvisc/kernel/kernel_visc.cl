@@ -197,10 +197,10 @@ __kernel void kt_src_alongy(
                             d_pi[idn(IND, 1)],
                             d_pi[idn(IND, 2)],
                             d_pi[idn(IND, 3)]);
-        pimi[J+2] = (real4)(d_pi[idn(IND, idx(1, 0))],
-                            d_pi[idn(IND, idx(1, 1))],
-                            d_pi[idn(IND, idx(1, 2))],
-                            d_pi[idn(IND, idx(1, 3))]);
+        pimi[J+2] = (real4)(d_pi[idn(IND, idx(2, 0))],
+                            d_pi[idn(IND, idx(2, 1))],
+                            d_pi[idn(IND, idx(2, 2))],
+                            d_pi[idn(IND, idx(2, 3))]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
