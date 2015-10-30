@@ -11,6 +11,11 @@
 // represent 16 components of pi^{mu nu} in 10 elements
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
+// idn() return the idx of pi^{mu nu}_{i,j,k}in global mem
+// I = i*NY*NZ + j*NZ + k
+#define idn(I, mn) (I)*10+mn
+
+
 #define ALONG_X 0
 #define ALONG_Y 1
 #define ALONG_Z 2

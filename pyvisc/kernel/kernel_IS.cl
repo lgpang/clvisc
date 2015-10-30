@@ -1,9 +1,5 @@
 #include<helper.h>
 
-// IDN() return the idx of pi^{mu nu}_{i,j,k}in global mem
-// I = i*NY*NZ + j*NZ + k
-#define idn(I, mn) (I)*10+mn
-
 constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
                            {0.0f,-1.0f, 0.0f, 0.0f},
                            {0.0f, 0.0f,-1.0f, 0.0f},
