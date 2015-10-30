@@ -146,14 +146,14 @@ class CLVisc(object):
         pass
 
     def plot_sigma_traceless(self, i):
-        cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.d_checkpi).wait()
+        cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.ideal.d_ev[1]).wait()
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
-        edxy = self.ideal.h_ev1[:, 0].reshape(NX, NY, NZ)[:,:,NZ/2]
-        np.savetxt('debug/pi_traceless%d.dat'%i, edxy)
-        #import matplotlib.pyplot as plt
-        #plt.imshow(edxy.T)
-        #plt.colorbar()
-        #plt.show()
+        edxy = self.ideal.h_ev1[:, 1].reshape(NX, NY, NZ)[:,:,NZ/2]
+        #np.savetxt('debug/pi_traceless%d.dat'%i, edxy)
+        import matplotlib.pyplot as plt
+        plt.imshow(edxy.T)
+        plt.colorbar()
+        plt.show()
 
     def update_time(self, loop):
         self.ideal.update_time(loop)
@@ -175,10 +175,21 @@ class CLVisc(object):
             #self.plot_sigma_traceless(loop)
             print('loop=', loop)
 
-    def evolve(self, max_loops=1000, ntskip=10):
+    def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True):
         '''The main loop of hydrodynamic evolution '''
         self.initialize()
         for loop in xrange(max_loops):
+            self.ideal.edmax = self.ideal.max_energy_density()
+            self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
+            print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
+            is_finished = self.ideal.get_hypersf(loop, self.cfg.ntskip)
+            if is_finished:
+                break
+
+            if loop % self.cfg.ntskip == 0:
+                self.ideal.bulkinfo.get(self.ideal.tau,
+                        self.ideal.d_ev[1], self.ideal.edmax)
+
             # store ev[0] and d_pi[0]
             cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
                             self.ideal.d_ev[1]).wait()
@@ -194,10 +205,11 @@ class CLVisc(object):
             # update pi[1] with d_ev[0] and d_ev[2]_visc
             self.IS_stepUpdate(step=2)
             self.visc_stepUpdate(step=2)
-            #if loop % ntskip == 0:
-            #self.plot_sigma_traceless(loop)
-            print('loop=', loop)
+            if loop % self.cfg.ntskip == 0:
+                self.plot_sigma_traceless(loop)
+                #pass
 
+        self.ideal.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
 
 
@@ -209,17 +221,18 @@ def main():
     from config import cfg
     cfg.NX = 301
     cfg.NY = 301
-    cfg.dt = 0.02
-    cfg.dx = 0.16
-    cfg.dy = 0.16
+    cfg.dt = 0.01
+    cfg.dx = 0.08
+    cfg.dy = 0.08
     cfg.NZ = 1
+    cfg.ntskip = 100
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
 
     #visc.IS_test(max_loops=80)
-    visc.evolve(max_loops=80)
+    visc.evolve(max_loops=2000)
     #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)

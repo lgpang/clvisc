@@ -57,8 +57,8 @@ inline real etas0(real Ta, real Tb) {
     real v_n = sqrt(gamma_n*gamma_n - 1.0f)/gamma_n;
     real T1 = (Ta + Tb)*gamma_n;
     real T2 = (Ta - Tb)*gamma_n*v_n;
-    return 0.5f*log((T1+T2)/(T1-T2));
-    //return 0.0f;
+    //return 0.5f*log((T1+T2)/(T1-T2));
+    return 0.0f;
 }
 
 // number of wounded nucleons
