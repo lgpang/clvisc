@@ -147,7 +147,6 @@ __kernel void kt_src_alongx(
        ev[1] = ev[2];
        ev[NX+3] = ev[NX+1];
        ev[NX+2] = ev[NX+1];
-
        pim0[0] = pim0[2];
        pim0[1] = pim0[2];
        pim0[NX+3] = pim0[NX+1];
@@ -211,7 +210,6 @@ __kernel void kt_src_alongy(
        ev[1] = ev[2];
        ev[NY+3] = ev[NY+1];
        ev[NY+2] = ev[NY+1];
-
        pim0[0] = pim0[2];
        pim0[1] = pim0[2];
        pim0[NY+3] = pim0[NY+1];
@@ -275,7 +273,6 @@ __kernel void kt_src_alongz(
        ev[1] = ev[2];
        ev[NZ+3] = ev[NZ+1];
        ev[NZ+2] = ev[NZ+1];
-
        pim0[0] = pim0[2];
        pim0[1] = pim0[2];
        pim0[NZ+3] = pim0[NZ+1];

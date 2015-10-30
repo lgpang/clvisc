@@ -360,11 +360,17 @@ __kernel void visc_src_alongz(__global real * d_Src,
     }
 }
 
-/** update d_pinew with d_pi1 and d_Src*/
+    /** update d_pinew with d_pi1, d_pistep and d_Src
+    where d_pi1 is for u0*d_pi as Q0_old
+    d_pistep is for src term in Runge Kutta method,
+    which is d_pi[1] for step==1 and d_pi[2] for step==2
+    **/
+
 __kernel void update_pimn(
 	__global real4 * d_checkpi,
 	__global real * d_pinew,
 	__global real * d_pi1,
+    __global real * d_pistep,
     __global real4 * d_ev1,
     __global real4 * d_ev2,
     __global real4 * d_udx,
@@ -383,45 +389,62 @@ __kernel void update_pimn(
     real4 u_new = umu4(e_v2);
     real4 udt = (u_new - u_old)/DT;
 
-    real sigma[4][4];
+    real sigma[10];
 
     real4 udx = d_udx[I];
     real4 udy = d_udy[I];
     real4 udz = d_udz[I];
 
-    // dalpha_u = (partial_t, partial_x, partial_y, partial_z)ux
+    // dalpha_ux = (partial_t, partial_x, partial_y, partial_z)ux
     real4 dalpha_u[4] = {(real4)(udt.s0, udx.s0, udy.s0, udz.s0),
                          (real4)(udt.s1, udx.s1, udy.s1, udz.s1),
                          (real4)(udt.s2, udx.s2, udy.s2, udz.s2),
                          (real4)(udt.s3, udx.s3, udy.s3, udz.s3)};
 
-    real DU[4] = {dot(u_old, dalpha_u[0]), dot(u_old, dalpha_u[1]),
-                  dot(u_old, dalpha_u[2]), dot(u_old, dalpha_u[3])};
-    real u[4] = {u_old.s0, u_old.s1, u_old.s2, u_old.s3};
+    real DU[4];
+    real u[4];
+    if ( step == 1 ) {
+        for (int i=0; i<4; i++ ){
+            DU[i] = dot(u_old, dalpha_u[i]);
+        }
+        u[0] = u_old.s0;
+        u[1] = u_old.s1;
+        u[2] = u_old.s2;
+        u[3] = u_old.s3;
+    } else {
+        for (int i=0; i<4; i++ ){
+            DU[i] = dot(u_new, dalpha_u[i]);
+        }
+        u[0] = u_new.s0;
+        u[1] = u_new.s1;
+        u[2] = u_new.s2;
+        u[3] = u_new.s3;
+    }
     
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
     real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
-    real etav = ETAOS * S(e_v2.s0, eos_table) * hbarc;
-    real taupi = 5.0f*ETAOS/max(T(e_v2.s0, eos_table), acu) * hbarc;
+    real ehalf = 0.5f * (e_v1.s0+e_v2.s0);
+    real etav = ETAOS * S(ehalf, eos_table) * hbarc;
+    real taupi = 3.0f*ETAOS/max(T(ehalf, eos_table), acu*acu) * hbarc;
 
-    real pi1[10];
+    real pi1[10], pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
         pi1[mn] = d_pi1[10*I+mn];
+        pi2[mn] = d_pistep[10*I+mn];
     }
 
     for ( int mu = 0; mu < 4; mu ++ )
         for ( int nu = mu; nu < 4; nu ++ ) {
-            sigma[mu][nu] = dot(gm[mu], dalpha_u[nu]) + 
+            sigma[idx(mu,nu)] = dot(gm[mu], dalpha_u[nu]) + 
                             dot(gm[nu], dalpha_u[mu]) -
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
 
             //// set the sigma^{mu nu} and theta 0 when ed is too small
-            //if ( u[0] > 10 ) {
-            //    sigma[mu][nu] = 0.0f;
-            //    theta = 0.0f;
-            //}
+            if ( u[0] > 100.0f ) {
+                sigma[idx(mu,nu)] = 0.0f;
+            }
 
             int mn = idx(mu, nu);
             real pi_old = pi1[mn] * u_old.s0;
@@ -430,12 +453,12 @@ __kernel void update_pimn(
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
             // */
 
-            real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/taupi;
-            real src = stiff_term - pi1[mn]*theta/3.0f - pi1[mn]*u_new.s0/tau;
-            src -= (u[mu]*pi1[idx(nu,0)] + u[nu]*pi1[idx(mu,0)])*DU[0];
-            src -= (u[mu]*pi1[idx(nu,1)] + u[nu]*pi1[idx(mu,1)])*DU[1];
-            src -= (u[mu]*pi1[idx(nu,2)] + u[nu]*pi1[idx(mu,2)])*DU[2];
-            src -= (u[mu]*pi1[idx(nu,3)] + u[nu]*pi1[idx(mu,3)])*DU[3];
+            real   stiff_term = -(pi1[mn]-etav*sigma[idx(mu,nu)])/taupi;
+            real src = stiff_term - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
+            src -= (u[mu]*pi2[idx(nu,0)] + u[nu]*pi2[idx(mu,0)])*DU[0];
+            src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1];
+            src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2];
+            src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3];
 
             d_Src[idn(I, mn)] += src;
             pi_old = pi_old + d_Src[idn(I, mn)]*DT/step;
@@ -443,15 +466,11 @@ __kernel void update_pimn(
             d_pinew[10*I + mn] = pi_old/u_new.s0;
     }
 
-    // u[0]*sigma[0][0]-u[1]*sigma[1][0]-u[2]*sigma[2][0]-u[3]*sigma[3][0],
-    //d_checkpi[I] = (real4)(sigma[0][0]-sigma[1][1]-sigma[2][2]-sigma[3][3],
-    //d_checkpi[I] = (real4)(udx.s0,
-    //d_checkpi[I] = (real4)(d_pinew[10*I + idx(0,1)],
     d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
                             d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
                            /max(d_pinew[idn(I, idx(1,1))], 1.0E-6f),
-    u[0]*sigma[0][1]-u[1]*sigma[1][1]-u[2]*sigma[2][1]-u[3]*sigma[3][1],
-    u[0]*sigma[0][2]-u[1]*sigma[1][2]-u[2]*sigma[2][2]-u[3]*sigma[3][2],
-    u[0]*sigma[0][3]-u[1]*sigma[1][3]-u[2]*sigma[2][3]-u[3]*sigma[3][3]);
+    u[0]*sigma[idx(0, 1)]-u[1]*sigma[idx(1, 1)]-u[2]*sigma[idx(2, 1)]-u[3]*sigma[idx(3, 1)],
+    u[0]*sigma[idx(0, 2)]-u[1]*sigma[idx(1, 2)]-u[2]*sigma[idx(2, 2)]-u[3]*sigma[idx(3, 2)],
+    u[0]*sigma[idx(0, 3)]-u[1]*sigma[idx(1, 3)]-u[2]*sigma[idx(2, 3)]-u[3]*sigma[idx(3, 3)]);
     
 }

@@ -35,10 +35,13 @@ class CLVisc(object):
         self.d_IS_src = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
         # datatypes are real4
-        self.d_udt = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
         self.d_udx = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
         self.d_udy = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
         self.d_udz = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+
+        # velocity difference between u_visc and u_ideal* for correction
+        self.d_udelta = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+
         # traceless and transverse check
         self.d_checkpi = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
@@ -104,7 +107,7 @@ class CLVisc(object):
         # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
         # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
         self.kernel_visc.update_ev(self.queue, (NX*NY*NZ, ), None,
-                              self.ideal.d_ev[3-step], self.ideal.d_ev[0], 
+                              self.ideal.d_ev[3-step], self.ideal.d_ev[1],
                               self.d_pi[0], self.d_pi[3-step],
                               self.ideal.d_Src,
                               self.eos_table, self.ideal.tau, np.int32(step)).wait()
@@ -135,8 +138,8 @@ class CLVisc(object):
 
         #print "udz along z"
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
-                self.d_checkpi, self.d_pi[3-step], self.d_pi[1],
-                self.ideal.d_ev[0], self.ideal.d_ev[2],
+                self.d_checkpi, self.d_pi[3-step], self.d_pi[1], self.d_pi[step],
+                self.ideal.d_ev[1], self.ideal.d_ev[2],
                 self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
@@ -191,13 +194,11 @@ class CLVisc(object):
                         self.ideal.d_ev[1], self.ideal.edmax)
 
             # store ev[0] and d_pi[0]
-            cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
-                            self.ideal.d_ev[1]).wait()
             cl.enqueue_copy(self.queue, self.d_pi[0],
                             self.d_pi[1]).wait()
             # ideal prediction; d_ev[2] is updated
             self.ideal.stepUpdate(step=1)
-            #print(self.ideal.max_energy_density())
+
             # update pi[2] with d_ev[0] and d_ev[2]_ideal
             self.IS_stepUpdate(step=1)
             self.visc_stepUpdate(step=1)
@@ -219,12 +220,14 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    cfg.NX = 301
-    cfg.NY = 301
-    cfg.dt = 0.01
-    cfg.dx = 0.08
-    cfg.dy = 0.08
+    cfg.NX = 201
+    cfg.NY = 201
+    cfg.dt = 0.02
+    cfg.dx = 0.16
+    cfg.dy = 0.16
     cfg.NZ = 1
+    cfg.ImpactParameter = 0.0
+    cfg.IEOS = 0
     cfg.ntskip = 100
     visc = CLVisc(cfg)
     from glauber import Glauber

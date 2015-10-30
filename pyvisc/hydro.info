@@ -49,9 +49,9 @@ NY = 205
 # etas range [ -NZ/2, NZ/2] * dz
 NZ = 85              
 # time step
-dt = 0.01             
-dx = 0.08            
-dy = 0.08
+dt = 0.02             
+dx = 0.16            
+dy = 0.16
 dz = 0.3
 # do output every 0.4 fm
 ntskip = 20           
@@ -70,7 +70,7 @@ nzskip = 1
 ## starting proper time for hydro in units fm
 tau0 = 0.6            
 
-IEOS = 2              
+IEOS = 0              
 # IEOS = 0 for p = e/3
 # IEOS = 1 for s95p_v1 CE lattice QCD EOS
 # IEOS = 2 for s95p_PCE_v0 lattice QCD EOS
