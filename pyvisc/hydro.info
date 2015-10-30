@@ -49,9 +49,9 @@ NY = 205
 # etas range [ -NZ/2, NZ/2] * dz
 NZ = 85              
 # time step
-dt = 0.02             
-dx = 0.16            
-dy = 0.16
+dt = 0.01             
+dx = 0.08            
+dy = 0.08
 dz = 0.3
 # do output every 0.4 fm
 ntskip = 20           
