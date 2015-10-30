@@ -395,14 +395,15 @@ __kernel void update_pimn(
                          (real4)(udt.s2, udx.s2, udy.s2, udz.s2),
                          (real4)(udt.s3, udx.s3, udy.s3, udz.s3)};
 
-    real DU[4] = {dot(u_new, dalpha_u[0]), dot(u_new, dalpha_u[1]),
-                  dot(u_new, dalpha_u[2]), dot(u_new, dalpha_u[3])};
-    real u[4] = {u_new.s0, u_new.s1, u_new.s2, u_new.s3};
+    real DU[4] = {dot(u_old, dalpha_u[0]), dot(u_old, dalpha_u[1]),
+                  dot(u_old, dalpha_u[2]), dot(u_old, dalpha_u[3])};
+    real u[4] = {u_old.s0, u_old.s1, u_old.s2, u_old.s3};
     
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
     real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
     real etav = ETAOS * S(e_v2.s0, eos_table) * hbarc;
+    real taupi = 5.0f*ETAOS/max(T(e_v2.s0, eos_table), acu) * hbarc;
 
     real pi1[10];
     for ( int mn=0; mn < 10; mn ++ ) {
@@ -416,11 +417,11 @@ __kernel void update_pimn(
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
 
-            // set the sigma^{mu nu} and theta 0 when ed is too small
-            if ( u[0] > 10 ) {
-                sigma[mu][nu] = 0.0f;
-                theta = 0.0f;
-            }
+            //// set the sigma^{mu nu} and theta 0 when ed is too small
+            //if ( u[0] > 10 ) {
+            //    sigma[mu][nu] = 0.0f;
+            //    theta = 0.0f;
+            //}
 
             int mn = idx(mu, nu);
             real pi_old = pi1[mn] * u_old.s0;
@@ -429,7 +430,7 @@ __kernel void update_pimn(
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
             // */
 
-            real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/0.3f;
+            real stiff_term = -(pi1[mn]-etav*sigma[mu][nu])/taupi;
             real src = stiff_term - pi1[mn]*theta/3.0f - pi1[mn]*u_new.s0/tau;
             src -= (u[mu]*pi1[idx(nu,0)] + u[nu]*pi1[idx(mu,0)])*DU[0];
             src -= (u[mu]*pi1[idx(nu,1)] + u[nu]*pi1[idx(mu,1)])*DU[1];
