@@ -218,7 +218,11 @@ class CLIdeal(object):
         global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
         is_finished = self.edmax < self.efrz
 
-        if ( (n % ntskip == 0 and n != 0) or is_finished):
+        if n == 0:
+            cl.enqueue_copy(self.queue, self.d_ev_old,
+                            self.d_ev[1]).wait()
+            self.tau_old = self.cfg.TAU0
+        elif (n % ntskip == 0) or is_finished:
             nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
             ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
             nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
@@ -255,8 +259,6 @@ class CLIdeal(object):
 
     def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True):
         '''The main loop of hydrodynamic evolution '''
-        cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
-        self.tau_old = self.cfg.TAU0
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
