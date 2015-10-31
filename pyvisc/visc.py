@@ -234,15 +234,18 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    cfg.NX = 401
-    cfg.NY = 401
-    cfg.dt = 0.01
-    cfg.dx = 0.08
-    cfg.dy = 0.08
+    cfg.NX = 201
+    cfg.NY = 201
     cfg.NZ = 1
+
+    cfg.DT = 0.02
+    cfg.DX = 0.16
+    cfg.DY = 0.16
     cfg.ImpactParameter = 0.0
     cfg.IEOS = 0
     cfg.ntskip = 100
+
+    cfg.ETAOS = 0.01
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,

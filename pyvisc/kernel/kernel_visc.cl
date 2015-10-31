@@ -50,6 +50,10 @@ real4 kt1d_visc(real4 ev[5], real4 pim0[5], real4 pimi[5],
            real vip_half, real vim_half,
            real tau, int along, read_only image2d_t eos_table);
 
+
+//               *       *
+//   0 ----- 1 ----- 2 ----- 3 -----4
+
 real4 kt1d_visc(real4 ev[5], real4 pim0[5], real4 pimi[5],
            real vip_half, real vim_half,
            real tau, int along, read_only image2d_t eos_table) {

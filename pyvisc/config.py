@@ -49,7 +49,7 @@ def read_config():
     config['Si0'] = (_parser.getfloat( 'glauber', 'Si0'),
             'inelastic scattering cross section')
 
-    config['ImpactParameter'] = (_parser.getfloat( 'glauber', 'b'),
+    config['ImpactParameter'] = (_parser.getfloat( 'glauber', 'ImpactParameter'),
             'average impact parameter')
 
     config['Hwn'] = (_parser.getfloat( 'glauber', 'Hwn'),
@@ -84,19 +84,19 @@ def read_config():
             'Skip steps along z for bulk information output')
 
    
-    config['DT'] = (_parser.getfloat( 'geometry', 'dt'), 
+    config['DT'] = (_parser.getfloat( 'geometry', 'DT'),
             'time step for hydro evolution' )
 
-    config['DX'] = (_parser.getfloat( 'geometry', 'dx'), 
+    config['DX'] = (_parser.getfloat( 'geometry', 'DX'),
             'x step for hydro evolution' )
 
-    config['DY'] = (_parser.getfloat( 'geometry', 'dy'), 
+    config['DY'] = (_parser.getfloat( 'geometry', 'DY'),
             'y step for hydro evolution' )
 
-    config['DZ'] = (_parser.getfloat( 'geometry', 'dz'),
+    config['DZ'] = (_parser.getfloat( 'geometry', 'DZ'),
             'z step for hydro evolution' )
     
-    config['TAU0'] = (_parser.getfloat('intrinsic', 'tau0'),
+    config['TAU0'] = (_parser.getfloat('intrinsic', 'TAU0'),
             'time when hydro starts')
 
     config['IEOS']  = (_parser.getint('intrinsic', 'IEOS'), 
