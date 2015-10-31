@@ -43,9 +43,9 @@ Eta_gw = 0.5
 [geometry]
 ############# Params for hydro grid setting 
 # x range [ -NX/2, NX/2] * dx
-NX = 205              
+NX = 405              
 # y range [ -NY/2, NY/2] * dy
-NY = 205              
+NY = 405              
 # etas range [ -NZ/2, NZ/2] * dz
 NZ = 85              
 # time step

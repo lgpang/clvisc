@@ -47,9 +47,10 @@ real kt1d_real(
 }
 
 
-// christoffel terms from d;mu pi^{\alpha \beta}
+// initialize d_pi1 and d_udiff between u_ideal* and u_visc
 __kernel void visc_initialize(
              __global real * d_pi1,
+		     __global real4 * d_udiff,
 		     __global real4 * d_ev,
 		     const real tau,
              read_only image2d_t eos_table) {
@@ -65,6 +66,8 @@ __kernel void visc_initialize(
        d_pi1[10*I+idx(1, 1)] = 0.0f;
        d_pi1[10*I+idx(2, 2)] = 0.0f;
        d_pi1[10*I+idx(3, 3)] = 0.0f;
+
+       d_udiff[I] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     }
 }
 
@@ -373,6 +376,7 @@ __kernel void update_pimn(
     __global real * d_pistep,
     __global real4 * d_ev1,
     __global real4 * d_ev2,
+    __global real4 * d_udiff,
     __global real4 * d_udx,
     __global real4 * d_udy,
     __global real4 * d_udz,
@@ -388,6 +392,9 @@ __kernel void update_pimn(
     real4 u_old = umu4(e_v1);
     real4 u_new = umu4(e_v2);
     real4 udt = (u_new - u_old)/DT;
+
+    // correct with previous udiff=u_visc-u_ideal*
+    if ( step == 1 ) udt += d_udiff[I]/DT;
 
     real sigma[10];
 
@@ -426,7 +433,13 @@ __kernel void update_pimn(
 
     real ehalf = 0.5f * (e_v1.s0+e_v2.s0);
     real etav = ETAOS * S(ehalf, eos_table) * hbarc;
-    real taupi = 3.0f*ETAOS/max(T(ehalf, eos_table), acu*acu) * hbarc;
+
+    real one_over_taupi = T(ehalf, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
+
+    // if ed is too low, set one_over_taupi 0.0 to make code stable
+    if (ehalf < acu ) {
+        one_over_taupi = 0.0f;
+    }
 
     real pi1[10], pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
@@ -441,20 +454,24 @@ __kernel void update_pimn(
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
 
-            //// set the sigma^{mu nu} and theta 0 when ed is too small
-            if ( u[0] > 100.0f ) {
-                sigma[idx(mu,nu)] = 0.0f;
-            }
-
             int mn = idx(mu, nu);
-            real pi_old = pi1[mn] * u_old.s0;
+            real pi_old;
+
+            real piNS = etav*sigma[mn];
+
+            pi_old = (pi1[mn] - piNS)*exp(-one_over_taupi*DT/u[0])
+                     + piNS;
+
+            //pi_old = pi1[mn] * u_old.s0;
+            pi_old *= u_old.s0;
 
             // /** step==1: Q' = Q0 + Src*DT
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
             // */
 
-            real   stiff_term = -(pi1[mn]-etav*sigma[idx(mu,nu)])/taupi;
-            real src = stiff_term - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
+            //real   stiff_term = -(pi1[mn]-etav*sigma[idx(mu,nu)])/taupi;
+            //real src = stiff_term - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
+            real src = - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
             src -= (u[mu]*pi2[idx(nu,0)] + u[nu]*pi2[idx(mu,0)])*DU[0];
             src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1];
             src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2];
@@ -463,7 +480,16 @@ __kernel void update_pimn(
             d_Src[idn(I, mn)] += src;
             pi_old = pi_old + d_Src[idn(I, mn)]*DT/step;
 
-            d_pinew[10*I + mn] = pi_old/u_new.s0;
+            // after kt, before appling stiff term (unstable in explicit Runge-Kutta)
+            pi_old = pi_old/u_new.s0;
+
+            d_pinew[10*I + mn] = pi_old;
+
+            //// set the sigma^{mu nu} and theta 0 when ed is too small
+            if ( u[0] > 100.0f ) {
+                sigma[mn] = 0.0f;
+                d_pinew[10*I + mn] = 0.0f;
+            }
     }
 
     d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
@@ -473,4 +499,21 @@ __kernel void update_pimn(
     u[0]*sigma[idx(0, 2)]-u[1]*sigma[idx(1, 2)]-u[2]*sigma[idx(2, 2)]-u[3]*sigma[idx(3, 2)],
     u[0]*sigma[idx(0, 3)]-u[1]*sigma[idx(1, 3)]-u[2]*sigma[idx(2, 3)]-u[3]*sigma[idx(3, 3)]);
     
+}
+
+
+/** get the u^mu difference between u_{visc} and u_{ideal*}
+where u_{ideal*} is the prediction from ideal hydro for pi^{mu nu}
+update; while u_{visc} is the results after the full viscous evolution,
+the correction will be used in the next prediction step */
+__kernel void get_udiff(
+    __global real4 * d_udiff,
+    __global real4 * d_ev0,
+    __global real4 * d_ev1)
+{
+    int I = get_global_id(0);
+    
+    real4 e_v0 = d_ev0[I];
+    real4 e_v1 = d_ev1[I];
+    d_udiff[I] =  umu4(e_v1) - umu4(e_v0);
 }

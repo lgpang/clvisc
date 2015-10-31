@@ -40,7 +40,7 @@ class CLVisc(object):
         self.d_udz = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
         # velocity difference between u_visc and u_ideal* for correction
-        self.d_udelta = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+        self.d_udiff = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
         # traceless and transverse check
         self.d_checkpi = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
@@ -65,8 +65,8 @@ class CLVisc(object):
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
 
         self.kernel_IS.visc_initialize(self.queue, (NX*NY*NZ,), None,
-                self.d_pi[1], self.ideal.d_ev[1], self.ideal.tau,
-                self.eos_table).wait()
+                self.d_pi[1], self.d_udiff, self.ideal.d_ev[1],
+                self.ideal.tau, self.eos_table).wait()
 
 
     def visc_stepUpdate(self, step):
@@ -139,11 +139,18 @@ class CLVisc(object):
         #print "udz along z"
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
                 self.d_checkpi, self.d_pi[3-step], self.d_pi[1], self.d_pi[step],
-                self.ideal.d_ev[1], self.ideal.d_ev[2],
+                self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
                 self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
 
+
+    def update_udiff(self):
+        '''get d_udiff = u_{visc}^{n} - u_{ideal*}^{n} '''
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        self.kernel_IS.get_udiff(self.queue, (NX*NY*NZ,), None,
+            self.d_udiff, self.ideal.d_ev[0], self.ideal.d_ev[1]).wait()
+                
 
     def __output(self, nt):
         pass
@@ -193,19 +200,26 @@ class CLVisc(object):
                 self.ideal.bulkinfo.get(self.ideal.tau,
                         self.ideal.d_ev[1], self.ideal.edmax)
 
-            # store ev[0] and d_pi[0]
+            # store d_pi[0]
             cl.enqueue_copy(self.queue, self.d_pi[0],
                             self.d_pi[1]).wait()
             # ideal prediction; d_ev[2] is updated
             self.ideal.stepUpdate(step=1)
 
+            # copy the ideal prediction to d_ev[0] for d_udiff calc
+            cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
+                            self.ideal.d_ev[2]).wait()
+
             # update pi[2] with d_ev[0] and d_ev[2]_ideal
+            # the difference is corrected with d_udiff
             self.IS_stepUpdate(step=1)
             self.visc_stepUpdate(step=1)
             self.update_time(loop)
             # update pi[1] with d_ev[0] and d_ev[2]_visc
             self.IS_stepUpdate(step=2)
             self.visc_stepUpdate(step=2)
+            self.update_udiff()
+
             if loop % self.cfg.ntskip == 0:
                 self.plot_sigma_traceless(loop)
                 #pass
@@ -220,11 +234,11 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg
-    cfg.NX = 201
-    cfg.NY = 201
-    cfg.dt = 0.02
-    cfg.dx = 0.16
-    cfg.dy = 0.16
+    cfg.NX = 401
+    cfg.NY = 401
+    cfg.dt = 0.01
+    cfg.dx = 0.08
+    cfg.dy = 0.08
     cfg.NZ = 1
     cfg.ImpactParameter = 0.0
     cfg.IEOS = 0
