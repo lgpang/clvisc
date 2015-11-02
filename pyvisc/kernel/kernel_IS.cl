@@ -367,10 +367,14 @@ __kernel void visc_src_alongz(__global real * d_Src,
     where d_pi1 is for u0*d_pi as Q0_old
     d_pistep is for src term in Runge Kutta method,
     which is d_pi[1] for step==1 and d_pi[2] for step==2
+    d_ev[1] is the ev_visc 
+    d_ev[2] is ev_ideal*+correction at step==1
+    and ev_visc* at step==2
+    d_udiff is the correction from previous step
     **/
 
 __kernel void update_pimn(
-	__global real4 * d_checkpi,
+//	__global real4 * d_checkpi,
 	__global real * d_pinew,
 	__global real * d_pi1,
     __global real * d_pistep,
@@ -436,17 +440,19 @@ __kernel void update_pimn(
 
     real one_over_taupi = T(ehalf, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
 
-    // if ed is too low, set one_over_taupi 0.0 to make code stable
-    if (ehalf < acu ) {
-        one_over_taupi = 0.0f;
-    }
+    //if ed is too low, set one_over_taupi 0.0 to make code stable
+    //if (ehalf < acu ) {
+    //    one_over_taupi = 0.0f;
+    //}
 
-    real pi1[10], pi2[10];
+    real pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
-        pi1[mn] = d_pi1[10*I+mn];
         pi2[mn] = d_pistep[10*I+mn];
     }
 
+    bool scale_pimn = true;
+    real pre = P(e_v2.s0, eos_table);
+    real T00 = (e_v2.s0 + pre)*u_new.s0*u_new.s0 - pre;
     for ( int mu = 0; mu < 4; mu ++ )
         for ( int nu = mu; nu < 4; nu ++ ) {
             sigma[idx(mu,nu)] = dot(gm[mu], dalpha_u[nu]) + 
@@ -455,22 +461,26 @@ __kernel void update_pimn(
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
 
             int mn = idx(mu, nu);
+            //// set the sigma^{mu nu} and theta 0 when ed is too small
+            if ( u[0] > 100.0f ) {
+                sigma[mn] = 0.0f;
+            }
             real pi_old;
 
             real piNS = etav*sigma[mn];
 
-            pi_old = (pi1[mn] - piNS)*exp(-one_over_taupi*DT/u[0])
-                     + piNS;
+            //pi_old = (pi1[mn] - piNS)*exp(-one_over_taupi*DT/u[0])
+            //         + piNS;
 
-            //pi_old = pi1[mn] * u_old.s0;
-            pi_old *= u_old.s0;
+            pi_old = d_pi1[10*I + mn] * u_old.s0;
+            //pi_old *= u_old.s0;
+
+            //pi_old = (pi_old + DT*one_over_taupi*piNS)/(1.0f + DT*one_over_taupi/u_new.s0);
 
             // /** step==1: Q' = Q0 + Src*DT
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
             // */
 
-            //real   stiff_term = -(pi1[mn]-etav*sigma[idx(mu,nu)])/taupi;
-            //real src = stiff_term - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
             real src = - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
             src -= (u[mu]*pi2[idx(nu,0)] + u[nu]*pi2[idx(mu,0)])*DU[0];
             src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1];
@@ -478,26 +488,32 @@ __kernel void update_pimn(
             src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3];
 
             d_Src[idn(I, mn)] += src;
-            pi_old = pi_old + d_Src[idn(I, mn)]*DT/step;
+
+            // use implicit method for stiff term; 
+            pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
+                      DT*one_over_taupi*piNS) / (1.0f + DT*one_over_taupi/u_new.s0);
 
             // after kt, before appling stiff term (unstable in explicit Runge-Kutta)
             pi_old = pi_old/u_new.s0;
 
-            d_pinew[10*I + mn] = pi_old;
-
-            //// set the sigma^{mu nu} and theta 0 when ed is too small
-            if ( u[0] > 100.0f ) {
-                sigma[mn] = 0.0f;
-                d_pinew[10*I + mn] = 0.0f;
+            if ( fabs(pi_old) > T00 ) {
+                 scale_pimn = true;
             }
+            d_pinew[10*I + mn] = pi_old;
     }
 
-    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
-                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
-                           /max(d_pinew[idn(I, idx(1,1))], 1.0E-6f),
-    u[0]*sigma[idx(0, 1)]-u[1]*sigma[idx(1, 1)]-u[2]*sigma[idx(2, 1)]-u[3]*sigma[idx(3, 1)],
-    u[0]*sigma[idx(0, 2)]-u[1]*sigma[idx(1, 2)]-u[2]*sigma[idx(2, 2)]-u[3]*sigma[idx(3, 2)],
-    u[0]*sigma[idx(0, 3)]-u[1]*sigma[idx(1, 3)]-u[2]*sigma[idx(2, 3)]-u[3]*sigma[idx(3, 3)]);
+    if ( scale_pimn ) {
+        for ( int mn = 0; mn <10; mn++ ) {
+            d_pinew[10*I + mn] *= 0.95f;
+        }
+    }
+
+//    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
+//                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
+//                           /max(d_pinew[idn(I, idx(1,1))], 1.0E-6f),
+//    u[0]*sigma[idx(0, 1)]-u[1]*sigma[idx(1, 1)]-u[2]*sigma[idx(2, 1)]-u[3]*sigma[idx(3, 1)],
+//    u[0]*sigma[idx(0, 2)]-u[1]*sigma[idx(1, 2)]-u[2]*sigma[idx(2, 2)]-u[3]*sigma[idx(3, 2)],
+//    u[0]*sigma[idx(0, 3)]-u[1]*sigma[idx(1, 3)]-u[2]*sigma[idx(2, 3)]-u[3]*sigma[idx(3, 3)]);
     
 }
 
