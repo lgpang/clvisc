@@ -258,7 +258,7 @@ class CLIdeal(object):
         self.tau = self.cfg.real(self.cfg.TAU0 + (loop+1)*self.cfg.DT)
 
     def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True,
-               to_maxloop=True):
+               to_maxloop=False):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
             self.edmax = self.max_energy_density()

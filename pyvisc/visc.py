@@ -185,15 +185,22 @@ class CLVisc(object):
             #self.plot_sigma_traceless(loop)
             print('loop=', loop)
 
-    def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True):
+    @profile
+    def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True,
+               to_maxloop = False):
         '''The main loop of hydrodynamic evolution '''
         self.initialize()
         for loop in xrange(max_loops):
             self.ideal.edmax = self.ideal.max_energy_density()
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
             print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
-            is_finished = self.ideal.get_hypersf(loop, self.cfg.ntskip)
-            if is_finished:
+
+            is_finished = False
+
+            if save_hypersf:
+                is_finished = self.ideal.get_hypersf(loop, self.cfg.ntskip)
+
+            if is_finished and not to_maxloop:
                 break
 
             if loop % self.cfg.ntskip == 0:
@@ -236,7 +243,7 @@ def main():
     from config import cfg
     cfg.NX = 201
     cfg.NY = 201
-    cfg.NZ = 1
+    cfg.NZ = 61
 
     cfg.DT = 0.02
     cfg.DX = 0.16
@@ -245,14 +252,13 @@ def main():
     cfg.IEOS = 2
     cfg.ntskip = 100
 
-    cfg.ETAOS = 0.08
+    cfg.ETAOS = 0.16
 
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
 
-    #visc.IS_test(max_loops=80)
     visc.evolve(max_loops=2000)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)

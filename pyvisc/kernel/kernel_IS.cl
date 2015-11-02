@@ -438,7 +438,7 @@ __kernel void update_pimn(
     real ehalf = 0.5f * (e_v1.s0+e_v2.s0);
     real etav = ETAOS * S(ehalf, eos_table) * hbarc;
 
-    real one_over_taupi = T(ehalf, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
+    real one_over_taupi = T(ehalf, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
 
     //if ed is too low, set one_over_taupi 0.0 to make code stable
     //if (ehalf < acu ) {
@@ -450,9 +450,7 @@ __kernel void update_pimn(
         pi2[mn] = d_pistep[10*I+mn];
     }
 
-    bool scale_pimn = true;
-    real pre = P(e_v2.s0, eos_table);
-    real T00 = (e_v2.s0 + pre)*u_new.s0*u_new.s0 - pre;
+    real max_pimn_abs = 0.0f;
     for ( int mu = 0; mu < 4; mu ++ )
         for ( int nu = mu; nu < 4; nu ++ ) {
             sigma[idx(mu,nu)] = dot(gm[mu], dalpha_u[nu]) + 
@@ -496,15 +494,17 @@ __kernel void update_pimn(
             // after kt, before appling stiff term (unstable in explicit Runge-Kutta)
             pi_old = pi_old/u_new.s0;
 
-            if ( fabs(pi_old) > T00 ) {
-                 scale_pimn = true;
-            }
+            if ( fabs(pi_old) > max_pimn_abs ) max_pimn_abs = fabs(pi_old);
+
             d_pinew[10*I + mn] = pi_old;
     }
 
-    if ( scale_pimn ) {
+    real pre = P(e_v2.s0, eos_table);
+    real T00 = (e_v2.s0 + pre)*u_new.s0*u_new.s0 - pre;
+    if ( max_pimn_abs > T00 ) {
         for ( int mn = 0; mn <10; mn++ ) {
-            d_pinew[10*I + mn] *= 0.95f;
+            //d_pinew[10*I + mn] *= 0.8f * T00 / max(acu, max_pimn_abs);
+            d_pinew[10*I + mn] *= 0.0f;
         }
     }
 
