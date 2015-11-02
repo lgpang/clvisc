@@ -127,7 +127,8 @@ real rand(int* seed) // 1 <= *seed < m
 void tiny_move_if_coplanar(__private real4 * ints, int size_of_ints,
                            real4 * mass_center, int gid) {
    hypersf sf;
-   int seed = 32117*gid;
+   // don't initialize seed with 0; otherwise seed will always be 0
+   int seed = 32117*(gid+1);
    for ( int i = 0; i < size_of_ints-4; i ++ )
    for ( int j = i+1; j < size_of_ints-3; j ++ )
    for ( int k = j+1; k < size_of_ints-2; k ++ )
@@ -442,6 +443,8 @@ __kernel void test_hypersf(__global real4 * result) {
     __private real4 all_ints[32];
 
     get_all_intersections(ed_cube, all_ints, &num_of_intersection);
+
+    //printf("num_of_intersections=%d\n", num_of_intersection);
     
     real4 energy_flow_vector = energy_flow(ed_cube);
 
