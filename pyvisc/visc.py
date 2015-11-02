@@ -245,7 +245,7 @@ def main():
     cfg.IEOS = 0
     cfg.ntskip = 100
 
-    cfg.ETAOS = 0.01
+    cfg.ETAOS = 0.0
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
