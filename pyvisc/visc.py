@@ -43,7 +43,7 @@ class CLVisc(object):
         self.d_udiff = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
         # traceless and transverse check
-        self.d_checkpi = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+        # self.d_checkpi = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
         cl.enqueue_copy(self.queue, self.d_pi[1], self.h_pi0).wait()
 
@@ -138,7 +138,7 @@ class CLVisc(object):
 
         #print "udz along z"
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
-                self.d_checkpi, self.d_pi[3-step], self.d_pi[1], self.d_pi[step],
+                self.d_pi[3-step], self.d_pi[1], self.d_pi[step],
                 self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
                 self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
@@ -221,8 +221,8 @@ class CLVisc(object):
             self.update_udiff()
 
             if loop % self.cfg.ntskip == 0:
-                self.plot_sigma_traceless(loop)
-                #pass
+                #self.plot_sigma_traceless(loop)
+                pass
 
         self.ideal.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
@@ -242,10 +242,11 @@ def main():
     cfg.DX = 0.16
     cfg.DY = 0.16
     cfg.ImpactParameter = 0.0
-    cfg.IEOS = 0
+    cfg.IEOS = 2
     cfg.ntskip = 100
 
-    cfg.ETAOS = 0.0
+    cfg.ETAOS = 0.08
+
     visc = CLVisc(cfg)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
@@ -253,7 +254,6 @@ def main():
 
     #visc.IS_test(max_loops=80)
     visc.evolve(max_loops=2000)
-    #visc.ideal.evolve(max_loops=200)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
 

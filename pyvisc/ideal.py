@@ -257,17 +257,21 @@ class CLIdeal(object):
         float64 which can be used directly as parameter in kernel functions'''
         self.tau = self.cfg.real(self.cfg.TAU0 + (loop+1)*self.cfg.DT)
 
-    def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True):
+    def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True,
+               to_maxloop=True):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
-            is_finished = self.get_hypersf(n, self.cfg.ntskip)
-            if is_finished:
+            is_finished = False
+
+            if save_hypersf:
+                is_finished = self.get_hypersf(n, self.cfg.ntskip)
+            if is_finished and not to_maxloop:
                 break
 
-            if n % self.cfg.ntskip == 0:
+            if save_bulk and n % self.cfg.ntskip == 0:
                 self.bulkinfo.get(self.tau, self.d_ev[1], self.edmax)
 
             self.stepUpdate(step=1)

@@ -23,20 +23,21 @@ def glueball(Tmax = 0.6, outdir = '../results/event0'):
 
     # set IEOS = 2 for (2+1)-flavor QCD EOS
     # set IEOS = 3 for GlueBall EOS
-    cfg.IEOS = 3
+    cfg.IEOS = 2
     cfg.NX = 301
     cfg.NY = 301
     cfg.NZ = 81
-    cfg.dt = 0.02
-    cfg.dx = 0.16
-    cfg.dy = 0.16
+    cfg.DT = 0.02
+    cfg.DX = 0.16
+    cfg.DY = 0.16
+    cfg.ImpactParameter = 3.0
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber
     Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
                   ideal.d_ev[1])
 
-    ideal.evolve(max_loops=2000, save_hypersf=False)
+    ideal.evolve(max_loops=1000, save_hypersf=False, to_maxloop=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
