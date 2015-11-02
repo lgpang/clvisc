@@ -90,7 +90,7 @@ class CLIdeal(object):
         print('end of loading ini data')
 
     def __compile_options(self):
-        optlist = [ 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
+        optlist = [ 'TAU0', 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
         gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
                 in list(self.cfg.__dict__.items()) if key in optlist ]
         gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))

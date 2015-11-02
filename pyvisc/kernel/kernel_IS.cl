@@ -50,6 +50,7 @@ real kt1d_real(
 // initialize d_pi1 and d_udiff between u_ideal* and u_visc
 __kernel void visc_initialize(
              __global real * d_pi1,
+             __global real * d_goodcell,
 		     __global real4 * d_udiff,
 		     __global real4 * d_ev,
 		     const real tau,
@@ -68,6 +69,7 @@ __kernel void visc_initialize(
        d_pi1[10*I+idx(3, 3)] = 0.0f;
 
        d_udiff[I] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
+       d_goodcell[I] = 1.0f;
     }
 }
 
@@ -374,8 +376,8 @@ __kernel void visc_src_alongz(__global real * d_Src,
     **/
 
 __kernel void update_pimn(
-//	__global real4 * d_checkpi,
 	__global real * d_pinew,
+	__global real * d_goodcell,
 	__global real * d_pi1,
     __global real * d_pistep,
     __global real4 * d_ev1,
@@ -438,12 +440,7 @@ __kernel void update_pimn(
     real ehalf = 0.5f * (e_v1.s0+e_v2.s0);
     real etav = ETAOS * S(ehalf, eos_table) * hbarc;
 
-    real one_over_taupi = T(ehalf, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
-
-    //if ed is too low, set one_over_taupi 0.0 to make code stable
-    //if (ehalf < acu ) {
-    //    one_over_taupi = 0.0f;
-    //}
+    real one_over_taupi = T(ehalf, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
 
     real pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
@@ -504,8 +501,11 @@ __kernel void update_pimn(
     if ( max_pimn_abs > T00 ) {
         for ( int mn = 0; mn <10; mn++ ) {
             //d_pinew[10*I + mn] *= 0.8f * T00 / max(acu, max_pimn_abs);
-            d_pinew[10*I + mn] *= 0.0f;
+            //d_pinew[10*I + mn] = 0.8f*d_pi1[10*I+mn];
+            d_pinew[10*I + mn] = 0.0f;
+            d_goodcell[I] = 0.0f;
         }
+        // for the bad cells, update T^{mu nu}_{ideal} istead of T^{mu nu}_{visc}
     }
 
 //    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-

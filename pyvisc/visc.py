@@ -28,6 +28,7 @@ class CLVisc(object):
         self.size =self.ideal.size
         self.h_pi0  = np.zeros(10*self.size, self.cfg.real)
 
+
         mf = cl.mem_flags
         self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
                      cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
@@ -44,8 +45,11 @@ class CLVisc(object):
 
         # traceless and transverse check
         # self.d_checkpi = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+        self.h_goodcell = np.ones(self.size, self.cfg.real)
+        self.d_goodcell = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_goodcell.nbytes)
 
         cl.enqueue_copy(self.queue, self.d_pi[1], self.h_pi0).wait()
+        cl.enqueue_copy(self.queue, self.d_goodcell, self.h_goodcell).wait()
 
 
     def __loadAndBuildCLPrg(self):
@@ -65,7 +69,7 @@ class CLVisc(object):
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
 
         self.kernel_IS.visc_initialize(self.queue, (NX*NY*NZ,), None,
-                self.d_pi[1], self.d_udiff, self.ideal.d_ev[1],
+                self.d_pi[1], self.d_goodcell, self.d_udiff, self.ideal.d_ev[1],
                 self.ideal.tau, self.eos_table).wait()
 
 
@@ -138,7 +142,7 @@ class CLVisc(object):
 
         #print "udz along z"
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
-                self.d_pi[3-step], self.d_pi[1], self.d_pi[step],
+                self.d_pi[3-step], self.d_goodcell, self.d_pi[1], self.d_pi[step],
                 self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
                 self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
@@ -185,7 +189,7 @@ class CLVisc(object):
             #self.plot_sigma_traceless(loop)
             print('loop=', loop)
 
-    @profile
+    #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True,
                to_maxloop = False):
         '''The main loop of hydrodynamic evolution '''
@@ -248,7 +252,7 @@ def main():
     cfg.DT = 0.02
     cfg.DX = 0.16
     cfg.DY = 0.16
-    cfg.ImpactParameter = 0.0
+    cfg.ImpactParameter = 10.0
     cfg.IEOS = 2
     cfg.ntskip = 100
 
