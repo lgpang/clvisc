@@ -9,8 +9,9 @@
 #define NPARTONS_PER_GROUP 512
 
 __kernel void smearing(
-    __global real8 * d_p4x4, \
     __global real4  * d_EdV, \
+    __global real8 * d_p4x4, \
+    read_only image2d_t eos_table,
     const int npartons, \
     const int size )
 {
@@ -103,11 +104,13 @@ __kernel void smearing(
   if ( K0 < acu ) K0 = acu;
 
   real Ed = 0.0f;
-  rootFinding( &Ed, K0, K2 );
+  rootFinding(&Ed, K0, sqrt(K2), eos_table);
 
-  if ( Ed < 1.0E-15f ) Ed = 1.0E-15f;
+  //if ( Ed < acu ) Ed = 1.0E-15f;
 
-  real EPV = max(acu, K0+P(Ed));
+  Ed = max(0.0f, Ed);
+
+  real EPV = max(acu, K0+P(Ed, eos_table));
 
   d_EdV[get_global_id(0)*NY*NZ + get_global_id(1)*NZ + get_global_id(2)] = \
        (real4){Ed, Tm0.s1/EPV, Tm0.s2/EPV, Tm0.s3/EPV};
