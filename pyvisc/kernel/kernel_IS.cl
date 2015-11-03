@@ -416,6 +416,7 @@ __kernel void update_pimn(
 
     real DU[4];
     real u[4];
+    real ed_step = 0.0f;
     if ( step == 1 ) {
         for (int i=0; i<4; i++ ){
             DU[i] = dot(u_old, dalpha_u[i]);
@@ -424,6 +425,7 @@ __kernel void update_pimn(
         u[1] = u_old.s1;
         u[2] = u_old.s2;
         u[3] = u_old.s3;
+        ed_step = e_v1.s0;
     } else {
         for (int i=0; i<4; i++ ){
             DU[i] = dot(u_new, dalpha_u[i]);
@@ -432,15 +434,15 @@ __kernel void update_pimn(
         u[1] = u_new.s1;
         u[2] = u_new.s2;
         u[3] = u_new.s3;
+        ed_step = e_v2.s0;
     }
     
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
     real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
-    real ehalf = 0.5f * (e_v1.s0+e_v2.s0);
-    real etav = ETAOS * S(ehalf, eos_table) * hbarc;
+    real etav = ETAOS * S(ed_step, eos_table) * hbarc;
 
-    real one_over_taupi = T(ehalf, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
+    real one_over_taupi = T(ed_step, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
 
     real pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
@@ -506,7 +508,7 @@ __kernel void update_pimn(
             d_goodcell[I] = 0.0f;
         }
         // for the bad cells, update T^{mu nu}_{ideal} istead of T^{mu nu}_{visc}
-    }
+    }        
 
 //    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
 //                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
