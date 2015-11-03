@@ -168,13 +168,13 @@ __kernel void kt_src_alongx(
     for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         int i = I + 2;
-        real4 p_ev[5] ={ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2]};
-        real4 p_pim0[5] ={pim0[i-2], pim0[i-1], pim0[i], pim0[i+1], pim0[i+2]};
-        real4 p_pimi[5] ={pimi[i-2], pimi[i-1], pimi[i], pimi[i+1], pimi[i+2]};
-        real vip_half = 0.5f*(p_ev[2].s1 + p_ev[3].s1);
-        real vim_half = 0.5f*(p_ev[1].s1 + p_ev[2].s1);
+        real4 ev_[5] ={ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2]};
+        real4 pim0_[5] ={pim0[i-2], pim0[i-1], pim0[i], pim0[i+1], pim0[i+2]};
+        real4 pimi_[5] ={pimi[i-2], pimi[i-1], pimi[i], pimi[i+1], pimi[i+2]};
+        real vip_half = 0.5f*(ev_[2].s1 + ev_[3].s1);
+        real vim_half = 0.5f*(ev_[1].s1 + ev_[2].s1);
 
-        d_Src[IND] = d_Src[IND] - kt1d_visc(p_ev, p_pim0, p_pimi, vip_half,
+        d_Src[IND] = d_Src[IND] - kt1d_visc(ev_, pim0_, pimi_, vip_half,
                              vim_half, tau, ALONG_X, eos_table)/DX;
     }
 }
@@ -231,13 +231,13 @@ __kernel void kt_src_alongy(
         int IND = I*NY*NZ + J*NZ + K;
         int i = J + 2;
 
-        real4 p_ev[5] ={ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2]};
-        real4 p_pim0[5] ={pim0[i-2], pim0[i-1], pim0[i], pim0[i+1], pim0[i+2]};
-        real4 p_pimi[5] ={pimi[i-2], pimi[i-1], pimi[i], pimi[i+1], pimi[i+2]};
+        real4 ev_[5] ={ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2]};
+        real4 pim0_[5] ={pim0[i-2], pim0[i-1], pim0[i], pim0[i+1], pim0[i+2]};
+        real4 pimi_[5] ={pimi[i-2], pimi[i-1], pimi[i], pimi[i+1], pimi[i+2]};
 
-        real vip_half = 0.5f*(p_ev[2].s2 + p_ev[3].s2);
-        real vim_half = 0.5f*(p_ev[1].s2 + p_ev[2].s2);
-        d_Src[IND] = d_Src[IND] - kt1d_visc(p_ev, p_pim0, p_pimi, vip_half,
+        real vip_half = 0.5f*(ev_[2].s2 + ev_[3].s2);
+        real vim_half = 0.5f*(ev_[1].s2 + ev_[2].s2);
+        d_Src[IND] = d_Src[IND] - kt1d_visc(ev_, pim0_, pimi_, vip_half,
                                  vim_half, tau, ALONG_Y, eos_table)/DY;
     }
 }
@@ -293,14 +293,15 @@ __kernel void kt_src_alongz(
     for ( int K = get_global_id(2); K < NZ; K = K + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         int i = K + 2;
-        real4 p_ev[5] ={ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2]};
-        real4 p_pim0[5] ={pim0[i-2], pim0[i-1], pim0[i], pim0[i+1], pim0[i+2]};
-        real4 p_pimi[5] ={pimi[i-2], pimi[i-1], pimi[i], pimi[i+1], pimi[i+2]};
+        // load from local to private memory
+        real4 ev_[5] ={ev[i-2], ev[i-1], ev[i], ev[i+1], ev[i+2]};
+        real4 pim0_[5] ={pim0[i-2], pim0[i-1], pim0[i], pim0[i+1], pim0[i+2]};
+        real4 pimi_[5] ={pimi[i-2], pimi[i-1], pimi[i], pimi[i+1], pimi[i+2]};
 
-        real vip_half = 0.5f*(p_ev[2].s3 + p_ev[3].s3);
-        real vim_half = 0.5f*(p_ev[1].s3 + p_ev[2].s3);
+        real vip_half = 0.5f*(ev_[2].s3 + ev_[3].s3);
+        real vim_half = 0.5f*(ev_[1].s3 + ev_[2].s3);
 
-        d_Src[IND] = d_Src[IND] - kt1d_visc(p_ev, p_pim0, p_pimi, vip_half,
+        d_Src[IND] = d_Src[IND] - kt1d_visc(ev_, pim0_, pimi_, vip_half,
                          vim_half, tau, ALONG_Z, eos_table)/(tau*DZ);
     }
 }
