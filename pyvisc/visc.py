@@ -51,6 +51,9 @@ class CLVisc(object):
         cl.enqueue_copy(self.queue, self.d_pi[1], self.h_pi0).wait()
         cl.enqueue_copy(self.queue, self.d_goodcell, self.h_goodcell).wait()
 
+        # initialize pimn such that its value can be changed before
+        # self.evolve() is called for bjorken_test and gubser_test
+        self.IS_initialize()
 
     def __loadAndBuildCLPrg(self):
         self.cwd, cwf = os.path.split(__file__)
@@ -64,7 +67,7 @@ class CLVisc(object):
             self.kernel_visc = cl.Program(self.ctx, src).build(options=self.compile_options)
         pass
             
-    def initialize(self):
+    def IS_initialize(self):
         '''initialize pi^{mu nu} tensor'''
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
 
@@ -174,7 +177,6 @@ class CLVisc(object):
 
     def IS_test(self, max_loops=1000, ntskip=10):
         '''The main loop of hydrodynamic evolution '''
-        self.initialize()
         for loop in xrange(max_loops):
             cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
                             self.ideal.d_ev[1]).wait()
@@ -193,7 +195,6 @@ class CLVisc(object):
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True,
                to_maxloop = False):
         '''The main loop of hydrodynamic evolution '''
-        self.initialize()
         for loop in xrange(max_loops):
             self.ideal.edmax = self.ideal.max_energy_density()
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
