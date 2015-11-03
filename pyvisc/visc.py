@@ -250,7 +250,7 @@ def main():
     cfg.NY = 201
     cfg.NZ = 61
 
-    cfg.DT = 0.02
+    cfg.DT = 0.005
     cfg.DX = 0.16
     cfg.DY = 0.16
     cfg.ImpactParameter = 10.0

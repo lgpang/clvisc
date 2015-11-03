@@ -66,20 +66,18 @@ nzskip = 1
 
 [intrinsic]
 ## starting proper time for hydro in units fm
-#tau0 = 1.0            
-## starting proper time for hydro in units fm
 TAU0 = 0.6            
 
 IEOS = 0              
 # IEOS = 0 for p = e/3
 # IEOS = 1 for s95p_v1 CE lattice QCD EOS
-# IEOS = 2 for s95p_PCE_v0 lattice QCD EOS
+# IEOS = 2 for WB2014 lattice QCD EOS
 
 #in units GeV
 TFRZ = 0.137          
 
 # eta/s
-ETAOS = 0.0          
+ETAOS = 0.08          
 
 # \hat{ \lambda_1 }
 LAM1H = 0.001           

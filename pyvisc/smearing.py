@@ -53,19 +53,19 @@ def main():
     print('start ...')
     t0 = time()
     from config import cfg
-    cfg.NX = 201
-    cfg.NY = 201
+    cfg.NX = 301
+    cfg.NY = 301
     cfg.NZ = 61
 
     cfg.DT = 0.005
-    cfg.DX = 0.16
-    cfg.DY = 0.16
+    cfg.DX = 0.08
+    cfg.DY = 0.08
     cfg.IEOS = 2
-    cfg.ntskip = 100
+    cfg.ntskip = 20
 
     cfg.TAU0 = 0.2
 
-    cfg.ETAOS = 0.0
+    cfg.ETAOS = 0.08
 
     visc = CLVisc(cfg)
     #visc = CLIdeal(cfg)
@@ -75,7 +75,7 @@ def main():
     Smearing(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1], fname_partons, visc.eos_table)
 
-    visc.evolve(max_loops=2400)
+    visc.evolve(max_loops=2400, save_hypersf=False)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
