@@ -31,12 +31,16 @@ class Eos(object):
             self.num_of_ed = glueball.num_ed
 
         self.cfg = cfg
-        self.s = (self.ed + self.pr)/self.T
 
         # interpolation functions
         self.f_ed = interp1d(self.T, self.ed)
         self.f_T = interp1d(self.ed, self.T)
         self.f_P = interp1d(self.ed, self.pr)
+
+        T = np.copy(self.T)
+        T[T < 1.0E-15] = 1.0E-15
+        self.s = (self.ed + self.pr)/T
+        self.f_S = interp1d(self.ed, self.s)
 
     def create_table(self, ctx, compile_options, nrow=200, ncol=1000):
         '''store the eos (ed, pr, T, s) in image2d_t table for fast

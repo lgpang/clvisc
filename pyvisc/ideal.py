@@ -51,10 +51,10 @@ class CLIdeal(object):
         # set eos, create eos table for interpolation
         # self.eos_table must be before __loadAndBuildCLPrg() to pass
         # table information to definitions
-        eos = Eos(self.cfg)
-        self.eos_table = eos.create_table(self.ctx, self.gpu_defines)
+        self.eos = Eos(self.cfg)
+        self.eos_table = self.eos.create_table(self.ctx, self.gpu_defines)
 
-        self.efrz = eos.f_ed(self.cfg.TFRZ)
+        self.efrz = self.eos.f_ed(self.cfg.TFRZ)
 
 
         self.__loadAndBuildCLPrg()
