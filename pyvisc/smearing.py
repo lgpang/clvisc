@@ -57,7 +57,7 @@ def main():
     cfg.NY = 201
     cfg.NZ = 61
 
-    cfg.DT = 0.02
+    cfg.DT = 0.005
     cfg.DX = 0.16
     cfg.DY = 0.16
     cfg.IEOS = 2
@@ -65,7 +65,7 @@ def main():
 
     cfg.TAU0 = 0.2
 
-    cfg.ETAOS = 0.16
+    cfg.ETAOS = 0.0
 
     visc = CLVisc(cfg)
     #visc = CLIdeal(cfg)
@@ -75,7 +75,7 @@ def main():
     Smearing(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1], fname_partons, visc.eos_table)
 
-    visc.evolve(max_loops=200)
+    visc.evolve(max_loops=2400)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
