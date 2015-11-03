@@ -133,6 +133,8 @@ class BulkInfo(object):
         self.vx_xy.append(h_evxy[:,1].reshape(NX, NY))
         self.vy_xy.append(h_evxy[:,2].reshape(NX, NY))
 
+        self.exz.append(h_evxz[:,0].reshape(NX, NZ))
+
     def eccp(self, ed, vx, vy, vz=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
@@ -195,6 +197,9 @@ class BulkInfo(object):
             ecc1.append(self.eccp(exy, vx, vy)[0])
             ecc2.append(self.eccp(exy, vx, vy)[1])
         
+        for idx, exz in enumerate(self.exz):
+            np.savetxt(self.cfg.fPathOut+'/edxz%d.dat'%idx, exz)
+            np.savetxt(self.cfg.fPathOut+'/Txz%d.dat'%idx, self.eos.f_T(exz))
         np.savetxt(self.cfg.fPathOut + '/eccp.dat',
                    np.array(zip(self.time, ecc2)))
 
