@@ -38,7 +38,7 @@ class Smearing(object):
         glauber_defines.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
         glauber_defines.append('-D {key}={value}f'.format(key='SIGR', value=0.6))
         glauber_defines.append('-D {key}={value}f'.format(key='SIGZ', value=0.6))
-        glauber_defines.append('-D {key}={value}f'.format(key='KFACTOR', value=1.6))
+        glauber_defines.append('-D {key}={value}f'.format(key='KFACTOR', value=1.45))
         print(glauber_defines)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing.cl'), 'r') as f:
             prg_src = f.read()
@@ -70,7 +70,8 @@ def main():
     visc = CLVisc(cfg)
     #visc = CLIdeal(cfg)
 
-    fname_partons = '/u/lpang/P10.txt'
+    #fname_partons = '/u/lpang/P10.txt'
+    fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
 
     Smearing(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1], fname_partons, visc.eos_table)
@@ -80,5 +81,37 @@ def main():
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
 
+
+def ideal_main():
+    '''set default platform and device in opencl'''
+    print('start ...')
+    t0 = time()
+    from config import cfg
+    cfg.NX = 201
+    cfg.NY = 201
+    cfg.NZ = 61
+
+    cfg.DT = 0.005
+    cfg.DX = 0.16
+    cfg.DY = 0.16
+    cfg.IEOS = 2
+    cfg.ntskip = 60
+
+    cfg.TAU0 = 0.2
+
+    cfg.ETAOS = 0.0
+
+    ideal = CLIdeal(cfg)
+    fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
+
+    Smearing(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
+            ideal.d_ev[1], fname_partons, ideal.eos_table)
+
+    ideal.evolve(max_loops=2400)
+    t1 = time()
+    print('finished. Total time: {dtime}'.format(dtime = t1-t0))
+
+
+
 if __name__ == '__main__':
-    main()
+    ideal_main()
