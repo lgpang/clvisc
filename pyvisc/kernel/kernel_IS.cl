@@ -61,12 +61,12 @@ __kernel void visc_initialize(
        real4 ev = d_ev[I];
        real etav = ETAOS * S(ev.s0, eos_table) * hbarc;
        real tmp = 2.0f/3.0f * etav / tau;
-       //d_pi1[10*I+idx(1, 1)] = tmp;
-       //d_pi1[10*I+idx(2, 2)] = tmp;
-       //d_pi1[10*I+idx(3, 3)] = -2.0f*tmp;
-       d_pi1[10*I+idx(1, 1)] = 0.0f;
-       d_pi1[10*I+idx(2, 2)] = 0.0f;
-       d_pi1[10*I+idx(3, 3)] = 0.0f;
+       d_pi1[10*I+idx(1, 1)] = tmp;
+       d_pi1[10*I+idx(2, 2)] = tmp;
+       d_pi1[10*I+idx(3, 3)] = -2.0f*tmp;
+       //d_pi1[10*I+idx(1, 1)] = 0.0f;
+       //d_pi1[10*I+idx(2, 2)] = 0.0f;
+       //d_pi1[10*I+idx(3, 3)] = 0.0f;
 
        d_udiff[I] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
        d_goodcell[I] = 1.0f;
@@ -459,9 +459,9 @@ __kernel void update_pimn(
 
             int mn = idx(mu, nu);
             //// set the sigma^{mu nu} and theta 0 when ed is too small
-            if ( u[0] > 100.0f ) {
-                sigma[mn] = 0.0f;
-            }
+            //if ( u[0] > 100.0f ) {
+            //    sigma[mn] = 0.0f;
+            //}
             real pi_old;
 
             real piNS = etav*sigma[mn];
