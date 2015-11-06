@@ -442,7 +442,7 @@ __kernel void update_pimn(
 
     real etav = ETAOS * S(ed_step, eos_table) * hbarc;
 
-    real one_over_taupi = T(ed_step, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
+    real one_over_taupi = T(ed_step, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
 
     real pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
