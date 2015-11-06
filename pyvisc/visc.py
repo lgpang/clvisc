@@ -28,11 +28,12 @@ class CLVisc(object):
         self.size =self.ideal.size
         self.h_pi0  = np.zeros(10*self.size, self.cfg.real)
 
-
         mf = cl.mem_flags
         self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
                      cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
                      cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes) ]
+
+
         self.d_IS_src = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
         # datatypes are real4
@@ -50,6 +51,13 @@ class CLVisc(object):
 
         cl.enqueue_copy(self.queue, self.d_pi[1], self.h_pi0).wait()
         cl.enqueue_copy(self.queue, self.d_goodcell, self.h_goodcell).wait()
+
+        # used for freeze out hypersurface calculation
+        self.d_pi_old = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
+
+        # store the pi^{mu nu} on freeze out hyper surface
+        self.d_pi_sf = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
+        self.kernel_hypersf = self.ideal.kernel_hypersf
 
         # initialize pimn such that its value can be changed before
         # self.evolve() is called for bjorken_test and gubser_test
@@ -158,38 +166,47 @@ class CLVisc(object):
         self.kernel_IS.get_udiff(self.queue, (NX*NY*NZ,), None,
             self.d_udiff, self.ideal.d_ev[0], self.ideal.d_ev[1]).wait()
                 
+    def get_hypersf(self, n, ntskip):
+        '''get the freeze out hyper surface from d_ev_old and d_ev_new
+        global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
+        is_finished = self.ideal.edmax < self.ideal.efrz
 
-    def __output(self, nt):
-        pass
+        if n == 0:
+            cl.enqueue_copy(self.queue, self.ideal.d_ev_old,
+                            self.ideal.d_ev[1]).wait()
+            cl.enqueue_copy(self.queue, self.d_pi_old, self.d_pi[1]).wait()
+            self.tau_old = self.cfg.TAU0
+        elif (n % ntskip == 0) or is_finished:
+            nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
+            ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
+            nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
+            tau_new = self.tau
+            self.kernel_hypersf.visc_hypersf(self.queue, (nx, ny, nz), None,
+                    self.ideal.d_hypersf, self.d_pi_sf, self.ideal.d_num_of_sf,
+                    self.ideal.d_ev_old, self.ideal.d_ev[1],
+                    self.d_pi_old, self.d_pi[1],
+                    self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
-    def plot_sigma_traceless(self, i):
-        cl.enqueue_copy(self.queue, self.ideal.h_ev1, self.ideal.d_ev[1]).wait()
-        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
-        edxy = self.ideal.h_ev1[:, 1].reshape(NX, NY, NZ)[:,:,NZ/2]
-        #np.savetxt('debug/pi_traceless%d.dat'%i, edxy)
-        import matplotlib.pyplot as plt
-        plt.imshow(edxy.T)
-        plt.colorbar()
-        plt.show()
+            # update with current tau and d_ev[1]
+            cl.enqueue_copy(self.queue, self.ideal.d_ev_old,
+                            self.ideal.d_ev[1]).wait()
+            cl.enqueue_copy(self.queue, self.d_pi_old, self.d_pi[1]).wait()
+            self.tau_old = tau_new
+
+        return is_finished
+
+    def save(self, save_hypersf=True, save_bulk=True):
+        self.ideal.save(save_hypersf, save_bulk)
+        if save_hypersf:
+            pi_onsf = np.empty(10*self.num_of_sf, dtype=self.cfg.real)
+            cl.enqueue_copy(self.queue, pi_onsf, self.d_pi_sf).wait()
+            out_path = os.path.join(self.cfg.fPathOut, 'pimnsf.dat')
+            print("pimn on frzsf is saved to ", out_path)
+            np.savetxt(out_path, pi_onsf.reshape(self.num_of_sf, 10),
+                       header = 'pi00 01 02 03 11 12 13 22 23 33')
 
     def update_time(self, loop):
         self.ideal.update_time(loop)
-
-    def IS_test(self, max_loops=1000, ntskip=10):
-        '''The main loop of hydrodynamic evolution '''
-        for loop in xrange(max_loops):
-            cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
-                            self.ideal.d_ev[1]).wait()
-            ''' Do step update in kernel with KT algorithm 
-            This function is for one time step'''
-            self.ideal.stepUpdate(step=1)
-            #print(self.ideal.max_energy_density())
-            self.IS_stepUpdate(step=1)
-            self.update_time(loop)
-            self.IS_stepUpdate(step=2)
-            #if loop % ntskip == 0:
-            #self.plot_sigma_traceless(loop)
-            print('loop=', loop)
 
     #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True,
@@ -203,12 +220,12 @@ class CLVisc(object):
             is_finished = False
 
             if save_hypersf:
-                is_finished = self.ideal.get_hypersf(loop, self.cfg.ntskip)
+                is_finished = self.get_hypersf(loop, self.cfg.ntskip)
 
             if is_finished and not to_maxloop:
                 break
 
-            if loop % self.cfg.ntskip == 0:
+            if save_bulk and loop % self.cfg.ntskip == 0:
                 self.ideal.bulkinfo.get(self.ideal.tau,
                         self.ideal.d_ev[1], self.ideal.edmax)
 
@@ -236,7 +253,7 @@ class CLVisc(object):
                 #self.plot_sigma_traceless(loop)
                 pass
 
-        self.ideal.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
+        self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
 
 

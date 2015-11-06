@@ -83,6 +83,8 @@ void get_all_intersections(__private real ed[16],
                __private real4 all_ints[32],
                __private int size_of_ints[1]);
 
+real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
+                   int mn, int i, int j, int k);
 // get the ourward norm vector of one hyper surface
 // mass_center is the center for all intersections
 // vector_out = surf_center - mass_center
@@ -338,6 +340,30 @@ real4 centroid_ev(__private real4 ev_cube[16], real4 mc){
     return centroid;
 }
 
+
+real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
+                   int mn, int i, int j, int k){
+    real centroid;
+    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i, j, k)*10+mn]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i+1, j, k)*10+mn]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)*10+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)*10+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i, j, k+1)*10+mn]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i+1, j, k+1)*10+mn]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)*10+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)*10+mn]
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i, j, k)*10+mn]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i+1, j, k)*10+mn]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)*10+mn]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)*10+mn]
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i, j, k+1)*10+mn]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i+1, j, k+1)*10+mn]
+             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)*10+mn]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)*10+mn];
+    return centroid;
+}
+
+
 // calc the hypersf and store them in one buffer DA0, DA1, DA2, DA3,
 // vx, vy, veta, tau, x, y, eta
 __kernel void get_hypersf(__global real8  * d_sf,
@@ -423,6 +449,111 @@ __kernel void get_hypersf(__global real8  * d_sf,
                                    ev.s1, ev.s2, ev.s3, eta);
                                    
             d_sf[atomic_inc(num_of_sf)] = result;
+        } // end surface calculation
+    } // end boundary check
+}
+
+// calc the hypersf for viscous hydro and store them in one buffer 
+//DA0, DA1, DA2, DA3, vx, vy, veta, tau, x, y, eta
+//and another one for pimn terms
+__kernel void visc_hypersf(__global real8  * d_sf,
+                           __global real   * d_pi,
+                          __global int * num_of_sf,
+                          __global real4 * d_ev_old,
+                          __global real4 * d_ev_new,
+                          __global real * d_pi_old,
+                          __global real * d_pi_new,
+                          const real time_old,
+                          const real time_new) {
+    __private real4 ev_cube[16];
+    __private real ed_cube[16];
+    int i = get_global_id(0);
+    int j = get_global_id(1);
+    int k = get_global_id(2);
+
+    real4 mass_center;
+    int num_of_intersection;
+    real4 d_Sigma;
+
+    bool is_surf = true;
+    if ( (i+1)*nxskip < NX && (j+1)*nyskip < NY && (k+1)*nzskip < NZ ) {
+        ev_cube[0] = d_ev_old[idn(i, j, k)];
+        ev_cube[1] = d_ev_old[idn(i+1, j, k)];
+        ev_cube[2] = d_ev_old[idn(i, j+1, k)];
+        ev_cube[3] = d_ev_old[idn(i+1, j+1, k)];
+
+        ev_cube[4] = d_ev_old[idn(i, j, k+1)];
+        ev_cube[5] = d_ev_old[idn(i+1, j, k+1)];
+        ev_cube[6] = d_ev_old[idn(i, j+1, k+1)];
+        ev_cube[7] = d_ev_old[idn(i+1, j+1, k+1)];
+
+        ev_cube[8] = d_ev_new[idn(i, j, k)];
+        ev_cube[9] = d_ev_new[idn(i+1, j, k)];
+        ev_cube[10] = d_ev_new[idn(i, j+1, k)];
+        ev_cube[11] = d_ev_new[idn(i+1, j+1, k)];
+
+        ev_cube[12] = d_ev_new[idn(i, j, k+1)];
+        ev_cube[13] = d_ev_new[idn(i+1, j, k+1)];
+        ev_cube[14] = d_ev_new[idn(i, j+1, k+1)];
+        ev_cube[15] = d_ev_new[idn(i+1, j+1, k+1)];
+
+        for ( int grid = 0; grid < 16; grid ++ ) {
+            ed_cube[grid] = ev_cube[grid].s0;
+        }
+
+       
+        if ( (ed_cube[0] - EFRZ)*(ed_cube[15] - EFRZ) > 0 && 
+             (ed_cube[1] - EFRZ)*(ed_cube[14] - EFRZ) > 0 &&
+             (ed_cube[2] - EFRZ)*(ed_cube[13] - EFRZ) > 0 &&
+             (ed_cube[3] - EFRZ)*(ed_cube[12] - EFRZ) > 0 &&
+             (ed_cube[4] - EFRZ)*(ed_cube[11] - EFRZ) > 0 &&
+             (ed_cube[5] - EFRZ)*(ed_cube[10] - EFRZ) > 0 &&
+             (ed_cube[6] - EFRZ)*(ed_cube[9] - EFRZ) > 0 &&
+             (ed_cube[7] - EFRZ)*(ed_cube[8] - EFRZ) > 0 ) {
+            is_surf = false;
+        }
+    
+        if ( is_surf ) {
+            __private real4 all_ints[32];
+
+            get_all_intersections(ed_cube, all_ints, &num_of_intersection);
+            real4 energy_flow_vector = energy_flow(ed_cube);
+            mass_center = get_mass_center(all_ints, num_of_intersection);
+            d_Sigma = calc_area(all_ints, energy_flow_vector,
+                                num_of_intersection, i*j*k);
+
+            real dtd = time_new - time_old;
+            real dxd = nxskip*DX;
+            real dyd = nyskip*DY;
+            real dzd = nzskip*DZ;
+
+            // space-time centroid of the freeze out hyper-surface
+            real tau = time_old + mass_center.s0*dtd;
+            real x = -NX/2*DX + i*dxd + mass_center.s1*dxd;
+            real y = -NY/2*DY + j*dyd + mass_center.s2*dyd;
+            real eta = -NZ/2*DZ + k*dzd + mass_center.s3*dzd;
+
+            real4 ev = centroid_ev(ev_cube, mass_center);
+
+            real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
+                                  -tau*dtd*dyd*dzd*d_Sigma.s1,
+                                  -tau*dtd*dxd*dzd*d_Sigma.s2,
+                                  -dtd*dxd*dyd*d_Sigma.s3,
+                                   ev.s1, ev.s2, ev.s3, eta);
+
+            int id_ = atomic_inc(num_of_sf);
+                                   
+            d_sf[id_] = result;
+            d_pi[10*id_ + 0] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 0, i, j, k);
+            d_pi[10*id_ + 1] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 1, i, j, k);
+            d_pi[10*id_ + 2] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 2, i, j, k);
+            d_pi[10*id_ + 3] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 3, i, j, k);
+            d_pi[10*id_ + 4] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 4, i, j, k);
+            d_pi[10*id_ + 5] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 5, i, j, k);
+            d_pi[10*id_ + 6] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 6, i, j, k);
+            d_pi[10*id_ + 7] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 7, i, j, k);
+            d_pi[10*id_ + 8] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 8, i, j, k);
+            d_pi[10*id_ + 9] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 9, i, j, k);
         } // end surface calculation
     } // end boundary check
 }
