@@ -180,7 +180,7 @@ class CLVisc(object):
             nx = (self.cfg.NX-1)//self.cfg.nxskip + 1
             ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
             nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
-            tau_new = self.tau
+            tau_new = self.ideal.tau
             self.kernel_hypersf.visc_hypersf(self.queue, (nx, ny, nz), None,
                     self.ideal.d_hypersf, self.d_pi_sf, self.ideal.d_num_of_sf,
                     self.ideal.d_ev_old, self.ideal.d_ev[1],
@@ -197,12 +197,13 @@ class CLVisc(object):
 
     def save(self, save_hypersf=True, save_bulk=True):
         self.ideal.save(save_hypersf, save_bulk)
+        num_of_sf = self.ideal.num_of_sf
         if save_hypersf:
-            pi_onsf = np.empty(10*self.num_of_sf, dtype=self.cfg.real)
+            pi_onsf = np.empty(10*num_of_sf, dtype=self.cfg.real)
             cl.enqueue_copy(self.queue, pi_onsf, self.d_pi_sf).wait()
             out_path = os.path.join(self.cfg.fPathOut, 'pimnsf.dat')
             print("pimn on frzsf is saved to ", out_path)
-            np.savetxt(out_path, pi_onsf.reshape(self.num_of_sf, 10),
+            np.savetxt(out_path, pi_onsf.reshape(num_of_sf, 10), fmt='%.6e',
                        header = 'pi00 01 02 03 11 12 13 22 23 33')
 
     def update_time(self, loop):
@@ -267,14 +268,17 @@ def main():
     cfg.NY = 201
     cfg.NZ = 61
 
-    cfg.DT = 0.005
+    cfg.DT = 0.02
     cfg.DX = 0.16
     cfg.DY = 0.16
-    cfg.ImpactParameter = 10.0
+    cfg.ImpactParameter = 7.0
     cfg.IEOS = 2
-    cfg.ntskip = 100
+    cfg.ntskip = 15
+    cfg.nxskip = 2
+    cfg.nyskip = 2
+    cfg.nzskip = 1
 
-    cfg.ETAOS = 0.16
+    cfg.ETAOS = 0.08
 
     visc = CLVisc(cfg)
     from glauber import Glauber
