@@ -102,7 +102,7 @@ hypersf construct_hypersf(int id0, int id1, int id2, int id3,
     real4 a = ints[id1] - ints[id0];
     real4 b = ints[id2] - ints[id0];
     real4 c = ints[id3] - ints[id0];
-    // norm_vector has 2 directions
+    // norm_vector has 2 directions (here we can use native function dot and cross )
     real4 norm_vector = (real4)(
 		 a.s1*(b.s2*c.s3-b.s3*c.s2) + a.s2*(b.s3*c.s1-b.s1*c.s3) + a.s3*(b.s1*c.s2-b.s2*c.s1),
         -(a.s0*(b.s2*c.s3-b.s3*c.s2) + a.s2*(b.s3*c.s0-b.s0*c.s3) + a.s3*(b.s0*c.s2-b.s2*c.s0)),
@@ -323,20 +323,20 @@ real4 centroid_ev(__private real4 ev_cube[16], real4 mc){
     real4 centroid;
     centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[0]
              + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[1]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*ev_cube[2]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*ev_cube[3]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*ev_cube[2]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*ev_cube[3]
              + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*ev_cube[4]
              + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*ev_cube[5]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*ev_cube[6]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*ev_cube[7]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*ev_cube[6]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*ev_cube[7]
              + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[8]
              + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*ev_cube[9]
-             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*ev_cube[10]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*ev_cube[11]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*ev_cube[10]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*ev_cube[11]
              + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*ev_cube[12]
              + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*ev_cube[13]
-             + mc.s0*mc.s1*mc.s2*mc.s3*ev_cube[14]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*ev_cube[15];
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*ev_cube[14]
+             + mc.s0*mc.s1*mc.s2*mc.s3*ev_cube[15];
     return centroid;
 }
 
@@ -346,20 +346,23 @@ real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
     real centroid;
     centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i, j, k)*10+mn]
              + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i+1, j, k)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)*10+mn]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)*10+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)*10+mn]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)*10+mn]
+
              + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i, j, k+1)*10+mn]
              + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i+1, j, k+1)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)*10+mn]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)*10+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)*10+mn]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)*10+mn]
+
              + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i, j, k)*10+mn]
              + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i+1, j, k)*10+mn]
-             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)*10+mn]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)*10+mn]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)*10+mn]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)*10+mn]
+
              + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i, j, k+1)*10+mn]
              + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i+1, j, k+1)*10+mn]
-             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)*10+mn]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)*10+mn];
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)*10+mn]
+             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)*10+mn];
     return centroid;
 }
 
@@ -535,6 +538,7 @@ __kernel void visc_hypersf(__global real8  * d_sf,
 
             real4 ev = centroid_ev(ev_cube, mass_center);
 
+            // return dSigma^{mu} and vx, vy, veta, eta_s
             real8 result = (real8)(tau*dxd*dyd*dzd*d_Sigma.s0,
                                   -tau*dtd*dyd*dzd*d_Sigma.s1,
                                   -tau*dtd*dxd*dzd*d_Sigma.s2,
