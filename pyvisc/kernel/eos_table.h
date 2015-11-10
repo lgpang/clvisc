@@ -68,60 +68,13 @@ inline real T(real eps, read_only image2d_t eos_table){
 // get the pressure from eos_table
 inline real S(real eps, read_only image2d_t eos_table){
     real4 epTs = eos(eps, eos_table);
-    return (epTs.s0 + epTs.s1)/max(1.0E-3f, epTs.s2);
+    return (epTs.s0 + epTs.s1)/max(1.0E-6f, epTs.s2);
 }
 
 
 #endif
 
 
-
-#ifdef EOSLCE
-#include<eos_spline.h>
-
-////current EOSLCE only works for ed<311.001
-
-inline real fspline(real eps, constant real4 * spline ){
-    int index = 0;
-    real xlow = 0.0;
-    if( eps > 0.0 && eps < 0.001 ){
-        index = 0;
-        xlow = 0.0;
-    }
-    else if ( eps < 1.001 ) {
-        index = 1 + (int)( (eps-0.001)/0.1 );
-        xlow = 0.001 + (index-1)*0.1;
-    }
-    else if ( eps < 11.001 ) {
-        index = 11 + (int)( (eps-1.001)/1.0 );
-        xlow = 1.001 + (index-11)*1.0;
-    }
-    else if ( eps < 61.001 ) {
-        index = 21 + (int)( (eps-11.001)/5.0 );
-        xlow = 11.001 + (index-21)*5.0;
-    }
-    else if ( eps < 311.001 ) {
-        index = 31 + (int)( (eps-61.001)/25.0 );
-        xlow = 61.001 + (index-31)*25.0;
-    }
-
-    real4 s = spline[index];
-    return s.s0 + (eps-xlow)*(s.s1 + (eps-xlow)*(s.s2+(eps-xlow)*s.s3));
-}
-
-inline real P(real eps){
-    return  fspline(eps, spline_p);
-}
-
-inline real T(real eps){
-    return  fspline(eps, spline_T);
-}
-
-inline real S(real eps){
-    return  fspline(eps, spline_s);
-}
-
-#endif
 
 #endif
 
