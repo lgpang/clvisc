@@ -9,3 +9,4 @@
 #cmakedefine CL_USE_DEPRECATED_OPENCL_1_1_APIS
 
 #cmakedefine LOEWE_CSC
+#cmakedefine VISCOUS_ON

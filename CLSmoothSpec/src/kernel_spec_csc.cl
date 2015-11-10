@@ -3,6 +3,9 @@
 /** First stage: calc sub spec for each particle */
 __kernel void get_sub_dNdYPtdPtdPhi(  
             __global real8  * d_SF,            
+#ifdef VISCOUS_ON
+            __global real  * d_pi,            
+#endif
             __global real  * d_SubSpec,            
             __constant real4 * d_HadronInfo,           
             __constant real * d_Y ,           
@@ -25,6 +28,10 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     //real muB = HadronInfo.s3;
     real muB = 0.0f;
     real dof = gspin / pown(2.0*M_PI_F, 3);
+
+#ifdef VISCOUS_ON
+    real pimn[10];
+#endif
     
     int k = id_Y_PT_PHI / NPT;
     int l = id_Y_PT_PHI - k*NPT;
@@ -40,7 +47,12 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     
     while ( I < SizeSF ) {
         real8 SF = d_SF[I];
-        
+
+#ifdef VISCOUS_ON
+        for ( int id = 0; id < 10; id ++ ) {
+            pimn[id] = d_pi[10*I + id];
+        }
+#endif        
         real4 umu = (real4)(1.0f, SF.s4, SF.s5, SF.s6) * \
             1.0/sqrt(max((real)1.0E-15, \
             (real)(1.0-SF.s4*SF.s4 - SF.s5*SF.s5 - SF.s6*SF.s6)));
@@ -51,9 +63,18 @@ __kernel void get_sub_dNdYPtdPtdPhi(
         real mtsinh = mt*sinh(rapidity-SF.s7);
         for(int m=0; m<NPHI; m++){
             real4 pmu = (real4)(mtcosh, -pt*d_CPhi[m], -pt*d_SPhi[m], -mtsinh);
-        
-            dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) / \
-                ( exp((dot(pmu, umu)-muB)/Tfrz) + fermi_boson );
+            real feq = 1.0f/( exp((dot(pmu, umu)-muB)/Tfrz) + fermi_boson );
+#ifdef VISCOUS_ON
+            // TCOEFF = 1.0f/(2T^2 (e+P)) on freeze out hyper sf from compile options
+            real p2pi_o_T2ep = TCOEFF*(pmu.s0*pmu.s0*pimn[0] + pmu.s3*pmu.s3*pimn[9] +
+                               2.0f*pmu.s0*(pmu.s1*pimn[1] + pmu.s2*pimn[2] + pmu.s3*pimn[3]) +
+                               (pmu.s1*pmu.s1*pimn[4] + 2*pmu.s1*pmu.s2*pimn[5] + pmu.s2*pmu.s2*pimn[7]) +
+                               2.0f*pmu.s3*(pmu.s1*pimn[3] + pmu.s2*pimn[6]));
+
+            real df = feq*(1.0f - fermi_boson*feq)*p2pi_o_T2ep;
+            feq += df;
+#endif
+            dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq;
         }
         
         /** in units of GeV.fm^3 */

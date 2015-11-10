@@ -173,10 +173,11 @@ void Spec::ReadMuB( const std::string & dataFile )
 void Spec::ReadHyperSF( const std::string & dataFile )
 {
     cl_real dA0, dA1, dA2, dA3, vx, vy, vh, tau, x, y, etas;
-    std::ifstream fin( dataFile );
+    std::ifstream fin(dataFile);
     char buf[256];
     if ( fin.is_open() ) {
         fin.getline(buf, 256);  // readin the comment
+        fin >> Tfrz;
         while( fin.good() ){
             fin>>dA0>>dA1>>dA2>>dA3>>vx>>vy>>vh>>etas;
             if( fin.eof() )break;  // eof() repeat the last line
@@ -192,6 +193,34 @@ void Spec::ReadHyperSF( const std::string & dataFile )
     }
 }
 
+void Spec::ReadPimnSF(const std::string & piFile)
+{
+    std::ifstream fin2(piFile);
+    char buf[256];
+    cl_real pimn[10];
+    if ( fin2.is_open() ) {
+        fin2.getline(buf, 256);  // readin the comment
+        fin2 >> one_over_2TsqrEplusP; // read in the 1/(2T^2(e+P))
+        while( fin2.good() ){
+            for ( int i=0; i < 10; i++ ) {
+                fin2 >> pimn[i];
+            }
+            if( fin2.eof() )break;  // eof() repeat the last line
+            for ( int i=0; i < 10; i++ ) {
+                h_pi.push_back(pimn[i]); 
+            }
+        }
+        fin2.close();
+    }
+    else{
+        std::cerr<<"#Can't open hyper-surface data file for pimn!\n";
+        exit(0);
+    }
+
+    if (SizeSF != h_pi.size()/10) {
+        std::cout << "num of pi on sf is not correct!\n";
+    }
+}
 
 void Spec::ReadParticles(char * particle_data_table)
 {
@@ -337,7 +366,10 @@ void Spec::initializeCL()
         compile_options << "-D YHI="<<YHI<<" "; 
         compile_options << "-D INVSLOPE="<<INVSLOPE<<" ";   
         compile_options << "-D Tfrz="<<Tfrz<<" ";     
-
+#ifdef VISCOUS_ON        
+        compile_options << "-D VISCOUS_ON" << " ";
+        compile_options << "-D TCOEFF=" << one_over_2TsqrEplusP << " ";
+#endif
         queue = cl::CommandQueue( context, devices[0], CL_QUEUE_PROFILING_ENABLE );
         //queue = cl::CommandQueue( context, devices[1], CL_QUEUE_PROFILING_ENABLE );
         //std::cout<<"Vendor="<<dev_vendor<<'\n';
@@ -368,6 +400,9 @@ void Spec::initializeCL()
         h_Spec.resize( NY*NPT*NPHI );
 
         d_SF = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, SizeSF*sizeof(cl_real8), h_SF.data()); //global memory
+
+        d_pi = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 10*SizeSF*sizeof(cl_real), h_pi.data()); //global memory
+
         d_HadronInfo = cl::Buffer( context, CL_MEM_READ_ONLY  | CL_MEM_COPY_HOST_PTR, SizePID*sizeof(cl_real4) , h_HadronInfo.data()); //constant memory
 
         d_Y = cl::Buffer( context, CL_MEM_READ_ONLY  | CL_MEM_COPY_HOST_PTR, NY*sizeof(cl_real) , h_Y.data()); //constant memory
@@ -475,6 +510,18 @@ void Spec::CalcSpec(bool switch_off_decay)
             }
 
             if ( ! particles[pid].antibaryon_spec_exists ) {
+#ifdef VISCOUS_ON
+                kernel_subspec.setArg( 0, d_SF );
+                kernel_subspec.setArg( 1, d_pi );
+                kernel_subspec.setArg( 2, d_SubSpec );
+                kernel_subspec.setArg( 3, d_HadronInfo );
+                kernel_subspec.setArg( 4, d_Y );
+                kernel_subspec.setArg( 5, d_Pt );
+                kernel_subspec.setArg( 6, d_CPhi );
+                kernel_subspec.setArg( 7, d_SPhi );
+                kernel_subspec.setArg( 8, pid );
+#else
+
                 kernel_subspec.setArg( 0, d_SF );
                 kernel_subspec.setArg( 1, d_SubSpec );
                 kernel_subspec.setArg( 2, d_HadronInfo );
@@ -483,7 +530,7 @@ void Spec::CalcSpec(bool switch_off_decay)
                 kernel_subspec.setArg( 5, d_CPhi );
                 kernel_subspec.setArg( 6, d_SPhi );
                 kernel_subspec.setArg( 7, pid );
-
+#endif
                 /** Because AMD GPUs can not use big array in private memory.
                  * The dNdYPtdPtdPhi[41*15*48] in the kernel are replaced by
                  * dNdYPtdPtdPhi[48] with only phi values stored privately
@@ -492,7 +539,12 @@ void Spec::CalcSpec(bool switch_off_decay)
 #ifdef  LOEWE_CSC
                 for(int id_Y_Pt_Phi=0; id_Y_Pt_Phi<NY*NPT; id_Y_Pt_Phi++){
                     cl::Event event;
+
+#ifdef VISCOUS_ON
+                    kernel_subspec.setArg(9, id_Y_Pt_Phi);
+#else
                     kernel_subspec.setArg(8, id_Y_Pt_Phi);
+#endif
                     queue.enqueueNDRangeKernel(kernel_subspec, cl::NullRange, \
                             globalSize, localSize, NULL, &event);
                     event.wait();

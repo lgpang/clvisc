@@ -97,6 +97,7 @@ class Spec
 	cl_uint   SizePID;    /**< Size = h_SF.size() */
 
 	cl::Buffer d_SF;
+	cl::Buffer d_pi;
     cl::Buffer d_SubSpec;
     cl::Buffer d_Spec;
     cl::Buffer d_HadronInfo;
@@ -138,11 +139,16 @@ class Spec
     public:
 
     cl_real Tfrz;
+
+    // 1/(2T^2(e+P)) on freeze out hypersf for viscous hydro
+    cl_real one_over_2TsqrEplusP;
     ///chemical potential from PCE-EOS
     std::map<cl_int, cl_real> muB;
 
     std::map< cl_int, cl_int > newpid ;   /** map monval to position in the array */
 	std::vector<cl_real8> h_SF; 
+	std::vector<cl_real> h_pi;
+
 	std::vector<cl_real> h_SubSpec;       /** spec for all particles divided into 13 groups */
 	std::vector<cl_real> h_Spec;          /** do summation for the subspec; */
 	std::vector<cl_real4> h_HadronInfo;    /**< s[0]-> mass, s[1]-> gspin */
@@ -164,7 +170,9 @@ class Spec
 
 	void ReadMuB(  const std::string & muB_datafile );        
 
-	void ReadHyperSF(  const std::string & sf_datafile );        
+	void ReadHyperSF(const std::string & sf_datafile);
+
+    void ReadPimnSF(const std::string & piFile);
 
     void ReadParticles( char * particle_data_table);
 

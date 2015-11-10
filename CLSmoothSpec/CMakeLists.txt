@@ -30,6 +30,7 @@ option ( USE_SINGLE_PRECISION "Use float instead of double" on )
 option ( CL_USE_DEPRECATED_OPENCL_1_1_APIS "Use Nvidia GPU" on )
 
 option ( LOEWE_CSC "Use LOEWE AMD GPUs for spec kernel" on )
+option ( VISCOUS_ON "Freeze out for viscous hydro" on )
 
 
 configure_file (
@@ -37,24 +38,28 @@ configure_file (
    ${PROJECT_SOURCE_DIR}/inc/Config.h
 )
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../FindOpenCL/")
- 
-find_package( OpenCL REQUIRED )
- 
- 
-if( OPENCL_HAS_CPP_BINDINGS )
-    message( "OpenCL has CPP bindings. Full include is: " ${OPENCL_INCLUDE_DIRS} )
-else( OPENCL_HAS_CPP_BINDINGS )
-    message( "No OpenCL CPP bindings found" )
-endif( OPENCL_HAS_CPP_BINDINGS )
- 
-include_directories( ${OPENCL_INCLUDE_DIRS} )
+#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../FindOpenCL/")
+# 
+#find_package( OpenCL REQUIRED )
+# 
+# 
+#if( OPENCL_HAS_CPP_BINDINGS )
+#    message( "OpenCL has CPP bindings. Full include is: " ${OPENCL_INCLUDE_DIRS} )
+#else( OPENCL_HAS_CPP_BINDINGS )
+#    message( "No OpenCL CPP bindings found" )
+#endif( OPENCL_HAS_CPP_BINDINGS )
+# 
+#include_directories( ${OPENCL_INCLUDE_DIRS} )
 
 include_directories( "/usr/local/include/" )
 link_directories( "/usr/local/lib" )
 
+include_directories( "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include")
+link_directories("/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/lib/x86_64")
 
-set ( EXTRA_LIBS ${EXTRA_LIBS} ${OPENCL_LIBRARIES} )
+
+#set ( EXTRA_LIBS ${EXTRA_LIBS} ${OPENCL_LIBRARIES} )
+set ( EXTRA_LIBS ${EXTRA_LIBS} OpenCL)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 

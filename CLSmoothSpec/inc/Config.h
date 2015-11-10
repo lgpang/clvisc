@@ -9,3 +9,4 @@
 #define CL_USE_DEPRECATED_OPENCL_1_1_APIS
 
 #define LOEWE_CSC
+/* #undef VISCOUS_ON */
