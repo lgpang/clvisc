@@ -31,10 +31,10 @@ class CLIdeal(object):
         self.cwd, cwf = os.path.split(__file__)
 
         from backend_opencl import OpenCLBackend
-        backend = OpenCLBackend(self.cfg, gpu_id)
+        self.backend = OpenCLBackend(self.cfg, gpu_id)
 
-        self.ctx = backend.ctx
-        self.queue = backend.default_queue
+        self.ctx = self.backend.ctx
+        self.queue = self.backend.default_queue
 
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
@@ -55,7 +55,6 @@ class CLIdeal(object):
         self.eos_table = self.eos.create_table(self.ctx, self.gpu_defines)
 
         self.efrz = self.eos.f_ed(self.cfg.TFRZ)
-
 
         self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
@@ -246,8 +245,8 @@ class CLIdeal(object):
             cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
             out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
             print("hypersf save to ", out_path)
-            np.savetxt(out_path, hypersf, header =
-                       'dS0, dS1, dS2, dS3, vx, vy, veta, etas')
+            np.savetxt(out_path, hypersf, fmt='%.6e', header =
+              'Tfrz=%.6e ; other rows: dS0, dS1, dS2, dS3, vx, vy, veta, etas'%self.cfg.TFRZ)
 
         if save_bulk:
             self.bulkinfo.save()
@@ -290,6 +289,7 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
+    cfg.IEOS = 2
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber

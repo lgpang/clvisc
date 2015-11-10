@@ -63,6 +63,9 @@ class CLVisc(object):
         # self.evolve() is called for bjorken_test and gubser_test
         self.IS_initialize()
 
+        self.d_pizz_o_ep = cl.Buffer(self.ctx, mf.READ_WRITE, self.cfg.NZ*self.cfg.sz_real)
+
+
     def __loadAndBuildCLPrg(self):
         self.cwd, cwf = os.path.split(__file__)
         #load and build *.cl programs with compile options
@@ -73,7 +76,10 @@ class CLVisc(object):
         with open(os.path.join(self.cwd, 'kernel', 'kernel_visc.cl'), 'r') as f:
             src = f.read()
             self.kernel_visc = cl.Program(self.ctx, src).build(options=self.compile_options)
-        pass
+
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_checkpi.cl'), 'r') as f:
+            src = f.read()
+            self.kernel_checkpi = cl.Program(self.ctx, src).build(options=self.compile_options)
             
     def IS_initialize(self):
         '''initialize pi^{mu nu} tensor'''
@@ -82,6 +88,20 @@ class CLVisc(object):
         self.kernel_IS.visc_initialize(self.queue, (NX*NY*NZ,), None,
                 self.d_pi[1], self.d_goodcell, self.d_udiff, self.ideal.d_ev[1],
                 self.ideal.tau, self.eos_table).wait()
+
+
+    def check_pizz(self):
+        '''initialize pi^{mu nu} tensor'''
+        NZ = self.cfg.NZ
+
+        self.kernel_checkpi.pizz_o_ep(self.queue, (NZ,), None,
+                self.d_pizz_o_ep, self.d_pi[1], self.ideal.d_ev[1],
+                self.eos_table).wait()
+
+        pizz_o_ep = np.zeros(NZ, dtype=np.float32)
+        cl.enqueue_copy(self.queue, pizz_o_ep, self.d_pizz_o_ep).wait()
+        print('<pizz/(e+P)> =', pizz_o_ep[NZ//2])
+
 
 
     def visc_stepUpdate(self, step):
@@ -195,16 +215,26 @@ class CLVisc(object):
 
         return is_finished
 
+
     def save(self, save_hypersf=True, save_bulk=True):
         self.ideal.save(save_hypersf, save_bulk)
         num_of_sf = self.ideal.num_of_sf
+
+        ed = self.ideal.efrz
+        pr = self.ideal.eos.f_P(ed)
+        T = self.cfg.TFRZ
+        const_for_deltaf = 1.0/(2.0*T**2*(ed + pr))
+
         if save_hypersf:
             pi_onsf = np.empty(10*num_of_sf, dtype=self.cfg.real)
             cl.enqueue_copy(self.queue, pi_onsf, self.d_pi_sf).wait()
             out_path = os.path.join(self.cfg.fPathOut, 'pimnsf.dat')
             print("pimn on frzsf is saved to ", out_path)
+
+            comment_line = 'one_o_2TsqrEplusP=%.6e '%const_for_deltaf + \
+                   'pi00 01 02 03 11 12 13 22 23 33'
             np.savetxt(out_path, pi_onsf.reshape(num_of_sf, 10), fmt='%.6e',
-                       header = 'pi00 01 02 03 11 12 13 22 23 33')
+                       header = comment_line)
 
     def update_time(self, loop):
         self.ideal.update_time(loop)
@@ -254,6 +284,8 @@ class CLVisc(object):
                 #self.plot_sigma_traceless(loop)
                 pass
 
+            #self.check_pizz()
+
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
 
@@ -268,12 +300,12 @@ def main():
     cfg.NY = 201
     cfg.NZ = 61
 
-    cfg.DT = 0.02
+    cfg.DT = 0.005
     cfg.DX = 0.16
     cfg.DY = 0.16
-    cfg.ImpactParameter = 7.0
+    cfg.ImpactParameter = 10.0
     cfg.IEOS = 2
-    cfg.ntskip = 15
+    cfg.ntskip = 60
     cfg.nxskip = 2
     cfg.nyskip = 2
     cfg.nzskip = 1

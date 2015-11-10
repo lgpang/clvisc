@@ -177,7 +177,8 @@ void Spec::ReadHyperSF( const std::string & dataFile )
     char buf[256];
     if ( fin.is_open() ) {
         fin.getline(buf, 256);  // readin the comment
-        fin >> Tfrz;
+        std::string comments(buf);
+        Tfrz = std::stof(comments.substr(7));
         while( fin.good() ){
             fin>>dA0>>dA1>>dA2>>dA3>>vx>>vy>>vh>>etas;
             if( fin.eof() )break;  // eof() repeat the last line
@@ -200,7 +201,8 @@ void Spec::ReadPimnSF(const std::string & piFile)
     cl_real pimn[10];
     if ( fin2.is_open() ) {
         fin2.getline(buf, 256);  // readin the comment
-        fin2 >> one_over_2TsqrEplusP; // read in the 1/(2T^2(e+P))
+        std::string comments(buf);
+        one_over_2TsqrEplusP = std::stof(comments.substr(20));
         while( fin2.good() ){
             for ( int i=0; i < 10; i++ ) {
                 fin2 >> pimn[i];
@@ -369,6 +371,7 @@ void Spec::initializeCL()
 #ifdef VISCOUS_ON        
         compile_options << "-D VISCOUS_ON" << " ";
         compile_options << "-D TCOEFF=" << one_over_2TsqrEplusP << " ";
+        std::cout << "TFRZ=" << Tfrz << " TCOEFF=" << one_over_2TsqrEplusP << std::endl;
 #endif
         queue = cl::CommandQueue( context, devices[0], CL_QUEUE_PROFILING_ENABLE );
         //queue = cl::CommandQueue( context, devices[1], CL_QUEUE_PROFILING_ENABLE );
