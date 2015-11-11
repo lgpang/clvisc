@@ -1,0 +1,57 @@
+
+==The importance of concurrent reading from Global memory.==
+Here I used NX=NY=NZ=201 for a test, in principle the time cost for visc_src_alongx, 
+visc_src_alongy, visc_src_alongz should have no difference. However, from line profiler
+by using: {{{kernpro -l -v visc.py }}}
+One gets 41.9 vs 38.4 vs 6.9 for x, y and z direction.
+Why there is so big difference? It can be explained by the order of the data in global memory,
+where we use:
+{{{
+     for (int i = 0; i < NX; i++ )
+     for (int j = 0; j < NY; j++ )
+     for (int k = 0; k < NZ; k++ ) {
+         pimn[i*NY*NZ + j*NZ + K] = some number;
+     }
+}}}
+The data is continues along z direction, which makes it much faster to read from 
+global memory to local memory in z direction than x and y due to concurrent.
+
+
+Total time: 19.2475 s
+File: visc.py
+Function: IS_stepUpdate at line 165
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   165                                               @profile
+   166                                               def IS_stepUpdate(self, step):
+   167                                                   #print "ideal update finished"
+   168        52          152      2.9      0.0          NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+   169                                           
+   170        52       143954   2768.3      0.7          self.kernel_IS.visc_src_christoffel(self.queue, (NX*NY*NZ,), None,
+   171        52          134      2.6      0.0                  self.d_IS_src, self.d_pi[step], self.ideal.d_ev[step],
+   172        52       581359  11180.0      3.0                  self.ideal.tau, np.int32(step)).wait()
+   173                                           
+   174        52       159298   3063.4      0.8          self.kernel_IS.visc_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
+   175        52          143      2.8      0.0                  self.d_IS_src, self.d_udx, self.d_pi[step], self.ideal.d_ev[step],
+   176        52      8055724 154917.8     41.9                  self.eos_table, self.ideal.tau).wait()
+   177                                           
+   178                                                   #print "udx along x"
+   179                                           
+   180        51       156991   3078.3      0.8          self.kernel_IS.visc_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
+   181        51          151      3.0      0.0                  self.d_IS_src, self.d_udy, self.d_pi[step], self.ideal.d_ev[step],
+   182        51      7381515 144735.6     38.4                  self.eos_table, self.ideal.tau).wait()
+   183                                           
+   184                                                   #print "udy along y"
+   185        51       157382   3085.9      0.8          self.kernel_IS.visc_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
+   186        51          137      2.7      0.0                  self.d_IS_src, self.d_udz, self.d_pi[step], self.ideal.d_ev[step],
+   187        51      1329880  26076.1      6.9                  self.eos_table, self.ideal.tau).wait()
+   188                                           
+   189                                                   #print "udz along z"
+   190        51       302246   5926.4      1.6          self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
+   191        51          141      2.8      0.0                  self.d_pi[3-step], self.d_goodcell, self.d_pi[1], self.d_pi[step],
+   192        51           82      1.6      0.0                  self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
+   193        51           94      1.8      0.0                  self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
+   194        51       978116  19178.7      5.1                  self.eos_table, self.ideal.tau, np.int32(step)
+   195                                                           ).wait()
+
