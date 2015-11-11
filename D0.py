@@ -26,6 +26,7 @@ def event_by_event(fname_partons, fout):
 
     cfg.TAU0 = 0.4
     cfg.ETAOS = 0.08
+    cfg.fPathOut = fout
 
     t0 = time()
     visc = CLVisc(cfg)
