@@ -161,8 +161,8 @@ class CLVisc(object):
                               self.eos_table, self.ideal.tau, np.int32(step)).wait()
 
 
+    #@profile
     def IS_stepUpdate(self, step):
-        #print "ideal update finished"
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
 
         self.kernel_IS.visc_src_christoffel(self.queue, (NX*NY*NZ,), None,
@@ -173,18 +173,14 @@ class CLVisc(object):
                 self.d_IS_src, self.d_udx, self.d_pi[step], self.ideal.d_ev[step],
                 self.eos_table, self.ideal.tau).wait()
 
-        #print "udx along x"
-
         self.kernel_IS.visc_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
                 self.d_IS_src, self.d_udy, self.d_pi[step], self.ideal.d_ev[step],
                 self.eos_table, self.ideal.tau).wait()
 
-        #print "udy along y"
         self.kernel_IS.visc_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
                 self.d_IS_src, self.d_udz, self.d_pi[step], self.ideal.d_ev[step],
                 self.eos_table, self.ideal.tau).wait()
 
-        #print "udz along z"
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
                 self.d_pi[3-step], self.d_goodcell, self.d_pi[1], self.d_pi[step],
                 self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
@@ -257,6 +253,7 @@ class CLVisc(object):
                force_run_to_maxloop = False):
         '''The main loop of hydrodynamic evolution '''
         for loop in xrange(max_loops):
+            t0 = time()
             self.ideal.edmax = self.ideal.max_energy_density()
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
             print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
@@ -298,6 +295,8 @@ class CLVisc(object):
                 pass
 
             #self.check_pizz()
+            t1 = time()
+            print 'time per loop: {dtime}'.format(dtime = t1-t0)
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
@@ -325,7 +324,7 @@ def main():
 
     cfg.ETAOS = 0.08
 
-    visc = CLVisc(cfg)
+    visc = CLVisc(cfg, gpu_id=3)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
