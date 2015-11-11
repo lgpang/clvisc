@@ -402,7 +402,6 @@ __kernel void update_pimn(
     // correct with previous udiff=u_visc-u_ideal*
     if ( step == 1 ) udt += d_udiff[I]/DT;
 
-    real sigma[10];
 
     real4 udx = d_udx[I];
     real4 udy = d_udy[I];
@@ -449,10 +448,11 @@ __kernel void update_pimn(
         pi2[mn] = d_pistep[10*I+mn];
     }
 
+    real sigma;
     real max_pimn_abs = 0.0f;
     for ( int mu = 0; mu < 4; mu ++ )
         for ( int nu = mu; nu < 4; nu ++ ) {
-            sigma[idx(mu,nu)] = dot(gm[mu], dalpha_u[nu]) + 
+            sigma = dot(gm[mu], dalpha_u[nu]) + 
                             dot(gm[nu], dalpha_u[mu]) -
                             (u[mu]*DU[nu] + u[nu]*DU[mu]) -
                             2.0f/3.0f*(gmn[mu][nu]-u[mu]*u[nu])*theta;
@@ -460,11 +460,11 @@ __kernel void update_pimn(
             int mn = idx(mu, nu);
             //// set the sigma^{mu nu} and theta 0 when ed is too small
             if ( u[0] > 100.0f ) {
-                sigma[mn] = 0.0f;
+                sigma = 0.0f;
             }
             real pi_old;
 
-            real piNS = etav*sigma[mn];
+            real piNS = etav*sigma;
 
             //pi_old = (pi1[mn] - piNS)*exp(-one_over_taupi*DT/u[0])
             //         + piNS;
