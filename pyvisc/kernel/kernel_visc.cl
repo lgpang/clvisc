@@ -28,15 +28,14 @@ __kernel void kt_src_christoffel(
         real vz = e_v.s3;
         real u0 = gamma(vx, vy, vz);
 
-        //real bulkpi = d_pi[idn(I, IDX_PI)];
         real bulkpi = 0.0f;
         real pressure = P(ed, eos_table) + bulkpi;
 
         // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
         real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure
-                         + d_pi[idn(I, idx(3, 3))];
+                         + d_pi[I+SIZE*idx(3, 3)];
         real Ttz_tilde = (ed + pressure)*u0*u0*vz
-                         + d_pi[idn(I, idx(0, 3))];
+                         + d_pi[I+SIZE*idx(0, 3)];
         d_SrcT[I] = d_SrcT[I] - (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
     }
 }
@@ -133,14 +132,14 @@ __kernel void kt_src_alongx(
     for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[I+2] = d_ev[IND];
-        pim0[I+2] = (real4)(d_pi[idn(IND, 0)],
-                            d_pi[idn(IND, 1)],
-                            d_pi[idn(IND, 2)],
-                            d_pi[idn(IND, 3)]);
-        pimi[I+2] = (real4)(d_pi[idn(IND, idx(1, 0))],
-                            d_pi[idn(IND, idx(1, 1))],
-                            d_pi[idn(IND, idx(1, 2))],
-                            d_pi[idn(IND, idx(1, 3))]);
+        pim0[I+2] = (real4)(d_pi[IND+SIZE* 0],
+                            d_pi[IND+SIZE* 1],
+                            d_pi[IND+SIZE* 2],
+                            d_pi[IND+SIZE* 3]);
+        pimi[I+2] = (real4)(d_pi[IND+SIZE* idx(1, 0)],
+                            d_pi[IND+SIZE* idx(1, 1)],
+                            d_pi[IND+SIZE* idx(1, 2)],
+                            d_pi[IND+SIZE* idx(1, 3)]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -196,14 +195,14 @@ __kernel void kt_src_alongy(
     for ( int J = get_local_id(1); J < NY; J = J + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[J+2] = d_ev[IND];
-        pim0[J+2] = (real4)(d_pi[idn(IND, 0)],
-                            d_pi[idn(IND, 1)],
-                            d_pi[idn(IND, 2)],
-                            d_pi[idn(IND, 3)]);
-        pimi[J+2] = (real4)(d_pi[idn(IND, idx(2, 0))],
-                            d_pi[idn(IND, idx(2, 1))],
-                            d_pi[idn(IND, idx(2, 2))],
-                            d_pi[idn(IND, idx(2, 3))]);
+        pim0[J+2] = (real4)(d_pi[IND+SIZE* 0],
+                            d_pi[IND+SIZE* 1],
+                            d_pi[IND+SIZE* 2],
+                            d_pi[IND+SIZE* 3]);
+        pimi[J+2] = (real4)(d_pi[IND+SIZE* idx(2, 0)],
+                            d_pi[IND+SIZE* idx(2, 1)],
+                            d_pi[IND+SIZE* idx(2, 2)],
+                            d_pi[IND+SIZE* idx(2, 3)]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -259,14 +258,14 @@ __kernel void kt_src_alongz(
     for ( int K = get_local_id(2); K < NZ; K = K + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[K+2] = d_ev[IND];
-        pim0[K+2] = (real4)(d_pi[idn(IND, 0)],
-                            d_pi[idn(IND, 1)],
-                            d_pi[idn(IND, 2)],
-                            d_pi[idn(IND, 3)]);
-        pimi[K+2] = (real4)(d_pi[idn(IND, idx(3, 0))],
-                            d_pi[idn(IND, idx(3, 1))],
-                            d_pi[idn(IND, idx(3, 2))],
-                            d_pi[idn(IND, idx(3, 3))]);
+        pim0[K+2] = (real4)(d_pi[IND+SIZE* 0],
+                            d_pi[IND+SIZE* 1],
+                            d_pi[IND+SIZE* 2],
+                            d_pi[IND+SIZE* 3]);
+        pimi[K+2] = (real4)(d_pi[IND+SIZE* idx(3, 0)],
+                            d_pi[IND+SIZE* idx(3, 1)],
+                            d_pi[IND+SIZE* idx(3, 2)],
+                            d_pi[IND+SIZE* idx(3, 3)]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -328,10 +327,10 @@ __kernel void update_ev(
     real pressure = P(ed, eos_table);
     real u0 = gamma(vx, vy, vz);
     real4 umu = u0*(real4)(1.0f, vx, vy, vz);
-    real4 pim0 = (real4)(d_pi1[idn(I, 0)],
-                         d_pi1[idn(I, 1)],
-                         d_pi1[idn(I, 2)],
-                         d_pi1[idn(I, 3)]);
+    real4 pim0 = (real4)(d_pi1[I+SIZE* 0],
+                         d_pi1[I+SIZE* 1],
+                         d_pi1[I+SIZE* 2],
+                         d_pi1[I+SIZE* 3]);
 
     // when step=2, tau=(n+1)*DT, while T0m need tau=n*DT
     real old_time = tau - (step-1)*DT;
@@ -341,8 +340,8 @@ __kernel void update_ev(
     /** step==1: Q' = Q0 + Src*DT
         step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
     */
-    pim0 = (real4)(d_pi2[idn(I, 0)], d_pi2[idn(I, 1)],
-                         d_pi2[idn(I, 2)], d_pi2[idn(I, 3)]);
+    pim0 = (real4)(d_pi2[I+0*SIZE], d_pi2[I+1*SIZE],
+                         d_pi2[I+2*SIZE], d_pi2[I+3*SIZE]);
 
     T0m = T0m + d_Src[I]*DT/step - pim0*tau;
 

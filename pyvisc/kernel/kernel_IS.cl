@@ -61,12 +61,9 @@ __kernel void visc_initialize(
        real4 ev = d_ev[I];
        real etav = ETAOS * S(ev.s0, eos_table) * hbarc;
        real tmp = 2.0f/3.0f * etav / tau;
-       d_pi1[10*I+idx(1, 1)] = tmp;
-       d_pi1[10*I+idx(2, 2)] = tmp;
-       d_pi1[10*I+idx(3, 3)] = -2.0f*tmp;
-       //d_pi1[10*I+idx(1, 1)] = 0.0f;
-       //d_pi1[10*I+idx(2, 2)] = 0.0f;
-       //d_pi1[10*I+idx(3, 3)] = 0.0f;
+       d_pi1[I+SIZE*idx(1, 1)] = tmp;
+       d_pi1[I+SIZE*idx(2, 2)] = tmp;
+       d_pi1[I+SIZE*idx(3, 3)] = -2.0f*tmp;
 
        d_udiff[I] = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
        d_goodcell[I] = 1.0f;
@@ -87,23 +84,20 @@ __kernel void visc_src_christoffel(
     if ( I < NX*NY*NZ ) {
         if ( step == 1 ) {
            for ( int mn = 0; mn < 10; mn ++ ) {
-               d_Src[10*I+mn] = 0.0f;
+               d_Src[I+mn*SIZE] = 0.0f;
            }
         }
         
         real4 e_v = d_ev[I];
         real uz = e_v.s3 * gamma(e_v.s1, e_v.s2, e_v.s3);
 
-        d_Src[10*I+0] += 2.0f * uz * d_pi1[idx(0, 3)]/tau;
-        d_Src[10*I+1] += uz * d_pi1[idx(1, 3)]/tau;
-        d_Src[10*I+2] += uz * d_pi1[idx(2, 3)]/tau;
-        d_Src[10*I+3] += uz * (d_pi1[idx(0, 0)] + d_pi1[idx(3,3)])/tau;
-        // d_Src[10*I+4] += 0.0f;
-        // d_Src[10*I+5] += 0.0f;
-        d_Src[10*I+6] += uz * d_pi1[idx(0, 1)]/tau;
-        // d_Src[10*I+7] += 0.0f;
-        d_Src[10*I+8] += uz * d_pi1[idx(0, 2)]/tau;
-        d_Src[10*I+9] += 2.0f * uz * d_pi1[idx(0, 3)]/tau;
+        d_Src[I+0*SIZE] += 2.0f * uz * d_pi1[I + SIZE*idx(0, 3)]/tau;
+        d_Src[I+1*SIZE] += uz * d_pi1[I + SIZE*idx(1, 3)]/tau;
+        d_Src[I+2*SIZE] += uz * d_pi1[I + SIZE*idx(2, 3)]/tau;
+        d_Src[I+3*SIZE] += uz * (d_pi1[I + SIZE*idx(0, 0)] + d_pi1[I + SIZE*idx(3,3)])/tau;
+        d_Src[I+6*SIZE] += uz * d_pi1[I + SIZE*idx(0, 1)]/tau;
+        d_Src[I+8*SIZE] += uz * d_pi1[I + SIZE*idx(0, 2)]/tau;
+        d_Src[I+9*SIZE] += 2.0f * uz * d_pi1[I + SIZE*idx(0, 3)]/tau;
     }
 }
 
@@ -130,7 +124,7 @@ __kernel void visc_src_alongx(
         int IND = I*NY*NZ + J*NZ + K;
         ev[I+2] = d_ev[IND];
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[idn(I+2, mn)] = d_pi1[idn(IND, mn)];
+            pimn[idn(I+2, mn)] = d_pi1[IND + mn*SIZE];
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -183,7 +177,7 @@ __kernel void visc_src_alongx(
                                      ))/DX;
 
         for ( int mn = 0; mn < 10; mn ++ ) {
-            d_Src[idn(IND, mn)] = d_Src[idn(IND, mn)] - kt1d_real(
+            d_Src[IND+SIZE*mn] = d_Src[IND+SIZE*mn] - kt1d_real(
                u0_im2*pimn[idn(i-2, mn)], u0_im1*pimn[idn(i-1, mn)],
                u0_i*pimn[idn(i, mn)], u0_ip1*pimn[idn(i+1, mn)],
                u0_ip2*pimn[idn(i+2, mn)],
@@ -214,7 +208,7 @@ __kernel void visc_src_alongy(
         int IND = I*NY*NZ + J*NZ + K;
         ev[J+2] = d_ev[IND];
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[idn(J+2, mn)] = d_pi1[idn(IND, mn)];
+            pimn[idn(J+2, mn)] = d_pi1[IND+SIZE*mn];
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -268,7 +262,7 @@ __kernel void visc_src_alongy(
 
 
         for ( int mn = 0; mn < 10; mn ++ ) {
-            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
+            d_Src[IND+SIZE*mn] = d_Src[IND+SIZE*mn] - kt1d_real(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
                u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
                u0_ip2*pimn[(i+2)*10+mn],
@@ -299,7 +293,7 @@ __kernel void visc_src_alongz(__global real * d_Src,
         int IND = I*NY*NZ + J*NZ + K;
         ev[K+2] = d_ev[IND];
         for ( int mn = 0; mn < 10; mn ++ ) {
-            pimn[idn(K+2, mn)] = d_pi1[idn(IND, mn)];
+            pimn[idn(K+2, mn)] = d_pi1[IND+SIZE*mn];
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -356,7 +350,7 @@ __kernel void visc_src_alongz(__global real * d_Src,
 
 
         for ( int mn = 0; mn < 10; mn ++ ) {
-            d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
+            d_Src[IND + SIZE*mn] = d_Src[IND + SIZE*mn] - kt1d_real(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
                u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
                u0_ip2*pimn[(i+2)*10+mn],
@@ -446,7 +440,7 @@ __kernel void update_pimn(
 
     real pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
-        pi2[mn] = d_pistep[10*I+mn];
+        pi2[mn] = d_pistep[I+mn*SIZE];
     }
 
     real max_pimn_abs = 0.0f;
@@ -469,7 +463,7 @@ __kernel void update_pimn(
             //pi_old = (pi1[mn] - piNS)*exp(-one_over_taupi*DT/u[0])
             //         + piNS;
 
-            pi_old = d_pi1[10*I + mn] * u_old.s0;
+            pi_old = d_pi1[I + SIZE*mn] * u_old.s0;
             //pi_old *= u_old.s0;
 
             //pi_old = (pi_old + DT*one_over_taupi*piNS)/(1.0f + DT*one_over_taupi/u_new.s0);
@@ -484,10 +478,10 @@ __kernel void update_pimn(
             src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2];
             src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3];
 
-            d_Src[idn(I, mn)] += src;
+            d_Src[I+ SIZE*mn] += src;
 
             // use implicit method for stiff term; 
-            pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
+            pi_old = (pi_old + d_Src[I+SIZE*mn]*DT/step +
                       DT*one_over_taupi*piNS) / (1.0f + DT*one_over_taupi/u_new.s0);
 
             // after kt, before appling stiff term (unstable in explicit Runge-Kutta)
@@ -495,7 +489,7 @@ __kernel void update_pimn(
 
             if ( fabs(pi_old) > max_pimn_abs ) max_pimn_abs = fabs(pi_old);
 
-            d_pinew[10*I + mn] = pi_old;
+            d_pinew[I + SIZE*mn] = pi_old;
     }
 
     real pre = P(e_v2.s0, eos_table);
@@ -504,19 +498,13 @@ __kernel void update_pimn(
         for ( int mn = 0; mn <10; mn++ ) {
             //d_pinew[10*I + mn] *= 0.8f * T00 / max(acu, max_pimn_abs);
             //d_pinew[10*I + mn] = 0.8f*d_pi1[10*I+mn];
-            d_pinew[10*I + mn] = 0.0f;
+            d_pinew[I + SIZE*mn] = 0.0f;
             d_goodcell[I] = 0.0f;
         }
         // for the bad cells, update T^{mu nu}_{ideal} istead of T^{mu nu}_{visc}
     }        
 
-//    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
-//                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
-//                           /max(d_pinew[idn(I, idx(1,1))], 1.0E-6f),
-//    u[0]*sigma[idx(0, 1)]-u[1]*sigma[idx(1, 1)]-u[2]*sigma[idx(2, 1)]-u[3]*sigma[idx(3, 1)],
-//    u[0]*sigma[idx(0, 2)]-u[1]*sigma[idx(1, 2)]-u[2]*sigma[idx(2, 2)]-u[3]*sigma[idx(3, 2)],
-//    u[0]*sigma[idx(0, 3)]-u[1]*sigma[idx(1, 3)]-u[2]*sigma[idx(2, 3)]-u[3]*sigma[idx(3, 3)]);
-    
+   
 }
 
 

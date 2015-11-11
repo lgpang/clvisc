@@ -344,25 +344,25 @@ real4 centroid_ev(__private real4 ev_cube[16], real4 mc){
 real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
                    int mn, int i, int j, int k){
     real centroid;
-    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i, j, k)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i+1, j, k)*10+mn]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)*10+mn]
+    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[mn*SIZE + idn(i, j, k)]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i+1, j, k)+mn*SIZE]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)+mn*SIZE]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)+mn*SIZE]
 
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i, j, k+1)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i+1, j, k+1)*10+mn]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)*10+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i, j, k+1)+mn*SIZE]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i+1, j, k+1)+mn*SIZE]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)+mn*SIZE]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)+mn*SIZE]
 
-             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i, j, k)*10+mn]
-             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i+1, j, k)*10+mn]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)*10+mn]
-             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)*10+mn]
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i, j, k)+mn*SIZE]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i+1, j, k)+mn*SIZE]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)+mn*SIZE]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)+mn*SIZE]
 
-             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i, j, k+1)*10+mn]
-             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i+1, j, k+1)*10+mn]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)*10+mn]
-             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)*10+mn];
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i, j, k+1)+mn*SIZE]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i+1, j, k+1)+mn*SIZE]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)+mn*SIZE]
+             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)+mn*SIZE];
     return centroid;
 }
 

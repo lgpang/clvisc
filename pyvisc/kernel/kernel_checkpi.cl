@@ -11,6 +11,7 @@ __kernel void pizz_o_ep(
     real ratio = 0.0f;
     int num_of_cells = 0;
 
+    int start_idx = 9 * SIZE;
     for ( int i = 0; i < NX; i ++ )
     for ( int j = 0; j < NY; j ++ ) {
        int I = i*NY*NZ + j*NZ + K;
@@ -18,7 +19,7 @@ __kernel void pizz_o_ep(
        real ep = ev.s0 + P(ev.s0, eos_table);
 
        if ( ep > 0.133f ) {
-           ratio += d_pi1[10*I + 9] / ep;
+           ratio += d_pi1[start_idx + I] / ep;
            num_of_cells ++;
        }
     }
