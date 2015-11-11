@@ -53,30 +53,29 @@ def main():
     print('start ...')
     t0 = time()
     from config import cfg
-    cfg.NX = 301
-    cfg.NY = 301
+    cfg.NX = 201
+    cfg.NY = 201
     cfg.NZ = 61
 
     cfg.DT = 0.005
-    cfg.DX = 0.08
-    cfg.DY = 0.08
+    cfg.DX = 0.16
+    cfg.DY = 0.16
     cfg.IEOS = 2
-    cfg.ntskip = 20
+    cfg.ntskip = 40
 
     cfg.TAU0 = 0.2
 
     cfg.ETAOS = 0.08
 
     visc = CLVisc(cfg)
-    #visc = CLIdeal(cfg)
 
-    #fname_partons = '/u/lpang/P10.txt'
-    fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
+    fname_partons = '/u/lpang/P10.txt'
+    #fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
 
     Smearing(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1], fname_partons, visc.eos_table)
 
-    visc.evolve(max_loops=2400, save_hypersf=False)
+    visc.evolve(max_loops=2400, save_hypersf=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
@@ -91,7 +90,7 @@ def ideal_main():
     cfg.NY = 201
     cfg.NZ = 61
 
-    cfg.DT = 0.005
+    cfg.DT = 0.02
     cfg.DX = 0.16
     cfg.DY = 0.16
     cfg.IEOS = 2
@@ -99,10 +98,11 @@ def ideal_main():
 
     cfg.TAU0 = 0.2
 
-    cfg.ETAOS = 0.0
+    cfg.ETAOS = 0.08
 
     ideal = CLIdeal(cfg)
-    fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
+    #fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
+    fname_partons = '/u/lpang/P10.txt'
 
     Smearing(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
             ideal.d_ev[1], fname_partons, ideal.eos_table)
@@ -114,4 +114,5 @@ def ideal_main():
 
 
 if __name__ == '__main__':
-    ideal_main()
+    #ideal_main()
+    main()
