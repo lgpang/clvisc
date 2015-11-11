@@ -92,10 +92,14 @@ class CLVisc(object):
                 self.ideal.tau, self.eos_table).wait()
 
 
-    def create_ini_from_partons(self, fname):
+    def create_ini_from_partons(self, fname, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0):
+        '''generate initial condition from a list of partons in fname,
+        SIGR: the gaussian smearing width in transverse direction
+        SIGZ: the gaussian smearing width along longitudinal direction
+        KFACTOR: scale factor to fit dNch/deta in most central collisions'''
         from smearing import Smearing
         Smearing(self.cfg, self.ctx, self.queue, self.compile_options,
-            self.ideal.d_ev[1], fname, self.eos_table)
+            self.ideal.d_ev[1], fname, self.eos_table, SIGR, SIGZ, KFACTOR)
 
 
 
