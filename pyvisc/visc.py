@@ -10,6 +10,8 @@ import os
 import sys
 from time import time
 
+cwd, cwf = os.path.split(__file__)
+sys.path.append(cwd)
 from ideal import CLIdeal
 
 
@@ -88,6 +90,13 @@ class CLVisc(object):
         self.kernel_IS.visc_initialize(self.queue, (NX*NY*NZ,), None,
                 self.d_pi[1], self.d_goodcell, self.d_udiff, self.ideal.d_ev[1],
                 self.ideal.tau, self.eos_table).wait()
+
+
+    def create_ini_from_partons(self, fname):
+        from smearing import Smearing
+        Smearing(self.cfg, self.ctx, self.queue, self.compile_options,
+            self.ideal.d_ev[1], fname, self.eos_table)
+
 
 
     def check_pizz(self):

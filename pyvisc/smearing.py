@@ -9,8 +9,6 @@ from pyopencl import array
 import os
 import sys
 from time import time
-from visc import CLVisc
-from ideal import CLIdeal
 
 class Smearing(object):
     '''The pyopencl version for gaussian smearing ini condition'''
@@ -67,6 +65,7 @@ def main():
 
     cfg.ETAOS = 0.08
 
+    from visc import CLVisc
     visc = CLVisc(cfg)
 
     fname_partons = '/u/lpang/P10.txt'
@@ -86,6 +85,7 @@ def ideal_main():
     print('start ...')
     t0 = time()
     from config import cfg
+    from ideal import CLIdeal
     cfg.NX = 201
     cfg.NY = 201
     cfg.NZ = 61

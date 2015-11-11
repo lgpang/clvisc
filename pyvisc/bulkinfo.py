@@ -10,6 +10,9 @@ from pyopencl import array
 import os
 import sys
 from time import time
+
+cwd, cwf = os.path.split(__file__)
+sys.path.append(cwd)
 from eos.eos import Eos
 #import matplotlib.pyplot as plt
 
