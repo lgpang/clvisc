@@ -250,7 +250,7 @@ class CLVisc(object):
 
     #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True,
-               to_maxloop = False):
+               force_run_to_maxloop = False):
         '''The main loop of hydrodynamic evolution '''
         for loop in xrange(max_loops):
             self.ideal.edmax = self.ideal.max_energy_density()
@@ -262,7 +262,7 @@ class CLVisc(object):
             if save_hypersf:
                 is_finished = self.get_hypersf(loop, self.cfg.ntskip)
 
-            if is_finished and not to_maxloop:
+            if is_finished and not force_run_to_maxloop:
                 break
 
             if save_bulk and loop % self.cfg.ntskip == 0:
