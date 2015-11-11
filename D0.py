@@ -7,6 +7,7 @@ import numpy as np
 from subprocess import call
 import os
 from time import time
+from glob import glob
 
 from pyvisc.config import cfg
 from pyvisc.visc import CLVisc
@@ -35,9 +36,10 @@ def event_by_event(fname_partons, fout):
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
+finis = glob('/u/lpang/AuAu200_0_80/P*.txt')
 
-for i in xrange(2, 200):
-    fname_partons = '/u/lpang/AuAu200_0_80/P%d.txt'%i
+for i, fname in enumerate(finis):
+    fname_partons = fname
     fpath_out = '/u/lpang/PyVisc/results/D0/event%d/'%i
     
     event_by_event(fname_partons, fpath_out)
