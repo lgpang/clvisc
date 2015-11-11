@@ -94,16 +94,16 @@ __kernel void visc_src_christoffel(
         real4 e_v = d_ev[I];
         real uz = e_v.s3 * gamma(e_v.s1, e_v.s2, e_v.s3);
 
-        d_Src[10*I+0] += 2.0f * uz * d_pi1[idx(0, 3)]/tau;
-        d_Src[10*I+1] += uz * d_pi1[idx(1, 3)]/tau;
-        d_Src[10*I+2] += uz * d_pi1[idx(2, 3)]/tau;
-        d_Src[10*I+3] += uz * (d_pi1[idx(0, 0)] + d_pi1[idx(3,3)])/tau;
+        d_Src[10*I+0] += 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
+        d_Src[10*I+1] += uz * d_pi1[10*I+idx(1, 3)]/tau;
+        d_Src[10*I+2] += uz * d_pi1[10*I+idx(2, 3)]/tau;
+        d_Src[10*I+3] += uz * (d_pi1[10*I+idx(0, 0)] + d_pi1[10*I+idx(3,3)])/tau;
         // d_Src[10*I+4] += 0.0f;
         // d_Src[10*I+5] += 0.0f;
-        d_Src[10*I+6] += uz * d_pi1[idx(0, 1)]/tau;
+        d_Src[10*I+6] += uz * d_pi1[10*I+idx(0, 1)]/tau;
         // d_Src[10*I+7] += 0.0f;
-        d_Src[10*I+8] += uz * d_pi1[idx(0, 2)]/tau;
-        d_Src[10*I+9] += 2.0f * uz * d_pi1[idx(0, 3)]/tau;
+        d_Src[10*I+8] += uz * d_pi1[10*I+idx(0, 2)]/tau;
+        d_Src[10*I+9] += 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
     }
 }
 
@@ -459,9 +459,9 @@ __kernel void update_pimn(
 
             int mn = idx(mu, nu);
             //// set the sigma^{mu nu} and theta 0 when ed is too small
-            //if ( u[0] > 100.0f ) {
-            //    sigma[mn] = 0.0f;
-            //}
+            if ( u[0] > 100.0f ) {
+                sigma[mn] = 0.0f;
+            }
             real pi_old;
 
             real piNS = etav*sigma[mn];
