@@ -21,6 +21,7 @@ class Eos(object):
             self.pure_su3()
 
     def ideal_gas(self):
+        '''ideal gas eos, P=ed/3 '''
         hbarc = 0.1973269
         dof = 169.0/4.0
         coef = np.pi*np.pi/30.0
@@ -28,6 +29,14 @@ class Eos(object):
         self.f_T = lambda ed: hbarc*np.power(1.0/(dof*coef)*ed/hbarc, 0.25) + 1.0E-10
         self.f_S = lambda ed: (ed + self.f_P(ed))/self.f_T(ed)
         self.f_ed = lambda T: dof*coef*hbarc*(T/hbarc)**4.0
+        self.ed = np.linspace(0, 1999.99, 200000)
+        self.pr = self.f_P(self.ed)
+        self.T = self.f_T(self.ed)
+        self.s = self.f_S(self.ed)
+        self.ed_start = 0.0
+        self.ed_step = 0.01
+        self.num_of_ed = 200000
+
 
     def eos_func_from_interp1d(self):
         # interpolation functions

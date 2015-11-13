@@ -115,10 +115,7 @@ class CLIdeal(object):
         if self.cfg.use_float32:
             gpu_defines.append( '-D USE_SINGLE_PRECISION' )
         #choose EOS by ifdef in *.cl file
-        if self.cfg.IEOS==0:
-            gpu_defines.append( '-D EOSI' )
-        else:
-            gpu_defines.append( '-D EOS_TABLE' ) # WB2014
+        gpu_defines.append( '-D EOS_TABLE' ) # WB2014
 
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
@@ -295,7 +292,7 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 2
+    cfg.IEOS = 0
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber

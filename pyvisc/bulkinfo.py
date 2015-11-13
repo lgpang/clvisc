@@ -42,6 +42,10 @@ class BulkInfo(object):
         self.__loadAndBuildCLPrg()
         self.eos = Eos(cfg.IEOS)
 
+        self.x = np.linspace(-NX/2*cfg.DX, NX/2*cfg.DX, NX)
+        self.y = np.linspace(-NY/2*cfg.DY, NY/2*cfg.DY, NY)
+        self.z = np.linspace(-NZ/2*cfg.DZ, NZ/2*cfg.DZ, NZ)
+
 
     def __loadAndBuildCLPrg(self):
         #load and build *.cl programs with compile self.gpu_defines

@@ -182,6 +182,7 @@ class CLVisc(object):
                 self.eos_table, self.ideal.tau).wait()
 
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
+                #needs_update      not_important    start_point   src_for_RK
                 self.d_pi[3-step], self.d_goodcell, self.d_pi[1], self.d_pi[step],
                 self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
                 self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
@@ -316,13 +317,13 @@ def main():
     cfg.DX = 0.16
     cfg.DY = 0.16
     cfg.ImpactParameter = 10.0
-    cfg.IEOS = 2
+    cfg.IEOS = 1
     cfg.ntskip = 60
     cfg.nxskip = 2
     cfg.nyskip = 2
     cfg.nzskip = 1
 
-    cfg.ETAOS = 0.08
+    cfg.ETAOS = 0.16
 
     visc = CLVisc(cfg, gpu_id=3)
     from glauber import Glauber
