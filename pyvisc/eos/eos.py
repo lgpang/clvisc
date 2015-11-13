@@ -56,6 +56,9 @@ class Eos(object):
         self.ed = wb.ed
         self.pr = wb.pr
         self.T = wb.T
+        T = np.copy(self.T)
+        T[T < 1.0E-15] = 1.0E-15
+        self.s = (self.ed + self.pr)/T
         self.ed_start = wb.ed_start
         self.ed_step = wb.ed_step
         self.num_of_ed = wb.num_ed
