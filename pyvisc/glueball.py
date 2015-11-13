@@ -16,14 +16,14 @@ def glueball(Tmax = 0.6, outdir = '../results/event0'):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
-    eos = Eos(cfg)
+    cfg.IEOS = 2
+    eos = Eos(cfg.IEOS)
     # update the configuration
     cfg.Edmax = eos.f_ed(Tmax)
     cfg.fPathOut = outdir
 
     # set IEOS = 2 for (2+1)-flavor QCD EOS
     # set IEOS = 3 for GlueBall EOS
-    cfg.IEOS = 2
     cfg.NX = 301
     cfg.NY = 301
     cfg.NZ = 81

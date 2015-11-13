@@ -47,7 +47,7 @@ class Eos(object):
         self.ed_start = 0.0
         self.ed_step = 0.002
         self.num_of_ed = 155500
-        eos_func_from_interp1d()
+        self.eos_func_from_interp1d()
 
     def lattice_ce(self):
         '''lattice qcd EOS from wuppertal budapest group
@@ -59,7 +59,7 @@ class Eos(object):
         self.ed_start = wb.ed_start
         self.ed_step = wb.ed_step
         self.num_of_ed = wb.num_ed
-        eos_func_from_interp1d()
+        self.eos_func_from_interp1d()
 
     def pure_su3(self):
         '''pure su3 gauge EOS'''
@@ -73,7 +73,7 @@ class Eos(object):
         self.ed_start = glueball.ed_start
         self.ed_step = glueball.ed_step
         self.num_of_ed = glueball.num_ed
-        eos_func_from_interp1d()
+        self.eos_func_from_interp1d()
 
     def create_table(self, ctx, compile_options, nrow=200, ncol=1000):
         '''store the eos (ed, pr, T, s) in image2d_t table for fast

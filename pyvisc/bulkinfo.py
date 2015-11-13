@@ -40,7 +40,7 @@ class BulkInfo(object):
         self.time = []
         self.edmax = []
         self.__loadAndBuildCLPrg()
-        self.eos = Eos(cfg)
+        self.eos = Eos(cfg.IEOS)
 
 
     def __loadAndBuildCLPrg(self):

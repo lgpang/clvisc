@@ -100,7 +100,8 @@ def read_config():
             'time when hydro starts')
 
     config['IEOS']  = (_parser.getint('intrinsic', 'IEOS'), 
-            'EOS selection, 0 for ideal gas, 1 for s95p-ce, 2 for s95p-pce')
+            'EOS selection, 0 for ideal gas, 1 for s95p-pce,\
+             2 for wuppertal budapest 2014 ce, 3 for glueball eos')
 
     config['TFRZ'] = (_parser.getfloat('intrinsic', 'TFRZ'), 
             'Freeze out temperature, default=0.137')

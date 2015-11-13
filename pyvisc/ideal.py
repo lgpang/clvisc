@@ -54,8 +54,14 @@ class CLIdeal(object):
         # set eos, create eos table for interpolation
         # self.eos_table must be before __loadAndBuildCLPrg() to pass
         # table information to definitions
-        self.eos = Eos(self.cfg)
-        self.eos_table = self.eos.create_table(self.ctx, self.gpu_defines)
+        self.eos = Eos(self.cfg.IEOS)
+
+        if self.cfg.IEOS == 1:
+            self.eos_table = self.eos.create_table(self.ctx,
+                    self.gpu_defines, nrow=100, ncol=1555)
+        else:
+            self.eos_table = self.eos.create_table(self.ctx,
+                    self.gpu_defines)
 
         self.efrz = self.eos.f_ed(self.cfg.TFRZ)
 
@@ -111,12 +117,9 @@ class CLIdeal(object):
         #choose EOS by ifdef in *.cl file
         if self.cfg.IEOS==0:
             gpu_defines.append( '-D EOSI' )
-        elif self.cfg.IEOS==1:
-            gpu_defines.append( '-D EOSLCE' )
-        elif self.cfg.IEOS==2:
+        else:
             gpu_defines.append( '-D EOS_TABLE' ) # WB2014
-        elif self.cfg.IEOS==3:
-            gpu_defines.append( '-D EOS_TABLE' ) # GlueBall
+
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
         return gpu_defines
