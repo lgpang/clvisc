@@ -239,7 +239,7 @@ class CLIdeal(object):
 
         return is_finished
 
-    def save(self, save_hypersf=True, save_bulk=True):
+    def save(self, save_hypersf=True, save_bulk=False):
         self.num_of_sf = np.zeros(1, dtype=np.int32)
         cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
         print("num of sf=", self.num_of_sf)
@@ -260,7 +260,7 @@ class CLIdeal(object):
         self.tau = self.cfg.real(self.cfg.TAU0 + (loop+1)*self.cfg.DT)
 
     def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True,
-               to_maxloop=False):
+            plot_bulk=True, to_maxloop=False):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
             self.edmax = self.max_energy_density()
@@ -273,7 +273,7 @@ class CLIdeal(object):
             if is_finished and not to_maxloop:
                 break
 
-            if save_bulk and n % self.cfg.ntskip == 0:
+            if ( save_bulk or plot_bulk ) and n % self.cfg.ntskip == 0:
                 self.bulkinfo.get(self.tau, self.d_ev[1], self.edmax)
 
             self.stepUpdate(step=1)
