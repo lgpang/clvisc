@@ -39,7 +39,7 @@ class Eos(object):
 
 
     def eos_func_from_interp1d(self):
-        # interpolation functions
+        # construct interpolation functions
         self.f_ed = interp1d(self.T, self.ed)
         self.f_T = interp1d(self.ed, self.T)
         self.f_P = interp1d(self.ed, self.pr)
@@ -65,9 +65,7 @@ class Eos(object):
         self.ed = wb.ed
         self.pr = wb.pr
         self.T = wb.T
-        T = np.copy(self.T)
-        T[T < 1.0E-15] = 1.0E-15
-        self.s = (self.ed + self.pr)/T
+        self.s = (self.ed + self.pr)/(self.T + 1.0E-10)
         self.ed_start = wb.ed_start
         self.ed_step = wb.ed_step
         self.num_of_ed = wb.num_ed
@@ -79,9 +77,7 @@ class Eos(object):
         self.ed = glueball.ed
         self.pr = glueball.pr
         self.T = glueball.T
-        T = np.copy(self.T)
-        T[T < 1.0E-15] = 1.0E-15
-        self.s = (self.ed + self.pr)/T
+        self.s = (self.ed + self.pr)/(self.T + 1.0E-10)
         self.ed_start = glueball.ed_start
         self.ed_step = glueball.ed_step
         self.num_of_ed = glueball.num_ed

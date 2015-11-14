@@ -8,6 +8,11 @@ import sympy as sym
 import pyopencl as cl
 import os
 
+
+
+def gubser_vr(tau, r, q):
+    return 2.0*q*q*tau*r/(1.0+q*q*tau*tau+q*q*r*r)
+
 ##### Calc the limit of pixx, pixy, piyy at (x->0, y->0 )
 def GetLimit(tau_input=1.0, L_input=10.0, lam1_input=10.0):
     '''pixx, piyy, pixy is not numerically calculable at x->0 and y->0 due to 
@@ -52,28 +57,36 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(cwd, '..'))
     from config import cfg
     from visc import CLVisc
-    cfg.IEOS = 2
+    cfg.IEOS = 0
     Lam = -10.0
     L = 5.0
     cfg.TAU0 = 1.0
     cfg.NX = 405
     cfg.NY = 405
     cfg.NZ = 1
+    cfg.DT = 0.005
     cfg.DX = 0.05
     cfg.DY = 0.05
-    cfg.ntskip = 1
+    cfg.LAM1 = Lam
+    cfg.ntskip = 10
     visc = CLVisc(cfg)
     ctx = visc.ctx
     queue = visc.queue
     CreateIni(ctx, queue, visc.ideal.d_ev[1], visc.d_pi[1], tau=cfg.TAU0,  L=L, lam1=Lam,
               NX=cfg.NX, NY=cfg.NY, NZ=cfg.NZ, DX=cfg.DX, DY=cfg.DY, DZ=cfg.DZ)
 
-    visc.evolve(max_loops=20, force_run_to_maxloop=True, save_hypersf=False)
+    visc.evolve(max_loops=200, force_run_to_maxloop=True, save_bulk=False,
+                plot_bulk=True, save_hypersf=False)
 
     bulk = visc.ideal.bulkinfo
 
     import matplotlib.pyplot as plt
-    plt.plot(bulk.x, bulk.ex[0])
+    q = 1/L
+
+    for i in range(10):
+        plt.plot(bulk.x, bulk.vx[i])
+        plt.plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, q), '--')
+
     plt.show()
 
 

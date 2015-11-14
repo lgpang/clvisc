@@ -109,6 +109,9 @@ def read_config():
     config['ETAOS']= (_parser.getfloat('intrinsic', 'ETAOS'), 
             'Shear viscosity over entropy density')
 
+    config['LAM1']= (_parser.getfloat('intrinsic', 'LAM1'), 
+            'coefficient for pimn^2 term')
+
     config['BSZ'] = (_parser.getint('opencl', 'local_workgroup_size'), 
             'Local workgroup size in one dimension')
 

@@ -174,9 +174,6 @@ __kernel void visc_src_alongx(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        //d_udx[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
-        //    -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DX);
-        
         d_udx[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
                                      THETA*(umu4(ev_ip1) - umu4(ev_i))
@@ -258,9 +255,6 @@ __kernel void visc_src_alongy(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        //d_udy[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
-        //              -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*DY);
-
         d_udy[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
                                      THETA*(umu4(ev_ip1) - umu4(ev_i))
@@ -345,10 +339,6 @@ __kernel void visc_src_alongz(__global real * d_Src,
         
         real4 christoffel_term = (real4)(ev_i.s3, 0.0f, 0.0f, 1.0f)*u0_i/tau;
         
-        //d_udz[IND] = (u0_ip1*(real4)(1.0f, ev_ip1.s123)
-        //              -u0_im1*(real4)(1.0f, ev_im1.s123))/(2.0f*tau*DZ)
-        //              + christoffel_term;
-
         d_udz[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
                                      THETA*(umu4(ev_ip1) - umu4(ev_i))
@@ -363,6 +353,33 @@ __kernel void visc_src_alongz(__global real * d_Src,
                pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Z)/(tau*DZ);
         }
     }
+}
+
+
+
+/** \pi^{< mu}_{lam} * pi^{nu> lam} self coupling term **/
+inline real PiPi(int lam, int mu, int nu, __private real pimn[10],
+                 __private real u[4])
+{
+  /** pi_{\mu}^{lam} **/
+  real4 A = (real4)(pimn[idx(0, lam)], -pimn[idx(1, lam)], -pimn[idx(2, lam)],
+                    -pimn[idx(3, lam)]);
+
+  real4 umu = (real4)(u[0], u[1], u[2], u[3]);
+
+  real4 Delta4[] = {gm[0]-u[0]*umu, gm[1]-u[1]*umu,
+                    gm[2]-u[2]*umu, gm[3]-u[3]*umu};
+
+  // Delta^{mu alpha} Delta^{nu beta} * A_{alpha} * A_{beta}
+  real firstTerm = dot(Delta4[mu], A) * dot(Delta4[nu], A);
+
+  real4 temp = (real4)(dot(Delta4[0], A), dot(Delta4[1], A),
+                       dot(Delta4[2], A), dot(Delta4[3], A));
+
+  // -1/3.0 * Delta[mu][nu]  Delta^{alpha beta} * A_{alpha} * A_{beta}
+  real secondTerm = -1.0f/3.0f*(gmn[mu][nu] - u[mu]*u[nu]) * dot(temp, A);
+
+  return firstTerm + secondTerm;
 }
 
     /** update d_pinew with d_pi1, d_pistep and d_Src
@@ -401,7 +418,6 @@ __kernel void update_pimn(
 
     // correct with previous udiff=u_visc-u_ideal*
     if ( step == 1 ) udt += d_udiff[I]/DT;
-
 
     real4 udx = d_udx[I];
     real4 udy = d_udy[I];
@@ -443,10 +459,22 @@ __kernel void update_pimn(
 
     real one_over_taupi = T(ed_step, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
 
+#define GUBSER_VISC_TEST
+#ifdef GUBSER_VISC_TEST
+    // for gubser visc solution test, use EOS: P=e/3, T=e**1/4, S=e**1/3
+    real etavH = ETAOS * 4.0f/3.0f;
+    real taupiH = LAM1*LAM1*etavH/3.0f;
+    one_over_taupi = 1.0f/(taupiH*pow(ed_step, -0.25f));
+    real coef_pipi = LAM1/ed_step;
+    etav = ETAOS * pow(ed_step, 1.0f/3.0f);
+    ////////////////////////////////
+#endif
+
     real pi2[10];
     for ( int mn=0; mn < 10; mn ++ ) {
         pi2[mn] = d_pistep[10*I+mn];
     }
+
 
     real sigma;
     real max_pimn_abs = 0.0f;
@@ -483,6 +511,14 @@ __kernel void update_pimn(
             src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1];
             src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2];
             src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3];
+
+#ifdef GUBSER_VISC_TEST
+            src -= coef_pipi*(PiPi(0, mu, nu, pi2, u) 
+                -PiPi(1, mu, nu, pi2, u)
+                -PiPi(2, mu, nu, pi2, u)
+                -PiPi(3, mu, nu, pi2, u));
+#endif
+
 
             d_Src[idn(I, mn)] += src;
 

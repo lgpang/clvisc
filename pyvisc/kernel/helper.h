@@ -2,7 +2,6 @@
 #define __HELPERH__
 
 #include"real_type.h"
-//#include"EosPCEv0.cl"
 #include"eos_table.h"
 
 #define THETA 1.1f

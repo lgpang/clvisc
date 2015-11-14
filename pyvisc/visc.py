@@ -226,7 +226,7 @@ class CLVisc(object):
         return is_finished
 
 
-    def save(self, save_hypersf=True, save_bulk=True):
+    def save(self, save_hypersf=True, save_bulk=False):
         self.ideal.save(save_hypersf, save_bulk)
         num_of_sf = self.ideal.num_of_sf
 
@@ -250,11 +250,13 @@ class CLVisc(object):
         self.ideal.update_time(loop)
 
     #@profile
-    def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=True,
-               force_run_to_maxloop = False):
-        '''The main loop of hydrodynamic evolution '''
+    def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=False,
+               plot_bulk=True, force_run_to_maxloop = False):
+        '''The main loop of hydrodynamic evolution
+        default parameters: save_hypersf, don't save bulk info
+        store bulk info by switch on plot_bulk'''
         for loop in xrange(max_loops):
-            t0 = time()
+            #t0 = time()
             self.ideal.edmax = self.ideal.max_energy_density()
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
             print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
@@ -267,7 +269,7 @@ class CLVisc(object):
             if is_finished and not force_run_to_maxloop:
                 break
 
-            if save_bulk and loop % self.cfg.ntskip == 0:
+            if (plot_bulk or save_bulk) and loop % self.cfg.ntskip == 0:
                 self.ideal.bulkinfo.get(self.ideal.tau,
                         self.ideal.d_ev[1], self.ideal.edmax)
 
@@ -291,13 +293,9 @@ class CLVisc(object):
             self.visc_stepUpdate(step=2)
             self.update_udiff()
 
-            if loop % self.cfg.ntskip == 0:
-                #self.plot_sigma_traceless(loop)
-                pass
-
             #self.check_pizz()
-            t1 = time()
-            print 'time per loop: {dtime}'.format(dtime = t1-t0)
+            #t1 = time()
+            #print 'time per loop: {dtime}'.format(dtime = t1-t0)
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 

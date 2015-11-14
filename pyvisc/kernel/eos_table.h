@@ -67,8 +67,9 @@ inline real T(real eps, read_only image2d_t eos_table){
 
 // get the pressure from eos_table
 inline real S(real eps, read_only image2d_t eos_table){
-    real4 epTs = eos(eps, eos_table);
-    return (epTs.s0 + epTs.s1)/max(1.0E-6f, epTs.s2);
+    return eos(eps, eos_table).s3;
+    //real4 epTs = eos(eps, eos_table);
+    //return (epTs.s0 + epTs.s1)/max(1.0E-6f, epTs.s2);
 }
 
 
