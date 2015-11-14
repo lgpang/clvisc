@@ -9,8 +9,12 @@ import pyopencl as cl
 import os
 
 
+def gubser_ed(tau, r, L, lam1):
+    ''' energy density for 2nd order viscous gubser solution '''
+    return np.power(1 + 0.25*(-L*L + tau*tau - r*r)**2/(L*L*tau*tau), -1.33333333333333 + 1.0/lam1)/np.power(tau, 4)
 
-def gubser_vr(tau, r, q):
+def gubser_vr(tau, r, L):
+    q = 1.0/L
     return 2.0*q*q*tau*r/(1.0+q*q*tau*tau+q*q*r*r)
 
 ##### Calc the limit of pixx, pixy, piyy at (x->0, y->0 )
@@ -58,7 +62,7 @@ if __name__ == '__main__':
     from config import cfg
     from visc import CLVisc
     cfg.IEOS = 0
-    Lam = -10.0
+    Lam = -100.0
     L = 5.0
     cfg.TAU0 = 1.0
     cfg.NX = 405
@@ -82,11 +86,14 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
     q = 1/L
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 
     for i in range(10):
-        plt.plot(bulk.x, bulk.vx[i])
-        plt.plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, q), '--')
+        ax[0].plot(bulk.x, bulk.ex[i])
+        ax[0].plot(bulk.x, gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), '--')
+
+    for i in range(10):
+        ax[1].plot(bulk.x, bulk.vx[i])
+        ax[1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), '--')
 
     plt.show()
-
-
