@@ -226,8 +226,13 @@ class CLVisc(object):
         return is_finished
 
 
-    def save(self, save_hypersf=True, save_bulk=False):
+    def save(self, save_hypersf = True, save_bulk = False, 
+             save_pi = False):
         self.ideal.save(save_hypersf, save_bulk)
+
+        if save_pi:
+            self.pimn_info.save()
+
         num_of_sf = self.ideal.num_of_sf
 
         ed = self.ideal.efrz
@@ -251,10 +256,15 @@ class CLVisc(object):
 
     #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=False,
-               plot_bulk=True, force_run_to_maxloop = False):
+               plot_bulk=True, save_pi=True, force_run_to_maxloop = False):
         '''The main loop of hydrodynamic evolution
         default parameters: save_hypersf, don't save bulk info
         store bulk info by switch on plot_bulk'''
+        if save_pi:
+            from pimninfo import PimnInfo
+            self.pimn_info = PimnInfo(self.cfg, self.ctx, self.queue,
+                                 self.compile_options)
+
         for loop in xrange(max_loops):
             #t0 = time()
             self.ideal.edmax = self.ideal.max_energy_density()
@@ -272,6 +282,9 @@ class CLVisc(object):
             if (plot_bulk or save_bulk) and loop % self.cfg.ntskip == 0:
                 self.ideal.bulkinfo.get(self.ideal.tau,
                         self.ideal.d_ev[1], self.ideal.edmax)
+
+            if save_pi:
+                self.pimn_info.get(self.ideal.tau, self.d_pi[1])
 
             # store d_pi[0]
             cl.enqueue_copy(self.queue, self.d_pi[0],
@@ -297,7 +310,8 @@ class CLVisc(object):
             #t1 = time()
             #print 'time per loop: {dtime}'.format(dtime = t1-t0)
 
-        self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
+        self.save(save_hypersf=save_hypersf, save_bulk=save_bulk, 
+                  save_pi = save_pi)
 
 
 

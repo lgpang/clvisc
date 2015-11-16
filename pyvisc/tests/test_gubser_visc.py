@@ -62,7 +62,7 @@ if __name__ == '__main__':
     from config import cfg
     from visc import CLVisc
     cfg.IEOS = 0
-    Lam = -100.0
+    Lam = -10.0
     L = 5.0
     cfg.TAU0 = 1.0
     cfg.NX = 405
@@ -80,7 +80,7 @@ if __name__ == '__main__':
               NX=cfg.NX, NY=cfg.NY, NZ=cfg.NZ, DX=cfg.DX, DY=cfg.DY, DZ=cfg.DZ)
 
     visc.evolve(max_loops=200, force_run_to_maxloop=True, save_bulk=False,
-                plot_bulk=True, save_hypersf=False)
+                plot_bulk=True, save_hypersf=False, save_pi=True)
 
     bulk = visc.ideal.bulkinfo
 
