@@ -420,7 +420,11 @@ __kernel void update_pimn(
     real4 udt = (u_new - u_old)/DT;
 
     // correct with previous udiff=u_visc-u_ideal*
-    if ( step == 1 ) udt += d_udiff[I]/DT;
+    //if ( step == 1 ) udt += d_udiff[I]/DT;
+    if ( step == 1 ) { 
+        udt = d_udiff[I]/DT;
+        u_new = u_old + udt;
+    }
 
     real4 udx = d_udx[I];
     real4 udy = d_udy[I];

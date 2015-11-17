@@ -80,6 +80,12 @@ if __name__ == '__main__':
     CreateIni(ctx, queue, visc.ideal.d_ev[1], visc.d_pi[1], tau=cfg.TAU0,  L=L, lam1=Lam,
               NX=cfg.NX, NY=cfg.NY, NZ=cfg.NZ, DX=cfg.DX, DY=cfg.DY, DZ=cfg.DZ)
 
+    CreateIni(ctx, queue, visc.ideal.d_ev[2], visc.d_pi[2], tau=cfg.TAU0 + cfg.DT,  L=L, lam1=Lam,
+              NX=cfg.NX, NY=cfg.NY, NZ=cfg.NZ, DX=cfg.DX, DY=cfg.DY, DZ=cfg.DZ)
+
+
+    visc.update_udiff(visc.ideal.d_ev[1], visc.ideal.d_ev[2])
+
     visc.evolve(max_loops=200, force_run_to_maxloop=True, save_bulk=False,
                 plot_bulk=True, save_hypersf=False, save_pi=True)
 

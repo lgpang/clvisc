@@ -61,11 +61,13 @@ class CLVisc(object):
         self.d_pi_sf = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         self.kernel_hypersf = self.ideal.kernel_hypersf
 
-        # initialize pimn such that its value can be changed before
+        # initialize pimn, umu[2] such that its value can be changed before
         # self.evolve() is called for bjorken_test and gubser_test
         self.IS_initialize()
+        self.ideal_predict_for_first_step()
 
         self.d_pizz_o_ep = cl.Buffer(self.ctx, mf.READ_WRITE, self.cfg.NZ*self.cfg.sz_real)
+
 
 
     def __loadAndBuildCLPrg(self):
@@ -193,11 +195,12 @@ class CLVisc(object):
                 ).wait()
 
 
-    def update_udiff(self):
-        '''get d_udiff = u_{visc}^{n} - u_{ideal*}^{n} '''
+    def update_udiff(self, d_ev0, d_ev1):
+        '''get d_udiff = u_{visc}^{n} - u_{visc}^{n-1}, it is possible to 
+        set d_udiff in analytical solution for viscous gubser test'''
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
         self.kernel_IS.get_udiff(self.queue, (NX*NY*NZ,), None,
-            self.d_udiff, self.ideal.d_ev[0], self.ideal.d_ev[1]).wait()
+            self.d_udiff, d_ev0, d_ev1).wait()
                 
     def get_hypersf(self, n, ntskip):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
@@ -257,6 +260,11 @@ class CLVisc(object):
     def update_time(self, loop):
         self.ideal.update_time(loop)
 
+
+    def ideal_predict_for_first_step(self):
+        # ideal prediction to get umu for the first time step
+        self.ideal.stepUpdate(step=1)
+
     #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=False,
                plot_bulk=True, save_pi=True, force_run_to_maxloop = False):
@@ -292,22 +300,20 @@ class CLVisc(object):
             # store d_pi[0]
             cl.enqueue_copy(self.queue, self.d_pi[0],
                             self.d_pi[1]).wait()
-            # ideal prediction; d_ev[2] is updated
-            self.ideal.stepUpdate(step=1)
 
-            # copy the ideal prediction to d_ev[0] for d_udiff calc
+            # copy the d_ev[1] to d_ev[0] for umu_new prediction
             cl.enqueue_copy(self.queue, self.ideal.d_ev[0],
-                            self.ideal.d_ev[2]).wait()
+                            self.ideal.d_ev[1]).wait()
 
-            # update pi[2] with d_ev[0] and d_ev[2]_ideal
-            # the difference is corrected with d_udiff
+            # update pi[2] with d_ev[0] and u_new=u0+d_udiff
+            # where d_udiff is prediction from previous step
             self.IS_stepUpdate(step=1)
             self.visc_stepUpdate(step=1)
             self.update_time(loop)
-            # update pi[1] with d_ev[0] and d_ev[2]_visc
+            # update pi[1] with d_ev[0] and d_ev[2]_visc*
             self.IS_stepUpdate(step=2)
             self.visc_stepUpdate(step=2)
-            self.update_udiff()
+            self.update_udiff(self.ideal.d_ev[0], self.ideal.d_ev[1])
 
             #self.check_pizz()
             #t1 = time()
