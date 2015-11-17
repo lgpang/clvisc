@@ -71,6 +71,9 @@ class CLVisc(object):
     def __loadAndBuildCLPrg(self):
         self.cwd, cwf = os.path.split(__file__)
         #load and build *.cl programs with compile options
+        if self.cfg.gubser_visc_test:
+            self.compile_options.append('-D GUBSER_VISC_TEST')
+
         with open(os.path.join(self.cwd, 'kernel', 'kernel_IS.cl'), 'r') as f:
             src = f.read()
             self.kernel_IS = cl.Program(self.ctx, src).build(options=self.compile_options)
@@ -337,7 +340,7 @@ def main():
 
     cfg.ETAOS = 0.16
 
-    visc = CLVisc(cfg, gpu_id=3)
+    visc = CLVisc(cfg, gpu_id=0)
     from glauber import Glauber
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])

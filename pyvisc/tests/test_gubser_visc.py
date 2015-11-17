@@ -73,6 +73,7 @@ if __name__ == '__main__':
     cfg.DY = 0.05
     cfg.LAM1 = Lam
     cfg.ntskip = 10
+    cfg.gubser_visc_test = True
     visc = CLVisc(cfg)
     ctx = visc.ctx
     queue = visc.queue
