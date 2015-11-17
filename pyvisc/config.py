@@ -10,6 +10,36 @@ if sys.version_info <= (3, 0):
 else:
     import configparser
 
+def write_config(configs):
+    '''write the current setting to hydro.info in the output directory'''
+    fPathOut = configs.fPathOut
+    configfile_name = os.path.join(fPathOut, 'hydro.info')
+    if not os.path.isfile(configfile_name):
+        # Create the configuration file as it doesn't exist yet
+        cfgfile = open(configfile_name, 'w')
+    
+        # Add content to the file
+        Config = configParser.ConfigParser()
+        Config.add_section('path')
+        Config.set('path', 'fPathIni', configs.fPathIni)
+        Config.set('path', 'fPathOut', configs.fPathOut)
+        Config.add_section('glauber')
+        Config.set('glauber', 'Edmax', configs.Edmax,
+                   'glauber', 'A', configs.A,
+                   'glauber', 'SQRTS', configs.SQRTS,
+                   'glauber', 'NucleonDensity', configs.NucleonDensity,
+                   'glauber', 'Ra', configs.Ra,
+                   'glauber', 'Eta', configs.Eta,
+                   'glauber', 'Si0', configs.Si0,
+                   'glauber', 'ImpactParameter', configs.ImpactParameter,
+                   'glauber', 'Hwn', configs.Hwn,
+                   'glauber', 'Eta_flat', configs.Eta_flat,
+                   'glauber', 'Eta_gw', configs.Eta_gw)
+                    
+        Config.write(cfgfile)
+        cfgfile.close()
+
+
 def read_config():
     '''read configeration from file, then update the value 
     with command line input if there is any'''
