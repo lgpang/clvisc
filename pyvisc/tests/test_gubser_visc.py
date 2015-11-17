@@ -17,6 +17,12 @@ def gubser_vr(tau, r, L):
     q = 1.0/L
     return 2.0*q*q*tau*r/(1.0+q*q*tau*tau+q*q*r*r)
 
+def gubser_pizz(tau, r, L, lam1):
+    return  2*np.power((0.25)*(4*np.power(L, 2)*np.power(tau, 2) + np.power(np.power(L, 2)
+            - np.power(tau, 2) + np.power(r, 2), 2))/(np.power(L, 2)*np.power(tau, 2)),
+            (-1.33333333333333*lam1 + 1)/lam1)/(lam1*np.power(tau, 6)) ;
+
+
 ##### Calc the limit of pixx, pixy, piyy at (x->0, y->0 )
 def GetLimit(tau_input=1.0, L_input=10.0, lam1_input=10.0):
     '''pixx, piyy, pixy is not numerically calculable at x->0 and y->0 due to 
@@ -90,17 +96,23 @@ if __name__ == '__main__':
                 plot_bulk=True, save_hypersf=False, save_pi=True)
 
     bulk = visc.ideal.bulkinfo
+    pimn = visc.pimn_info
 
     import matplotlib.pyplot as plt
     q = 1/L
-    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(2, 2, figsize=(10, 5))
 
     for i in range(10):
-        ax[0].plot(bulk.x, bulk.ex[i])
-        ax[0].plot(bulk.x, gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), '--')
+        ax[0, 0].plot(bulk.x, bulk.ex[i])
+        ax[0, 0].plot(bulk.x, gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), '--')
 
     for i in range(10):
-        ax[1].plot(bulk.x, bulk.vx[i])
-        ax[1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), '--')
+        ax[0, 1].plot(bulk.x, bulk.vx[i])
+        ax[0, 1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), '--')
+
+    for i in range(10):
+        tau = 1.0 + i*cfg.ntskip*cfg.DT
+        ax[1, 0].plot(pimn.x, pimn.pimn_x[i])
+        ax[1, 0].plot(pimn.x, tau*tau*gubser_pizz(tau, bulk.x, L, Lam), '--')
 
     plt.show()

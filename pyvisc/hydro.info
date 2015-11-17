@@ -80,7 +80,7 @@ TFRZ = 0.137
 ETAOS = 0.08          
 
 # \hat{ \lambda_1 }
-LAM1 = 0.001           
+LAM1 = -10
 
 [opencl]
 
