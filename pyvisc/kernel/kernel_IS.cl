@@ -10,7 +10,7 @@ constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
 // these mh, ph terms are calcualted 1 time and used 10 times by pimn
 real kt1d_real(
        real Q_im2, real Q_im1, real Q_i, real Q_ip1, real Q_ip2,
-       real pr_mh, real pr_ph, real v_mh, real v_ph, real lam_mh, real lam_ph,
+       real v_mh, real v_ph, real lam_mh, real lam_ph,
        real tau, int along)
 {
    real DA0, DA1;
@@ -185,7 +185,7 @@ __kernel void visc_src_alongx(
                u0_im2*pimn[idn(i-2, mn)], u0_im1*pimn[idn(i-1, mn)],
                u0_i*pimn[idn(i, mn)], u0_ip1*pimn[idn(i+1, mn)],
                u0_ip2*pimn[idn(i+2, mn)],
-               pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_X)/DX;
+               v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_X)/DX;
         }
     }
 }
@@ -268,7 +268,7 @@ __kernel void visc_src_alongy(
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
                u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
                u0_ip2*pimn[(i+2)*10+mn],
-               pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Y)/DY;
+               v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Y)/DY;
         }
     }
 }
@@ -353,7 +353,7 @@ __kernel void visc_src_alongz(__global real * d_Src,
                u0_im2*pimn[(i-2)*10+mn], u0_im1*pimn[(i-1)*10+mn],
                u0_i*pimn[i*10+mn], u0_ip1*pimn[(i+1)*10+mn],
                u0_ip2*pimn[(i+2)*10+mn],
-               pr_mh, pr_ph, v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Z)/(tau*DZ);
+               v_mh, v_ph, lam_mh, lam_ph, tau, ALONG_Z)/(tau*DZ);
         }
     }
 }
@@ -436,6 +436,7 @@ __kernel void update_pimn(
                          (real4)(udt.s2, udx.s2, udy.s2, udz.s2),
                          (real4)(udt.s3, udx.s3, udy.s3, udz.s3)};
 
+    // Notice DU = u^{lambda} \partial_{lambda} u^{beta} 
     real DU[4];
     real u[4];
     real ed_step = 0.0f;
@@ -470,11 +471,12 @@ __kernel void update_pimn(
 //#define GUBSER_VISC_TEST
 #ifdef GUBSER_VISC_TEST
     // for gubser visc solution test, use EOS: P=e/3, T=e**1/4, S=e**1/3
+    // where e is in units of fm^{-4}
     real etavH = ETAOS * 4.0f/3.0f;
     real taupiH = LAM1*LAM1*etavH/3.0f;
     one_over_taupi = 1.0f/(taupiH*pow(ed_step, -0.25f));
     real coef_pipi = LAM1/ed_step;
-    etav = ETAOS * pow(ed_step, 1.0f/3.0f);
+    etav = ETAOS * pow(ed_step, 3.0f/4.0f);
     ////////////////////////////////
 #endif
 
@@ -502,11 +504,11 @@ __kernel void update_pimn(
 
             real piNS = etav*sigma;
 
-            //pi_old = (pi1[mn] - piNS)*exp(-one_over_taupi*DT/u[0])
+            //pi_old = (d_pi1[10*I+mn] - piNS)*exp(-one_over_taupi*DT/u[0])
             //         + piNS;
+            //pi_old *= u_old.s0;
 
             pi_old = d_pi1[10*I + mn] * u_old.s0;
-            //pi_old *= u_old.s0;
 
             //pi_old = (pi_old + DT*one_over_taupi*piNS)/(1.0f + DT*one_over_taupi/u_new.s0);
 
@@ -515,10 +517,12 @@ __kernel void update_pimn(
             // */
 
             real src = - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
-            src -= (u[mu]*pi2[idx(nu,0)] + u[nu]*pi2[idx(mu,0)])*DU[0];
-            src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1];
-            src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2];
-            src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3];
+            src -= (u[mu]*pi2[idx(nu,0)] + u[nu]*pi2[idx(mu,0)])*DU[0]*gmn[0][0];
+            src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1]*gmn[1][1];
+            src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2]*gmn[2][2];
+            src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3]*gmn[3][3];
+
+            // src -= one_over_taupi*(pi2[idx(mu, nu)] - piNS);
 
 #ifdef GUBSER_VISC_TEST
             src -= coef_pipi*(PiPi(0, mu, nu, pi2, u) 
@@ -532,10 +536,7 @@ __kernel void update_pimn(
 
             // use implicit method for stiff term; 
             pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
-                      DT*one_over_taupi*piNS) / (1.0f + DT*one_over_taupi/u_new.s0);
-
-            // after kt, before appling stiff term (unstable in explicit Runge-Kutta)
-            pi_old = pi_old/u_new.s0;
+                      DT*one_over_taupi*piNS) / (u_new.s0 + DT*one_over_taupi);
 
             if ( fabs(pi_old) > max_pimn_abs ) max_pimn_abs = fabs(pi_old);
 
