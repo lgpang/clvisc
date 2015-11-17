@@ -94,16 +94,16 @@ __kernel void visc_src_christoffel(
         real4 e_v = d_ev[I];
         real uz = e_v.s3 * gamma(e_v.s1, e_v.s2, e_v.s3);
 
-        d_Src[10*I+0] += 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
-        d_Src[10*I+1] += uz * d_pi1[10*I+idx(1, 3)]/tau;
-        d_Src[10*I+2] += uz * d_pi1[10*I+idx(2, 3)]/tau;
-        d_Src[10*I+3] += uz * (d_pi1[10*I+idx(0, 0)] + d_pi1[10*I+idx(3,3)])/tau;
+        d_Src[10*I+0] -= 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
+        d_Src[10*I+1] -= uz * d_pi1[10*I+idx(1, 3)]/tau;
+        d_Src[10*I+2] -= uz * d_pi1[10*I+idx(2, 3)]/tau;
+        d_Src[10*I+3] -= uz * (d_pi1[10*I+idx(0, 0)] + d_pi1[10*I+idx(3,3)])/tau;
         // d_Src[10*I+4] += 0.0f;
         // d_Src[10*I+5] += 0.0f;
-        d_Src[10*I+6] += uz * d_pi1[10*I+idx(0, 1)]/tau;
+        d_Src[10*I+6] -= uz * d_pi1[10*I+idx(0, 1)]/tau;
         // d_Src[10*I+7] += 0.0f;
-        d_Src[10*I+8] += uz * d_pi1[10*I+idx(0, 2)]/tau;
-        d_Src[10*I+9] += 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
+        d_Src[10*I+8] -= uz * d_pi1[10*I+idx(0, 2)]/tau;
+        d_Src[10*I+9] -= 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
     }
 }
 
@@ -174,6 +174,7 @@ __kernel void visc_src_alongx(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
+        //d_udx[IND] = 0.5f*(umu4(ev_ip1)-umu4(ev_im1))/DX;
         d_udx[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
                                      THETA*(umu4(ev_ip1) - umu4(ev_i))
@@ -255,6 +256,7 @@ __kernel void visc_src_alongy(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
+        //d_udy[IND] = 0.5f*(umu4(ev_ip1)-umu4(ev_im1))/DY;
         d_udy[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
                                      THETA*(umu4(ev_ip1) - umu4(ev_i))
@@ -274,7 +276,7 @@ __kernel void visc_src_alongy(
 
 
 // output: d_Src kt src for pimn evolution;
-// output: d_udy the velocity gradient along x
+// output: d_udz the velocity gradient along etas
 // all the others are input
 __kernel void visc_src_alongz(__global real * d_Src,
                               __global real4 * d_udz,
@@ -339,6 +341,7 @@ __kernel void visc_src_alongz(__global real * d_Src,
         
         real4 christoffel_term = (real4)(ev_i.s3, 0.0f, 0.0f, 1.0f)*u0_i/tau;
         
+        //d_udz[IND] = 0.5f*(umu4(ev_ip1)-umu4(ev_im1))/(tau*DZ) + christoffel_term;
         d_udz[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
                                      THETA*(umu4(ev_ip1) - umu4(ev_i))
@@ -459,7 +462,8 @@ __kernel void update_pimn(
 
     real one_over_taupi = T(ed_step, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
 
-#define GUBSER_VISC_TEST
+// the following definition is switchon if cfg.gubser_visc_test is set to True
+//#define GUBSER_VISC_TEST
 #ifdef GUBSER_VISC_TEST
     // for gubser visc solution test, use EOS: P=e/3, T=e**1/4, S=e**1/3
     real etavH = ETAOS * 4.0f/3.0f;
