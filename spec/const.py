@@ -94,3 +94,7 @@ def rapidity_integral(spec_along_y, ylo=-0.5, yhi=0.5):
     #return quad(f, ylo, yhi, epsrel=1.0E-5)[0]
     tck = splrep(Y, spec_along_y)
     return splint(ylo, yhi, tck)
+
+if __name__ == '__main__':
+    print(phi_integral(np.sin(0.25*PHI)))
+    print(pt_integral(np.exp(-PT)))

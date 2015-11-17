@@ -118,12 +118,13 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     eos = EosWB()
     ed, pr, T = eos.create_table()
-    pr = np.diff(pr[:])
-    plt.plot(ed[:100000], pr[:100000], 'r--')
+    #pr = np.diff(pr[:])
+    #plt.plot(ed[:100000], pr[:100000], 'r--')
+    plt.plot(ed[:100], T[:100], 'r--')
+    plt.plot(ed[:100], pr[:100], 'b--')
 
     T_test = T[1001]
     ed_test = ed[1001]
-    print('ed_=', eos.energy_density(T_test))
-    print(ed_test)
+
     plt.show()
 

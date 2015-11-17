@@ -16,8 +16,8 @@ if __name__=='__main__':
     else :
         event_path = sys.argv[1]
 
-    ylo, yhi = -0.5, 0.5
-    ep_window = (-0.5, 0.5)
+    ylo, yhi = -1.0, 1.0
+    ep_window = (3.3, 3.9)
 
     #charged = spec.Spec(event_path, pid='Charged', rapidity_kind='Eta')
     #charged.get_vn(ylo=ylo, yhi=yhi, event_plane_window=ep_window)

@@ -7,11 +7,13 @@ import numpy as np
 from subprocess import call
 import os
 
-call(['python', 'pyvisc/ideal.py'])
+#call(['python', 'pyvisc/visc.py'])
 cwd = os.getcwd()
 os.chdir('CLSmoothSpec/build')
-call(['./spec', '../../results/event0', '0.137'])
+os.system('cmake -D VISCOUS_ON=OFF ..')
+os.system('make')
+call(['./spec', '../../results/event_etaos0p08'])
 os.chdir(cwd)
-call(['python', 'spec/main.py', 'results/event0'])
+call(['python', 'spec/main.py', 'results/event_etaos0p08'])
 
 
