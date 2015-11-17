@@ -404,7 +404,9 @@ void Spec::initializeCL()
 
         d_SF = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, SizeSF*sizeof(cl_real8), h_SF.data()); //global memory
 
+#ifdef  LOEWE_CSC
         d_pi = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 10*SizeSF*sizeof(cl_real), h_pi.data()); //global memory
+#endif
 
         d_HadronInfo = cl::Buffer( context, CL_MEM_READ_ONLY  | CL_MEM_COPY_HOST_PTR, SizePID*sizeof(cl_real4) , h_HadronInfo.data()); //constant memory
 

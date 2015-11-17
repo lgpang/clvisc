@@ -136,8 +136,8 @@ class Spec:
         for n in xrange(1, 7):
             Vn[n], self.event_plane[n] = cmath.polar(phi_integral(
                         spec_along_phi*np.exp(1j*n*PHI))/norm)
-            #self.event_plane[n] /= float(n)
-            self.event_plane[n] = 0.0
+            self.event_plane[n] /= float(n)
+            #self.event_plane[n] = 0.0
 
 
 
