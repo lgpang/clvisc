@@ -329,7 +329,7 @@ def main():
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     print >>sys.stdout, 'start ...'
     t0 = time()
-    from config import cfg
+    from config import cfg, write_config
     cfg.NX = 201
     cfg.NY = 201
     cfg.NZ = 61
@@ -345,6 +345,7 @@ def main():
     cfg.nzskip = 1
 
     cfg.ETAOS = 0.16
+    write_config(cfg)
 
     visc = CLVisc(cfg, gpu_id=0)
     from glauber import Glauber
@@ -354,6 +355,7 @@ def main():
     visc.evolve(max_loops=2000)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
+
 
 if __name__ == '__main__':
     main()

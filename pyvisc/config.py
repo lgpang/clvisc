@@ -14,30 +14,49 @@ def write_config(configs):
     '''write the current setting to hydro.info in the output directory'''
     fPathOut = configs.fPathOut
     configfile_name = os.path.join(fPathOut, 'hydro.info')
-    if not os.path.isfile(configfile_name):
+    #if not os.path.isfile(configfile_name):
+    with open(configfile_name, 'w') as cfgfile:
         # Create the configuration file as it doesn't exist yet
-        cfgfile = open(configfile_name, 'w')
-    
         # Add content to the file
-        Config = configParser.ConfigParser()
+        Config = configparser.ConfigParser()
         Config.add_section('path')
         Config.set('path', 'fPathIni', configs.fPathIni)
         Config.set('path', 'fPathOut', configs.fPathOut)
         Config.add_section('glauber')
-        Config.set('glauber', 'Edmax', configs.Edmax,
-                   'glauber', 'A', configs.A,
-                   'glauber', 'SQRTS', configs.SQRTS,
-                   'glauber', 'NucleonDensity', configs.NucleonDensity,
-                   'glauber', 'Ra', configs.Ra,
-                   'glauber', 'Eta', configs.Eta,
-                   'glauber', 'Si0', configs.Si0,
-                   'glauber', 'ImpactParameter', configs.ImpactParameter,
-                   'glauber', 'Hwn', configs.Hwn,
-                   'glauber', 'Eta_flat', configs.Eta_flat,
-                   'glauber', 'Eta_gw', configs.Eta_gw)
-                    
+        Config.set('glauber', 'Edmax', configs.Edmax)
+        Config.set('glauber', 'A', configs.A)
+        Config.set('glauber', 'SQRTS', configs.SQRTS)
+        Config.set('glauber', 'NucleonDensity', configs.NucleonDensity)
+        Config.set('glauber', 'Ra', configs.Ra)
+        Config.set('glauber', 'Eta', configs.Eta)
+        Config.set('glauber', 'Si0', configs.Si0)
+        Config.set('glauber', 'ImpactParameter', configs.ImpactParameter)
+        Config.set('glauber', 'Hwn', configs.Hwn)
+        Config.set('glauber', 'Eta_flat', configs.Eta_flat)
+        Config.set('glauber', 'Eta_gw', configs.Eta_gw)
+
+        Config.add_section('geometry')
+        Config.set('geometry', 'NX', configs.NX)
+        Config.set('geometry', 'NY', configs.NY)
+        Config.set('geometry', 'NZ', configs.NZ)
+        Config.set('geometry', 'ntskip', configs.ntskip)
+        Config.set('geometry', 'nxskip', configs.nxskip)
+        Config.set('geometry', 'nyskip', configs.nyskip)
+        Config.set('geometry', 'nzskip', configs.nzskip)
+        Config.set('geometry', 'DT', configs.DT)
+        Config.set('geometry', 'DX', configs.DX)
+        Config.set('geometry', 'DY', configs.DY)
+        Config.set('geometry', 'DZ', configs.DZ)
+
+        Config.add_section('intrinsic')
+        Config.set('intrinsic', 'TAU0', configs.TAU0)
+        Config.set('intrinsic', 'IEOS', configs.IEOS)
+        Config.set('intrinsic', 'TFRZ', configs.TFRZ)
+        Config.set('intrinsic', 'ETAOS', configs.ETAOS)
+        Config.set('intrinsic', 'LAM1', configs.LAM1)
+        Config.set('intrinsic', 'BSZ', configs.BSZ)
+
         Config.write(cfgfile)
-        cfgfile.close()
 
 
 def read_config():
