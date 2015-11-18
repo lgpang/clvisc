@@ -1,0 +1,866 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Note for CLVisc
+\end_layout
+
+\begin_layout Author
+LongGang Pang @ FIAS
+\end_layout
+
+\begin_layout Section
+Equations for relativistic hydrodynamic equations
+\end_layout
+
+\begin_layout Standard
+From previous experience, it looks like the algorithm is more stable if
+ we use 
+\begin_inset Formula $\tau^{2}\pi^{\eta\eta}$
+\end_inset
+
+ instead of 
+\begin_inset Formula $\pi^{\eta\eta}$
+\end_inset
+
+ in numerically solving IS equations.
+ And we already used 
+\begin_inset Formula $\tilde{T}^{\tau\nu}=\tau T^{\tau\nu}$
+\end_inset
+
+ in the 
+\begin_inset Formula $\partial_{;\mu}T^{\mu\nu}=0$
+\end_inset
+
+ equations in solving the 
+\begin_inset Formula $3+1D$
+\end_inset
+
+ ideal hydro.
+ It is thus straight forward for us to use 
+\begin_inset Formula $\tilde{\pi}^{\mu\nu}$
+\end_inset
+
+ instead of 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ in IS equations where 
+\begin_inset Formula $\tilde{\pi}^{\mu\eta}=\tau\pi^{\mu\eta}$
+\end_inset
+
+ when 
+\begin_inset Formula $\mu\neq\eta$
+\end_inset
+
+ and 
+\begin_inset Formula $\tilde{\pi}^{\eta\eta}=\tau^{2}\pi^{\eta\eta}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+The energy momentum conservation equations for 
+\begin_inset Formula $T^{\mu\nu}$
+\end_inset
+
+, charge conservation equations for 
+\begin_inset Formula $N_{B}^{\mu}$
+\end_inset
+
+ and IS equations for 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ are :
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\tilde{\partial}_{\mu}(\tau\tilde{T}^{\mu\nu}) & = & S_{T}^{\nu}\\
+\tilde{\partial}_{\mu}(\tau\tilde{N}_{B}^{\mu}) & = & 0\\
+\tilde{u}^{\mu}\tilde{\partial}_{\mu}\tilde{\pi}^{\mu\nu} & = & -\frac{\tilde{\pi}^{\mu\nu}-\tilde{\pi}_{NS}^{\mu\nu}}{\tau_{\pi}}+S_{\pi}^{\mu\nu}\\
+\tilde{u}^{\mu}\tilde{\partial}_{\mu}\Pi & = & -\frac{\Pi-\Pi_{NS}}{\tau_{\pi}}+S_{\Pi}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\tilde{\partial}_{\mu}\equiv\left\{ \partial_{\tau},\partial_{x},\partial_{y},(1/\tau)\partial_{\eta}\right\} $
+\end_inset
+
+ and 
+\begin_inset Formula $\tilde{u}^{\mu}\equiv\gamma\left\{ 1,v_{x},v_{y},v_{\eta}\right\} =\left\{ u^{\tau},u^{x},u^{y},\tau u^{\eta}\right\} $
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The energy momentum tensors are redefined as:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\begin{cases}
+\tilde{T}^{\mu\nu}=T^{\mu\nu}, & if\ \mu\neq\eta\ and\ \nu\neq\eta\\
+\tilde{T}^{\mu\eta}=\tau T^{\mu\eta} & if\ \mu\neq\eta\\
+\tilde{T}^{\eta\eta}=\tau^{2}T^{\eta\eta}\\
+\tilde{N}_{B}^{\eta}=\tau N_{B}^{\eta}
+\end{cases}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+And the same rule applies to 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ tensors.
+ 
+\end_layout
+
+\begin_layout Standard
+The source terms for energy momentum conservation equations are 
+\begin_inset Formula $S_{T}^{\nu}=\left\{ \tilde{T}^{\eta\eta},0,0,\tilde{T}^{\eta\tau}\right\} $
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+How to keep the traceless and transverse properties of 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ numerically.
+\end_layout
+
+\begin_layout Standard
+The most difficult thing in numerically solving equations for 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ is how to keep the transverse and traceless properties of 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+.
+ 
+\begin_inset Formula 
+\[
+D\pi^{\mu\nu}=-\frac{\pi^{\mu\nu}-\pi_{NS}^{\mu\nu}}{\tau_{\pi}}-\frac{4}{3}\pi^{\mu\nu}\theta-(u^{\mu}\pi^{\nu\alpha}+u^{\nu}\pi^{\mu\alpha})Du_{\alpha}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The terms 
+\begin_inset Formula $\frac{\pi^{\mu\nu}-\pi_{NS}^{\mu\nu}}{\tau_{\pi}}-\frac{4}{3}\pi^{\mu\nu}\theta$
+\end_inset
+
+ are always traceless and transverse analytically.
+ While it is not easy to keep these properties when we calculate the 
+\begin_inset Formula $\partial_{\tau}$
+\end_inset
+
+ and 
+\begin_inset Formula $\partial_{i}$
+\end_inset
+
+ numerically in 
+\begin_inset Formula $D\pi^{\mu\nu}=u^{\alpha}\partial_{;\alpha}\pi^{\mu\nu}$
+\end_inset
+
+.
+ Analytically the transverse property for the rest part of the equation
+ also kept:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+u_{\mu}D\pi^{\mu\nu} & = & -u_{\mu}u^{\mu}(\pi^{\nu\alpha}+0)Du_{\alpha}\\
+u_{\mu}D\pi^{\mu\nu}+\pi^{\nu\alpha}Du_{\alpha} & = & D(u_{\mu}\pi^{\mu\nu})=0
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Numerically 
+\begin_inset Formula 
+\begin{eqnarray*}
+u_{\mu}D\pi^{\mu\nu}+\pi^{\nu\alpha}Du_{\alpha} & = & u_{\mu}^{n+1/2}u^{\alpha}\partial_{;\alpha}(\pi^{\mu\nu})^{n+1/2}+(\pi^{\mu\nu})^{n+1/2}u^{\alpha}\partial_{;\alpha}u_{\mu}^{n+1/2}\\
+ & = & u_{\mu}^{n+1/2}u^{\tau}\partial_{;\tau}(\pi^{\mu\nu})^{n+1/2}+(\pi^{\mu\nu})^{n+1/2}u^{\tau}\partial_{;\tau}u_{\mu}^{n+1/2}\\
+ & + & u_{\mu}^{n+1/2}u^{i}\partial_{;i}(\pi^{\mu\nu})^{n+1/2}+(\pi^{\mu\nu})^{n+1/2}u^{i}\partial_{;i}u_{\mu}^{n+1/2}\\
+ & = & f(u_{\mu}^{n+1/2},(\pi^{\mu\nu})^{n+1/2},u_{\mu}^{n},u_{\mu}^{n+1},(\pi^{\mu\nu})^{n},(\pi^{\mu\nu})^{n+1},\tau^{n+1/2})
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where the fluid velocity and shear viscous tensor at 3 different time steps
+ 
+\begin_inset Formula $n,n+1/2,n+1$
+\end_inset
+
+ are needed.
+ This also happens for the 
+\begin_inset Formula $\pi_{NS}^{\mu\nu}$
+\end_inset
+
+ where
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\pi_{NS}^{\mu\nu}=(g^{\mu\alpha}\partial_{;\alpha}u^{\nu}+g^{\nu\alpha}\partial_{;\alpha}u^{\mu})-D(u^{\mu}u^{\nu})-\frac{2}{3}\Delta^{\mu\nu}\theta
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to preserve the traceless and transverse properties 
+\begin_inset Formula $u_{\mu}\pi_{NS}^{\mu\nu}=0$
+\end_inset
+
+ and 
+\begin_inset Formula $g_{\mu\nu}\pi_{NS}^{\mu\nu}=0$
+\end_inset
+
+, the 
+\begin_inset Formula $u_{\mu}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pi_{NS}^{\mu\nu}$
+\end_inset
+
+ should be calculated at the same proper time 
+\begin_inset Formula $\tau$
+\end_inset
+
+.
+ In other words the 
+\begin_inset Formula $A^{n}$
+\end_inset
+
+ and 
+\begin_inset Formula $A^{n+1}$
+\end_inset
+
+ terms are needed to get the time derivatives for 
+\begin_inset Formula $A^{n+1/2}$
+\end_inset
+
+, while the other 
+\begin_inset Formula $A^{n+1/2}$
+\end_inset
+
+ terms are needed for spatial derivatives.
+ It is expensive to use 
+\begin_inset Formula $A$
+\end_inset
+
+ at 3 time steps 
+\begin_inset Formula $n,n+1/2,n+1$
+\end_inset
+
+ for one step update.
+ And it is also not possible to get accurate values of fluid velocity at
+ these 3 different time steps since accurate 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ are needed in 
+\begin_inset Formula $\nabla_{\mu}T^{\mu\nu}=0$
+\end_inset
+
+ equations.
+ The IS equations and relay on each other to get one accurate solution.
+\end_layout
+
+\begin_layout Subsection
+Method of Direk Teney
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\partial_{;\alpha}(su^{\alpha}\pi^{\mu\nu}) & = & \pi^{\mu\nu}\partial_{;\alpha}(su^{\alpha})-s\frac{\pi^{\mu\nu}-\pi_{NS}^{\mu\nu}}{\tau_{\pi}}-\frac{4s}{3}\pi^{\mu\nu}\theta-s(u^{\mu}\pi^{\nu\alpha}+u^{\nu}\pi^{\mu\alpha})Du_{\alpha}\\
+ & = & \pi^{\mu\nu}\pi^{\alpha\beta}\sigma_{\alpha\beta}-s\frac{\pi^{\mu\nu}-\pi_{NS}^{\mu\nu}}{\tau_{\pi}}-\frac{4s}{3}\pi^{\mu\nu}\theta-s(u^{\mu}\pi^{\nu\alpha}+u^{\nu}\pi^{\mu\alpha})Du_{\alpha}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+And use implict method for the stiff term:
+\begin_inset Formula 
+\[
+\frac{dy}{dt}=f(y)+\frac{g(y)}{\tau_{\pi}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The discrete form is:
+\begin_inset Formula 
+\[
+y^{n+1}=y^{n}+\Delta tf(y)+\frac{\Delta t}{\tau_{\pi}}g(y^{n+1})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Numerical methods
+\end_layout
+
+\begin_layout Subsection
+Finite-volume method
+\end_layout
+
+\begin_layout Standard
+For fluid dynamic equations having the form
+\begin_inset Formula 
+\[
+\frac{\partial U}{\partial t}+\frac{\partial F}{\partial x}+\frac{\partial G}{\partial y}+\frac{\partial H}{\partial z}=other
+\]
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Standard
+The finite volume method is simple conceptually, where the change of conserved
+ quantities in time equals to the residual in volume between in flux and
+ out flux.
+ Which is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{dU}{dt} & = & Src\\
+ & = & (F_{out}^{*}-F_{in}^{*})/dx\\
+ & + & (G_{out}^{*}-G_{in}^{*})/dy\\
+ & + & (H_{out}^{*}-H_{in}^{*})/dz\\
+ & + & other
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The time derivatives can be solved by 2nd order Runge-Kutta method as shown
+ in the follows,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{eqnarray*}
+U^{*} & = & U^{n}+\Delta t\times Src^{n}\\
+Src^{n+1*} & = & Src(U^{*},v_{i}^{*})\\
+U^{n+1} & = & U^{n}+0.5\Delta t\times(Src^{n}+Src^{n+1*})
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The idea behind this method is to get a prediction 
+\begin_inset Formula $Src^{n+1/2}$
+\end_inset
+
+ for 
+\begin_inset Formula $\frac{dU}{dt}$
+\end_inset
+
+ at time step 
+\begin_inset Formula $n+\frac{1}{2}$
+\end_inset
+
+, from which one get much more accurate results than doing time update with
+ 
+\begin_inset Formula $U^{n+1}=U^{n}+\Delta t\times Src^{n}$
+\end_inset
+
+ or 
+\begin_inset Formula $U^{n+1}=U^{n}+\Delta t\times Src^{n+1}$
+\end_inset
+
+.
+ It thus inpire us to do the step update in the following way,
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $T_{id}^{\mu\nu}\rightarrow T_{id}^{\mu\nu*}$
+\end_inset
+
+ to get predictions of 
+\begin_inset Formula $u_{ideal}^{n+1*}$
+\end_inset
+
+, 
+\begin_inset Formula $\epsilon_{ideal}^{n+1*}$
+\end_inset
+
+ and 
+\begin_inset Formula $n_{ideal}^{n+1*}$
+\end_inset
+
+ .
+ The time derivative 
+\begin_inset Formula $\frac{\partial u^{\mu}}{\partial\tau}$
+\end_inset
+
+ can be corrected from the difference between 
+\begin_inset Formula $u_{ideal}^{\mu,n*}$
+\end_inset
+
+ and 
+\begin_inset Formula $u_{visc}^{\mu,n}$
+\end_inset
+
+ at last time step.
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\pi^{\mu\nu}\rightarrow\pi^{\mu\nu*}$
+\end_inset
+
+ with spatial derivatives 
+\begin_inset Formula $\frac{\partial u^{\mu}}{\partial x}$
+\end_inset
+
+ calculated from 
+\begin_inset Formula $u_{visc}^{n}$
+\end_inset
+
+, and time derivatives 
+\begin_inset Formula $\frac{\partial u^{\mu}}{\partial\tau}$
+\end_inset
+
+ from the ideal prediction + viscous correction.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $T_{id}^{\mu\nu}+\pi^{\mu\nu}\rightarrow T_{id}^{\mu\nu*}+\pi^{\mu\nu*}$
+\end_inset
+
+, with the 
+\begin_inset Formula $(\pi^{\mu\nu*})^{n+1}$
+\end_inset
+
+ given by the previous step, one can get 
+\begin_inset Formula $u_{visc}^{n+1*}$
+\end_inset
+
+, 
+\begin_inset Formula $\epsilon_{visc}^{n+1*}$
+\end_inset
+
+ and 
+\begin_inset Formula $n_{visc}^{n+1*}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $\pi^{\mu\nu}\rightarrow(\pi^{\mu\nu})^{n+1}$
+\end_inset
+
+, with the spatial derivatives 
+\begin_inset Formula $(\frac{\partial u^{\mu}}{\partial x})^{n+1*}$
+\end_inset
+
+ and time derivatives between 
+\begin_inset Formula $u_{visc}^{n}$
+\end_inset
+
+ and 
+\begin_inset Formula $u_{visc}^{n+1*}$
+\end_inset
+
+.
+ Notice that in 
+\begin_inset Formula $Src^{n}$
+\end_inset
+
+ for 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ we used 
+\begin_inset Formula $u_{visc}^{n}$
+\end_inset
+
+ for spatial difference and for 
+\begin_inset Formula $Src^{n+1}$
+\end_inset
+
+ we used 
+\begin_inset Formula $u_{visc}^{n+1*}$
+\end_inset
+
+ for spatial difference, the average gives accurate spatial derivatives
+ at time step 
+\begin_inset Formula $n+\frac{1}{2}$
+\end_inset
+
+.
+ And both time derivatives are calculated at 
+\begin_inset Formula $n+\frac{1}{2}$
+\end_inset
+
+.
+ The 
+\begin_inset Formula $\pi^{\mu\nu}$
+\end_inset
+
+ calculation is accurate enough for the next step.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $T_{id}^{\mu\nu}+\pi^{\mu\nu}\rightarrow(T_{id}^{\mu\nu}+\pi^{\mu\nu})^{n+1}$
+\end_inset
+
+ , and update 
+\begin_inset Formula $u_{visc}^{n+1}$
+\end_inset
+
+, 
+\begin_inset Formula $\epsilon_{visc}^{n+1}$
+\end_inset
+
+ and 
+\begin_inset Formula $n_{visc}^{n+1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+FCT-Shasta algorithm
+\end_layout
+
+\begin_layout Subsection
+KT algorithm
+\end_layout
+
+\begin_layout Standard
+KT algorithm is 1st order for local extrema and 2nd order for smooth region,
+ due to the strong limiter used, like the minmod limiter.
+\end_layout
+
+\begin_layout Standard
+For energy momentum conservation and net baryon conservation equations one
+ can use KT algorithm, where the flux at 
+\begin_inset Formula $i-1/2$
+\end_inset
+
+ and 
+\begin_inset Formula $i+1/2$
+\end_inset
+
+ are calculated from piecewise linear interpolation.
+\end_layout
+
+\begin_layout Standard
+The maximum propagation speed is not easy to calculate, from Bjorn Schenke's
+ paper, the maximum propagation speed of signal is,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\lambda_{k}^{max}=\frac{|A|+\sqrt{B}}{D}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+where 
+\begin_inset Formula 
+\begin{eqnarray*}
+A & = & u^{\tau}u^{k}(1-c_{s}^{2})\\
+B & = & \left[u_{\tau}^{2}-u_{k}^{2}-(u_{\tau}^{2}-u_{k}^{2}-1)c_{s}^{2}\right]c_{s}^{2}\\
+D & = & u_{\tau}^{2}-(u_{\tau}^{2}-1)c_{s}^{2}
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Formula $c_{s}^{2}=P/\epsilon$
+\end_inset
+
+ is the speed of sound.
+ For 
+\begin_inset Formula $k=\eta_{s}$
+\end_inset
+
+ direction, 
+\begin_inset Formula $\lambda_{\eta_{s}}=\lambda_{k\rightarrow\eta_{s}}/\tau$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Exact Riemann Solver
+\end_layout
+
+\begin_layout Standard
+It is not able to get exact Riemann solution analyticaly.
+ Currently one can only get the exact Riemann solution by itertavely solving
+ some coupled equations.
+ 
+\end_layout
+
+\begin_layout Subsection
+Roe's approximate Riemann Solver
+\end_layout
+
+\begin_layout Standard
+It is difficult to get eigen vectors and eigen values from Jacobi matrix
+ 
+\begin_inset Formula $A_{n}=\frac{\partial H_{n}}{\partial U}$
+\end_inset
+
+.
+ There is well-known non-linear instability.
+ 
+\end_layout
+
+\begin_layout Subsection
+HLL's approximate Riemann Solver
+\end_layout
+
+\begin_layout Standard
+Dissipative, especially for shear layer (parallel to short front).
+\end_layout
+
+\begin_layout Subsection
+Rotated Roe-HLL or Roe-Rusanove Riemann Solver
+\end_layout
+
+\begin_layout Standard
+Look for the flow vector 
+\begin_inset Formula $n_{1}$
+\end_inset
+
+ that is perpendicular to shock front and the flow vector 
+\begin_inset Formula $n_{2}$
+\end_inset
+
+ that is parallel to shock front.
+ The layer that parallel to shock front is also called shear layer.
+ It is known that when the velocity difference is small along shear layer,
+ purterbations along shear layer can introduce non-linear instability.
+ It thus straight forward to use 2 different fluxes along 
+\begin_inset Formula $n_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $n_{2}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\mathbf{n}_{1}=\begin{cases}
+\frac{\Delta\mathbf{q}}{||\Delta\mathbf{q}||}, & if\ ||\Delta\mathbf{q}||>\epsilon\\
+\mathbf{n} & otherwise
+\end{cases}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Where 
+\begin_inset Formula $\mathbf{n}$
+\end_inset
+
+ is the norm vector determined by grids, and 
+\begin_inset Formula $\Delta\mathbf{q}=(\Delta u,\Delta v)=(u_{R}-u_{L},v_{R}-v_{L})$
+\end_inset
+
+ and 
+\begin_inset Formula $||\Delta\mathbf{q}||=\sqrt{(\Delta u)^{2}+(\Delta v)^{2}}$
+\end_inset
+
+ , the 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ is a very small number.
+ The 
+\begin_inset Formula $\mathbf{n_{1}}$
+\end_inset
+
+ is chosen to normal to a shock or parallel to a shear.
+ 
+\end_layout
+
+\begin_layout Section
+OpenCL 
+\end_layout
+
+\begin_layout Subsection
+How to run the code on Macbook pro
+\end_layout
+
+\begin_layout Standard
+The header files in macbook pro is different, for C programs in host side,
+ one needs to include OpenCL/opencl.h, for C++ programs in host side, one
+ needs to download the cl.hpp and move it to /System/Library/Frameworks/OpenCL.fra
+mework/.
+ In order to compile it with 'clang', use the command 
+\begin_inset Quotes eld
+\end_inset
+
+clang -o main main.cpp -framework OpenCL
+\begin_inset Quotes erd
+\end_inset
+
+.
+ CMake can be used to make the compilation in different systems portable.
+\end_layout
+
+\begin_layout Subsection
+CLVisc in python
+\end_layout
+
+\begin_layout Standard
+With the help of pyopencl, the heavy computing can be done on GPU and the
+ host side code is used to read configurations, set up opencl envirements
+ and do data analysis.
+ 
+\end_layout
+
+\begin_layout Standard
+The importance of concurrent reading from Global memory,
+\end_layout
+
+\end_body
+\end_document
