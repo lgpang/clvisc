@@ -497,17 +497,10 @@ __kernel void update_pimn(
             if ( u[0] > 100.0f ) {
                 sigma = 0.0f;
             }
-            real pi_old;
 
             real piNS = etav*sigma;
 
-            //pi_old = (d_pi1[10*I+mn] - piNS)*exp(-one_over_taupi*DT/u[0])
-            //         + piNS;
-            //pi_old *= u_old.s0;
-
-            pi_old = d_pi1[10*I + mn] * u_old.s0;
-
-            //pi_old = (pi_old + DT*one_over_taupi*piNS)/(1.0f + DT*one_over_taupi/u_new.s0);
+            real pi_old = d_pi1[10*I + mn] * u_old.s0;
 
             // /** step==1: Q' = Q0 + Src*DT
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
@@ -519,7 +512,6 @@ __kernel void update_pimn(
             src -= (u[mu]*pi2[idx(nu,2)] + u[nu]*pi2[idx(mu,2)])*DU[2]*gmn[2][2];
             src -= (u[mu]*pi2[idx(nu,3)] + u[nu]*pi2[idx(mu,3)])*DU[3]*gmn[3][3];
 
-            // src -= one_over_taupi*(pi2[idx(mu, nu)] - piNS);
 
 #ifdef GUBSER_VISC_TEST
             src -= one_over_taupi*coef_pipi*(PiPi(0, mu, nu, pi2, u) 
@@ -527,7 +519,6 @@ __kernel void update_pimn(
                 -PiPi(2, mu, nu, pi2, u)
                 -PiPi(3, mu, nu, pi2, u));
 #endif
-
 
             d_Src[idn(I, mn)] += src;
 
