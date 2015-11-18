@@ -186,6 +186,8 @@ class CLVisc(object):
                 self.d_IS_src, self.d_udz, self.d_pi[step], self.ideal.d_ev[step],
                 self.eos_table, self.ideal.tau).wait()
 
+        # for step==1, d_ev[2] is useless, since u_new = u_old + d_udiff
+        # for step==2, d_ev[2] is used to calc u_new
         self.kernel_IS.update_pimn(self.queue, (NX*NY*NZ,), None,
                 #needs_update      not_important    start_point   src_for_RK
                 self.d_pi[3-step], self.d_goodcell, self.d_pi[1], self.d_pi[step],
@@ -294,10 +296,10 @@ class CLVisc(object):
                 self.ideal.bulkinfo.get(self.ideal.tau,
                         self.ideal.d_ev[1], self.ideal.edmax)
 
-            if save_pi:
+            if save_pi and loop % self.cfg.ntskip == 0:
                 self.pimn_info.get(self.ideal.tau, self.d_pi[1])
 
-            # store d_pi[0]
+            # store d_pi[0] for self.visc_stepUpdate()
             cl.enqueue_copy(self.queue, self.d_pi[0],
                             self.d_pi[1]).wait()
 
