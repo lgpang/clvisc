@@ -48,7 +48,7 @@ def GetLimit(tau_input=1.0, L_input=10.0, lam1_input=10.0):
 ##### Use GPU parallel to calculate the ini condition for Ed, u^{mu} and pi^{mu nu} 
 def CreateIni(ctx, queue, d_ev, d_pi, tau=1.0, L=10.0, lam1=10.0, NX=201, NY=201, NZ=6,
               DX=0.1, DY=0.1, DZ=0.3, fout='BoWenIni_Lam10_L10_gpu.dat'):
-    pixx, pixy, piyy = GetLimit( tau, L, lam1 )
+    pixx, pixy, piyy = GetLimit(tau, L, lam1)
     cwd, cwf = os.path.split(__file__)
     prg_src = open(os.path.join(cwd, '../kernel/kernel_gubser_visc.cl'), 'r').read()
     options = ['-D NX=%s'%NX, '-D NY=%s'%NY, '-D NZ=%s'%NZ, '-D DX=%s'%DX, '-D DY=%s'%DY, '-D DZ=%s'%DZ, '-D tau=%s'%tau, '-D L=%s'%L, '-D lam1=%s'%lam1]
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     cfg.DX = 0.05
     cfg.DY = 0.05
     cfg.LAM1 = Lam
-    cfg.ntskip = 10
+    cfg.ntskip = 100
     cfg.gubser_visc_test = True
     visc = CLVisc(cfg)
     ctx = visc.ctx
@@ -92,25 +92,24 @@ if __name__ == '__main__':
 
     visc.update_udiff(visc.ideal.d_ev[1], visc.ideal.d_ev[2])
 
-    visc.evolve(max_loops=200, force_run_to_maxloop=True, save_bulk=False,
+    visc.evolve(max_loops=1200, force_run_to_maxloop=True, save_bulk=False,
                 plot_bulk=True, save_hypersf=False, save_pi=True)
 
     bulk = visc.ideal.bulkinfo
     pimn = visc.pimn_info
 
     import matplotlib.pyplot as plt
-    q = 1/L
     fig, ax = plt.subplots(2, 2, figsize=(10, 5))
 
-    for i in range(10):
+    for i in range(11):
         ax[0, 0].plot(bulk.x, bulk.ex[i])
         ax[0, 0].plot(bulk.x, gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), '--')
 
-    for i in range(10):
+    for i in range(11):
         ax[0, 1].plot(bulk.x, bulk.vx[i])
         ax[0, 1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), '--')
 
-    for i in range(10):
+    for i in range(11):
         tau = 1.0 + i*cfg.ntskip*cfg.DT
         ax[1, 0].plot(pimn.x, pimn.pimn_x[i])
         ax[1, 0].plot(pimn.x, tau*tau*gubser_pizz(tau, bulk.x, L, Lam), '--')
