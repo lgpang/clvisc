@@ -98,10 +98,7 @@ __kernel void visc_src_christoffel(
         d_Src[10*I+1] -= uz * d_pi1[10*I+idx(1, 3)]/tau;
         d_Src[10*I+2] -= uz * d_pi1[10*I+idx(2, 3)]/tau;
         d_Src[10*I+3] -= uz * (d_pi1[10*I+idx(0, 0)] + d_pi1[10*I+idx(3,3)])/tau;
-        // d_Src[10*I+4] += 0.0f;
-        // d_Src[10*I+5] += 0.0f;
         d_Src[10*I+6] -= uz * d_pi1[10*I+idx(0, 1)]/tau;
-        // d_Src[10*I+7] += 0.0f;
         d_Src[10*I+8] -= uz * d_pi1[10*I+idx(0, 2)]/tau;
         d_Src[10*I+9] -= 2.0f * uz * d_pi1[10*I+idx(0, 3)]/tau;
     }
@@ -476,7 +473,7 @@ __kernel void update_pimn(
     real taupiH = LAM1*LAM1*etavH/3.0f;
     one_over_taupi = 1.0f/(taupiH*pow(ed_step, -0.25f));
     real coef_pipi = LAM1/ed_step;
-    etav = ETAOS * pow(ed_step, 3.0f/4.0f);
+    etav = ETAOS * 4.0f/3.0f * pow(ed_step, 0.75f);
     ////////////////////////////////
 #endif
 
@@ -525,7 +522,7 @@ __kernel void update_pimn(
             // src -= one_over_taupi*(pi2[idx(mu, nu)] - piNS);
 
 #ifdef GUBSER_VISC_TEST
-            src -= coef_pipi*(PiPi(0, mu, nu, pi2, u) 
+            src -= one_over_taupi*coef_pipi*(PiPi(0, mu, nu, pi2, u) 
                 -PiPi(1, mu, nu, pi2, u)
                 -PiPi(2, mu, nu, pi2, u)
                 -PiPi(3, mu, nu, pi2, u));
