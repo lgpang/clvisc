@@ -16,6 +16,9 @@ int lid = get_local_id(0);
 
 __local real xmax[ REDUCTION_BSZ ];  // REDUCTION_BSZ=Block size
 
+// initialize with -maxfloat in case NX*NY*NZ<256*64
+xmax[lid] = -MAXFLOAT;
+
 if ( gid < size ) xmax[lid] = x[gid].s0;
 
 while ( (int)(gid+get_global_size(0)) < size ) {
