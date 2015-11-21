@@ -25,10 +25,10 @@ class Eos(object):
         hbarc = 0.1973269
         dof = 169.0/4.0
         coef = np.pi*np.pi/30.0
-        self.f_P = lambda ed: ed/3.0
-        self.f_T = lambda ed: hbarc*np.power(1.0/(dof*coef)*ed/hbarc, 0.25) + 1.0E-10
-        self.f_S = lambda ed: (ed + self.f_P(ed))/self.f_T(ed)
-        self.f_ed = lambda T: dof*coef*hbarc*(T/hbarc)**4.0
+        self.f_P = lambda ed: np.array(ed)/3.0
+        self.f_T = lambda ed: hbarc*(1.0/(dof*coef)*np.array(ed)/hbarc)**0.25 + 1.0E-10
+        self.f_S = lambda ed: (np.array(ed) + self.f_P(ed))/self.f_T(ed)
+        self.f_ed = lambda T: dof*coef*hbarc*(np.array(T)/hbarc)**4.0
         self.ed = np.linspace(0, 1999.99, 200000)
         self.pr = self.f_P(self.ed)
         self.T = self.f_T(self.ed)

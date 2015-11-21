@@ -71,12 +71,12 @@ if __name__ == '__main__':
     Lam = -10.0
     L = 5.0
     cfg.TAU0 = 1.0
-    cfg.NX = 405
-    cfg.NY = 405
+    cfg.NX = 251
+    cfg.NY = 251
     cfg.NZ = 1
-    cfg.DT = 0.005
-    cfg.DX = 0.05
-    cfg.DY = 0.05
+    cfg.DT = 0.01
+    cfg.DX = 0.08
+    cfg.DY = 0.08
     cfg.LAM1 = Lam
     cfg.ntskip = 100
     cfg.gubser_visc_test = True
@@ -92,26 +92,42 @@ if __name__ == '__main__':
 
     visc.update_udiff(visc.ideal.d_ev[1], visc.ideal.d_ev[2])
 
-    visc.evolve(max_loops=1200, force_run_to_maxloop=True, save_bulk=False,
+    visc.evolve(max_loops=500, force_run_to_maxloop=True, save_bulk=False,
                 plot_bulk=True, save_hypersf=False, save_pi=True)
 
     bulk = visc.ideal.bulkinfo
     pimn = visc.pimn_info
 
     import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(2, 2, figsize=(10, 5))
+    fig, ax = plt.subplots(2, 2, figsize=(10, 10))
 
-    for i in range(11):
-        ax[0, 0].plot(bulk.x, bulk.ex[i])
-        ax[0, 0].plot(bulk.x, gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), '--')
+    fontsize = 25
 
-    for i in range(11):
+    for i in range(5):
+        ax[0, 0].plot(bulk.x, np.log(bulk.ex[i]), label='CLVisc')
+        ax[0, 0].plot(bulk.x, np.log(gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam)), 'o', label='Gubser', ms=2)
+        ax[0, 0].set_xlabel(r'$r_{\perp}$', fontsize=25)
+        ax[0, 0].set_ylabel(r'$\epsilon$', fontsize=25)
+
+    for i in range(5):
         ax[0, 1].plot(bulk.x, bulk.vx[i])
-        ax[0, 1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), '--')
+        ax[0, 1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), 'o', ms=2)
+        ax[0, 1].set_xlabel(r'$r_{\perp}$', fontsize=25)
+        ax[0, 1].set_ylabel(r'$v_r$', fontsize=25)
 
-    for i in range(11):
+    for i in range(5):
         tau = 1.0 + i*cfg.ntskip*cfg.DT
-        ax[1, 0].plot(pimn.x, pimn.pimn_x[i])
-        ax[1, 0].plot(pimn.x, tau*tau*gubser_pizz(tau, bulk.x, L, Lam), '--')
+        ax[1, 0].plot(pimn.x, pimn.pizz_x[i])
+        ax[1, 0].plot(pimn.x, tau*tau*gubser_pizz(tau, bulk.x, L, Lam), 'o', ms=2)
+        ax[1, 0].set_xlabel(r'$r_{\perp}$', fontsize=25)
+        ax[1, 0].set_ylabel(r'$\tau^2 pi^{\eta\eta}$', fontsize=25)
 
+    for i in range(5):
+        tau = 1.0 + i*cfg.ntskip*cfg.DT
+        ax[1, 1].plot(pimn.x, pimn.pixx_x[i])
+        ax[1, 1].plot(pimn.x, -0.5*tau*tau*gubser_pizz(tau, bulk.x, L, Lam), 'o', ms=2)
+        ax[1, 1].set_xlabel(r'$r_{\perp}$', fontsize=25)
+        ax[1, 1].set_ylabel(r'$\pi^{xx}$', fontsize=25)
+
+    plt.legend(loc='best')
     plt.show()

@@ -9,8 +9,11 @@ import os
 from time import time
 from glob import glob
 
-from pyvisc.config import cfg
-from pyvisc.visc import CLVisc
+import os, sys
+cwd, cwf = os.path.split(__file__)
+sys.path.append(os.path.join(cwd, '../pyvisc'))
+from config import cfg
+from visc import CLVisc
 
 def event_by_event(fname_partons, fout):
     if not os.path.exists(fout):
@@ -26,13 +29,13 @@ def event_by_event(fname_partons, fout):
     cfg.ntskip = 60
 
     cfg.TAU0 = 0.4
-    cfg.ETAOS = 0.08
+    cfg.ETAOS = 0.16
     cfg.fPathOut = fout
 
     t0 = time()
     visc = CLVisc(cfg)
     visc.create_ini_from_partons(fname_partons, SIGR=0.6, SIGZ=0.6, KFACTOR=1.2)
-    visc.evolve(max_loops=2400, save_hypersf=True, save_bulk=False)
+    visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=False)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
@@ -46,9 +49,9 @@ for i, fname in enumerate(finis):
     
     cwd = os.getcwd()
     
-    os.chdir('CLSmoothSpec/build')
+    os.chdir('../CLSmoothSpec/build')
     #os.system('cmake -D VISCOUS_ON=ON ..')
     #os.system('make')
     call(['./spec', fpath_out])
     os.chdir(cwd)
-    call(['python', 'spec/main.py', fpath_out])
+    call(['python', '../spec/main.py', fpath_out])
