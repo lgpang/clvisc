@@ -47,6 +47,7 @@ class BulkInfo(object):
         self.z = np.linspace(-NZ/2*cfg.DZ, NZ/2*cfg.DZ, NZ)
 
 
+
     def __loadAndBuildCLPrg(self):
         #load and build *.cl programs with compile self.gpu_defines
         edslice_src = '''#include"real_type.h"
@@ -173,22 +174,25 @@ class BulkInfo(object):
         self.ecc2_vs_rapidity.append(ecc2)
         
     def save(self):
-        np.savetxt(self.cfg.fPathOut+'/ex.dat', np.array(self.ex).T)
-        np.savetxt(self.cfg.fPathOut+'/ey.dat', np.array(self.ey).T)
-        np.savetxt(self.cfg.fPathOut+'/ez.dat', np.array(self.ez).T)
+        # use absolute path incase call bulkinfo.save() from other directory
+        path_out = os.path.abspath(self.cfg.fPathOut)
 
-        np.savetxt(self.cfg.fPathOut+'/Tx.dat', self.eos.f_T(np.array(self.ex).T))
-        np.savetxt(self.cfg.fPathOut+'/Ty.dat', self.eos.f_T(np.array(self.ey).T))
-        np.savetxt(self.cfg.fPathOut+'/Tz.dat', self.eos.f_T(np.array(self.ez).T))
+        np.savetxt(path_out+'/ex.dat', np.array(self.ex).T)
+        np.savetxt(path_out+'/ey.dat', np.array(self.ey).T)
+        np.savetxt(path_out+'/ez.dat', np.array(self.ez).T)
 
-        np.savetxt(self.cfg.fPathOut+'/vx.dat', np.array(self.vx).T)
-        np.savetxt(self.cfg.fPathOut+'/vy.dat', np.array(self.vy).T)
-        np.savetxt(self.cfg.fPathOut+'/vz.dat', np.array(self.vz).T)
+        np.savetxt(path_out+'/Tx.dat', self.eos.f_T(self.ex).T)
+        np.savetxt(path_out+'/Ty.dat', self.eos.f_T(self.ey).T)
+        np.savetxt(path_out+'/Tz.dat', self.eos.f_T(self.ez).T)
+
+        np.savetxt(path_out+'/vx.dat', np.array(self.vx).T)
+        np.savetxt(path_out+'/vy.dat', np.array(self.vy).T)
+        np.savetxt(path_out+'/vz.dat', np.array(self.vz).T)
 
         if len(self.ecc2_vs_rapidity) != 0:
-            np.savetxt(self.cfg.fPathOut+'/ecc2.dat',
+            np.savetxt(path_out+'/ecc2.dat',
                        np.array(self.ecc2_vs_rapidity).T)
-            np.savetxt(self.cfg.fPathOut+'/ecc1.dat',
+            np.savetxt(path_out+'/ecc1.dat',
                        np.array(self.ecc1_vs_rapidity).T)
 
         ecc2 = []
@@ -196,19 +200,19 @@ class BulkInfo(object):
         for idx, exy in enumerate(self.exy):
             vx= self.vx_xy[idx]
             vy= self.vy_xy[idx]
-            np.savetxt(self.cfg.fPathOut+'/edxy%d.dat'%idx, exy)
-            np.savetxt(self.cfg.fPathOut+'/Txy%d.dat'%idx, self.eos.f_T(exy))
-            np.savetxt(self.cfg.fPathOut+'/vx_xy%d.dat'%idx, vx)
-            np.savetxt(self.cfg.fPathOut+'/vy_xy%d.dat'%idx, vy)
+            np.savetxt(path_out+'/edxy%d.dat'%idx, exy)
+            np.savetxt(path_out+'/Txy%d.dat'%idx, self.eos.f_T(exy))
+            np.savetxt(path_out+'/vx_xy%d.dat'%idx, vx)
+            np.savetxt(path_out+'/vy_xy%d.dat'%idx, vy)
 
             ecc1.append(self.eccp(exy, vx, vy)[0])
             ecc2.append(self.eccp(exy, vx, vy)[1])
         
         for idx, exz in enumerate(self.exz):
-            np.savetxt(self.cfg.fPathOut+'/edxz%d.dat'%idx, exz)
-            np.savetxt(self.cfg.fPathOut+'/Txz%d.dat'%idx, self.eos.f_T(exz))
-        np.savetxt(self.cfg.fPathOut + '/eccp.dat',
+            np.savetxt(path_out+'/edxz%d.dat'%idx, exz)
+            np.savetxt(path_out+'/Txz%d.dat'%idx, self.eos.f_T(exz))
+        np.savetxt(path_out + '/eccp.dat',
                    np.array(zip(self.time, ecc2)))
 
-        np.savetxt(self.cfg.fPathOut + '/Tmax.dat',
+        np.savetxt(path_out + '/Tmax.dat',
                    np.array(zip(self.time, self.eos.f_T(self.edmax))))
