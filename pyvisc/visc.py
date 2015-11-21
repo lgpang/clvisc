@@ -346,7 +346,7 @@ def main():
     cfg.nyskip = 2
     cfg.nzskip = 1
 
-    cfg.ETAOS = 0.16
+    cfg.ETAOS = 0.08
     write_config(cfg)
 
     visc = CLVisc(cfg, gpu_id=0)

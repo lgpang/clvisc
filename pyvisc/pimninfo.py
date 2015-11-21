@@ -27,7 +27,9 @@ class PimnInfo(object):
         NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
         # pimn_x stores pi00, pi01, pi02, pi03, pi11, pi12, pi13
         # pi22, pi23, pi33 along x for (y=0, etas=0)
-        self.pimn_x = []
+        self.pixx_x = []
+        self.piyy_x = []
+        self.pizz_x = []
         self.time = []
         self.__loadAndBuildCLPrg()
 
@@ -80,9 +82,14 @@ class PimnInfo(object):
 
         cl.enqueue_copy(self.queue, h_pix, d_pix).wait()
 
-        self.pimn_x.append(h_pix.reshape(NX, 10)[:, 9])
+        pimn_x = h_pix.reshape(NX, 10)
+        self.pixx_x.append(pimn_x[:, 4])
+        self.piyy_x.append(pimn_x[:, 7])
+        self.pizz_x.append(pimn_x[:, 9])
 
        
     def save(self):
-        np.savetxt(self.cfg.fPathOut+'/pizz_x.dat', np.array(self.pimn_x).T)
+        np.savetxt(self.cfg.fPathOut+'/pizz_x.dat', np.array(self.pizz_x).T)
+        np.savetxt(self.cfg.fPathOut+'/pixx_x.dat', np.array(self.pixx_x).T)
+        np.savetxt(self.cfg.fPathOut+'/piyy_x.dat', np.array(self.piyy_x).T)
 

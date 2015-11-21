@@ -19,9 +19,9 @@ from config import cfg
 class TestBjorken(unittest.TestCase):
     def setUp(self):
         self.cfg = cfg
-        self.cfg.NX = 5
-        self.cfg.NY = 5
-        self.cfg.NZ = 5
+        self.cfg.NX = 1
+        self.cfg.NY = 1
+        self.cfg.NZ = 1
         self.cfg.IEOS = 0
         self.ideal = CLIdeal(self.cfg)
         self.ctx = self.ideal.ctx
