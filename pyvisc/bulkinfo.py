@@ -177,9 +177,9 @@ class BulkInfo(object):
         np.savetxt(self.cfg.fPathOut+'/ey.dat', np.array(self.ey).T)
         np.savetxt(self.cfg.fPathOut+'/ez.dat', np.array(self.ez).T)
 
-        np.savetxt(self.cfg.fPathOut+'/Tx.dat', np.array(self.eos.f_T(self.ex)).T)
-        np.savetxt(self.cfg.fPathOut+'/Ty.dat', np.array(self.eos.f_T(self.ey)).T)
-        np.savetxt(self.cfg.fPathOut+'/Tz.dat', np.array(self.eos.f_T(self.ez)).T)
+        np.savetxt(self.cfg.fPathOut+'/Tx.dat', self.eos.f_T(np.array(self.ex).T))
+        np.savetxt(self.cfg.fPathOut+'/Ty.dat', self.eos.f_T(np.array(self.ey).T))
+        np.savetxt(self.cfg.fPathOut+'/Tz.dat', self.eos.f_T(np.array(self.ez).T))
 
         np.savetxt(self.cfg.fPathOut+'/vx.dat', np.array(self.vx).T)
         np.savetxt(self.cfg.fPathOut+'/vy.dat', np.array(self.vy).T)
