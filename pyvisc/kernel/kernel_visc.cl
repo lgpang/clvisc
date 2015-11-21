@@ -1,4 +1,6 @@
 #include<helper.h>
+ls
+ls
 
 #define IDX_PI 11
 
@@ -129,18 +131,26 @@ __kernel void kt_src_alongx(
     __local real4 pim0[NX+4];
     __local real4 pimi[NX+4];
 
+    __global float * pimn;
+    real8 tmp;
     // Use num of threads = BSZ to compute src for NX elements
     for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[I+2] = d_ev[IND];
-        pim0[I+2] = (real4)(d_pi[idn(IND, 0)],
-                            d_pi[idn(IND, 1)],
-                            d_pi[idn(IND, 2)],
-                            d_pi[idn(IND, 3)]);
-        pimi[I+2] = (real4)(d_pi[idn(IND, idx(1, 0))],
-                            d_pi[idn(IND, idx(1, 1))],
-                            d_pi[idn(IND, idx(1, 2))],
-                            d_pi[idn(IND, idx(1, 3))]);
+        pimn = d_pi + 10*IND;
+
+        tmp = vload8(0, pimn);
+        pim0[I+2] = tmp.s0123;
+        pimi[I+2] = tmp.s1456;
+
+        //pim0[I+2] = (real4)(d_pi[idn(IND, 0)],
+        //                    d_pi[idn(IND, 1)],
+        //                    d_pi[idn(IND, 2)],
+        //                    d_pi[idn(IND, 3)]);
+        //pimi[I+2] = (real4)(d_pi[idn(IND, idx(1, 0))],
+        //                    d_pi[idn(IND, idx(1, 1))],
+        //                    d_pi[idn(IND, idx(1, 2))],
+        //                    d_pi[idn(IND, idx(1, 3))]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
@@ -192,18 +202,24 @@ __kernel void kt_src_alongy(
     __local real4 pim0[NY+4];
     __local real4 pimi[NY+4];
 
+    __global float * pimn;
+    real4 tmp1, tmp2;
     // Use num of threads = BSZ to compute src for NX elements
     for ( int J = get_local_id(1); J < NY; J = J + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         ev[J+2] = d_ev[IND];
-        pim0[J+2] = (real4)(d_pi[idn(IND, 0)],
-                            d_pi[idn(IND, 1)],
-                            d_pi[idn(IND, 2)],
-                            d_pi[idn(IND, 3)]);
-        pimi[J+2] = (real4)(d_pi[idn(IND, idx(2, 0))],
-                            d_pi[idn(IND, idx(2, 1))],
-                            d_pi[idn(IND, idx(2, 2))],
-                            d_pi[idn(IND, idx(2, 3))]);
+        tmp1 = vload4(0, d_pi+10*IND);   // tt, tx, ty, tz
+        tmp2 = vload4(0, d_pi+10*IND+5); // xy, xz, yy, yz
+        pim0[J+2] = tmp1;
+        pimi[J+2] = (real4)(tmp1.s2, tmp2.s0, tmp2.s23);
+        //pim0[J+2] = (real4)(d_pi[idn(IND, 0)],
+        //                    d_pi[idn(IND, 1)],
+        //                    d_pi[idn(IND, 2)],
+        //                    d_pi[idn(IND, 3)]);
+        //pimi[J+2] = (real4)(d_pi[idn(IND, idx(2, 0))],
+        //                    d_pi[idn(IND, idx(2, 1))],
+        //                    d_pi[idn(IND, idx(2, 2))],
+        //                    d_pi[idn(IND, idx(2, 3))]);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);

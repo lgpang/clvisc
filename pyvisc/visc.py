@@ -121,7 +121,7 @@ class CLVisc(object):
         print('<pizz/(e+P)> =', pizz_o_ep[NZ//2])
 
 
-
+    @profile
     def visc_stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm for visc evolution
             Args:
@@ -267,7 +267,7 @@ class CLVisc(object):
         # ideal prediction to get umu for the first time step
         self.ideal.stepUpdate(step=1)
 
-    #@profile
+    @profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=False,
                plot_bulk=True, save_pi=True, force_run_to_maxloop = False):
         '''The main loop of hydrodynamic evolution
@@ -282,7 +282,7 @@ class CLVisc(object):
             #t0 = time()
             self.ideal.edmax = self.ideal.max_energy_density()
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
-            print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
+            #print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
 
             is_finished = False
 
@@ -340,7 +340,7 @@ def main():
     cfg.DX = 0.16
     cfg.DY = 0.16
     cfg.ImpactParameter = 10.0
-    cfg.IEOS = 1
+    cfg.IEOS = 2
     cfg.ntskip = 60
     cfg.nxskip = 2
     cfg.nyskip = 2

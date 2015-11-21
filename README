@@ -55,3 +55,65 @@ Line #      Hits         Time  Per Hit   % Time  Line Contents
    194        51       978116  19178.7      5.1                  self.eos_table, self.ideal.tau, np.int32(step)
    195                                                           ).wait()
 
+
+==Usage of vloadn to speed up global data access==
+
+In kernel_visc.cl, one needs to load (pitt, pitx, pity, pitz) and (pixt, pixx, pixy, pixz) in src_alongx,
+needs to load (pitt, pitx, pity, pitz) and (piyt, piyx, piyy, piyz) in src_alongy,
+needs to load (pitt, pitx, pity, pitz) and (pizt, pizx, pizy, pizz) in src_alongz;
+
+Since the data are stored in for(i, j, k) order, so loading data along z is faster than along y.
+However, self.kernel_visc.kt_src_alongx is much faster than loading data along y. 
+This may be caused by continues address for pixx, pixy, pizx.
+
+Total time: 8.60907 s
+File: visc.py
+Function: visc_stepUpdate at line 124
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+   124                                               @profile
+   125                                               def visc_stepUpdate(self, step):
+   126                                                   ''' Do step update in kernel with KT algorithm for visc evolution
+   127                                                       Args:
+   128                                                           gpu_ev_old: self.d_ev[1] for the 1st step,
+   129                                                                       self.d_ev[2] for the 2nd step
+   130                                                           step: the 1st or the 2nd step in runge-kutta
+   131                                                   '''
+   132                                                   # upadte d_Src by KT time splitting, along=1,2,3 for 'x','y','z'
+   133                                                   # input: gpu_ev_old, tau, size, along_axis
+   134                                                   # output: self.d_Src
+   135       108          324      3.0      0.0          NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+   136       108       334097   3093.5      3.9          self.kernel_visc.kt_src_christoffel(self.queue, (NX*NY*NZ, ), None,
+   137       108          278      2.6      0.0                           self.ideal.d_Src, self.ideal.d_ev[step],
+   138       108          162      1.5      0.0                           self.d_pi[step], self.eos_table,
+   139       108       854615   7913.1      9.9                           self.ideal.tau, np.int32(step)
+   140                                                                    ).wait()
+   141                                           
+   142       108       296185   2742.5      3.4          self.kernel_visc.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
+   143       108          275      2.5      0.0                  self.ideal.d_Src, self.ideal.d_ev[step],
+   144       108          166      1.5      0.0                  self.d_pi[step], self.eos_table,
+   145       108      1313623  12163.2     15.3                  self.ideal.tau).wait()
+   146                                           
+   147       108       296962   2749.6      3.4          self.kernel_visc.kt_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
+   148       108          251      2.3      0.0                  self.ideal.d_Src, self.ideal.d_ev[step],
+   149       108          167      1.5      0.0                  self.d_pi[step], self.eos_table,
+   150       108      2435409  22550.1     28.3                  self.ideal.tau).wait()
+   151                                           
+   152       108       296962   2749.6      3.4          self.kernel_visc.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
+   153       108          261      2.4      0.0                  self.ideal.d_Src, self.ideal.d_ev[step],
+   154       108          180      1.7      0.0                  self.d_pi[step], self.eos_table,
+   155       108      1093978  10129.4     12.7                  self.ideal.tau).wait()
+   156                                           
+   157                                                   # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
+   158                                                   # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
+   159                                                   # Notice that d_Src=f(t,x) at step1 and 
+   160                                                   # d_Src=(f(t,x)+f(t+dt, x(t+dt))) at step2
+   161                                                   # output: d_ev[] where need_update=2 for step 1 and 1 for step 2
+   162       108       409861   3795.0      4.8          self.kernel_visc.update_ev(self.queue, (NX*NY*NZ, ), None,
+   163       108          277      2.6      0.0                                self.ideal.d_ev[3-step], self.ideal.d_ev[1],
+   164       108          169      1.6      0.0                                self.d_pi[0], self.d_pi[3-step],
+   165       108          147      1.4      0.0                                self.ideal.d_Src,
+   166       108      1274723  11803.0     14.8                                self.eos_table, self.ideal.tau, np.int32(step)).wait()
+
+
