@@ -18,7 +18,7 @@ from ideal import CLIdeal
 class CLVisc(object):
     '''The pyopencl version for 3+1D visc hydro dynamic simulation'''
     def __init__(self, configs, gpu_id=0):
-        self.ideal = CLIdeal(configs, gpu_id, viscous_on=True)
+        self.ideal = CLIdeal(configs, gpu_id)
         self.cfg = configs
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
