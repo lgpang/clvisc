@@ -58,7 +58,7 @@ def write_config(configs):
 
         Config.add_section('magnetic')
         Config.set('magnetic', 'SIGX', configs.SIGX)
-        Config.set('magnetic', 'SIGX', configs.SIGY)
+        Config.set('magnetic', 'SIGY', configs.SIGY)
         Config.set('magnetic', 'TAUD', configs.TAUD)
         Config.set('magnetic', 'EB0', configs.EB0)
 

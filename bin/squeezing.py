@@ -17,6 +17,7 @@ def squeezing(tdec=0.1, eB0=0.1, sigx=1.3, sigy=2.6, path_out='../results/event0
     cfg.EB0 = eB0
     cfg.SIGX = sigx
     cfg.SIGY = sigy
+    cfg.fPathOut = path_out
 
     cfg.ImpactParameter = 10.0
 
