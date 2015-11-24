@@ -56,6 +56,12 @@ def write_config(configs):
         Config.set('intrinsic', 'LAM1', configs.LAM1)
         Config.set('intrinsic', 'BSZ', configs.BSZ)
 
+        Config.add_section('magnetic')
+        Config.set('magnetic', 'SIGX', configs.SIGX)
+        Config.set('magnetic', 'SIGX', configs.SIGY)
+        Config.set('magnetic', 'TAUD', configs.TAUD)
+        Config.set('magnetic', 'EB0', configs.EB0)
+
         Config.write(cfgfile)
 
 
@@ -163,6 +169,19 @@ def read_config():
 
     config['BSZ'] = (_parser.getint('opencl', 'local_workgroup_size'), 
             'Local workgroup size in one dimension')
+
+
+    config['TAUD']= (_parser.getfloat('magnetic', 'TAUD'), 
+            'decay ratio for the magnetic field')
+
+    config['SIGX']= (_parser.getfloat('magnetic', 'SIGX'), 
+            'gaussian width along x of the magnetic field')
+
+    config['SIGY']= (_parser.getfloat('magnetic', 'SIGY'), 
+            'gaussian width along Y of the magnetic field')
+
+    config['EB0']= (_parser.getfloat('magnetic', 'EB0'), 
+            'maximum of the magnetic field')
 
     parser = argparse.ArgumentParser(description=\
         'Input parameters for hydrodynamic simulations')

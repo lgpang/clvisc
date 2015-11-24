@@ -95,7 +95,7 @@ class CLIdeal(object):
         print('end of loading ini data')
 
     def __compile_options(self):
-        optlist = [ 'TAU0', 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
+        optlist = ['TAU0', 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1', 'SIGX', 'SIGY', 'EB0', 'TAUD']
         gpu_defines = [ '-D %s=(real)%s'%(key, value) for (key,value)
                 in list(self.cfg.__dict__.items()) if key in optlist ]
         gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))
@@ -127,6 +127,11 @@ class CLIdeal(object):
         with open(os.path.join(self.cwd, 'kernel', 'kernel_reduction.cl'), 'r') as f:
             src_maxEd = f.read()
             self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(
+                                                 options=self.gpu_defines)
+
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_magnetic.cl'), 'r') as f:
+            src_magnetic = f.read()
+            self.kernel_squeezing = cl.Program(self.ctx, src_magnetic).build(
                                                  options=self.gpu_defines)
 
         hypersf_defines = list(self.gpu_defines)
@@ -166,8 +171,11 @@ class CLIdeal(object):
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
         self.kernel_ideal.kt_src_christoffel(self.queue, (NX*NY*NZ, ), None,
                          self.d_Src, self.d_ev[step], self.eos_table,
-                         self.tau, np.int32(step)
-                         ).wait()
+                         self.tau, np.int32(step)).wait()
+
+        self.kernel_squeezing.kt_src_magnetic(self.queue, (NX, NY, NZ), None,
+                         self.d_Src, self.d_ev[step], self.eos_table,
+                         self.tau, np.int32(step)).wait()
 
         self.kernel_ideal.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
                 self.d_Src, self.d_ev[step], self.eos_table,
@@ -286,15 +294,25 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 0
+    cfg.IEOS = 2
+    cfg.NX = 301
+    cfg.NY = 301
+    cfg.NZ = 61
+    cfg.DT = 0.01
+    cfg.DX = 0.08
+    cfg.DY = 0.08
 
-    ideal = CLIdeal(cfg)
+    cfg.TAUD = 1.9
+
+    cfg.ImpactParameter = 10
+
+    ideal = CLIdeal(cfg, gpu_id=2)
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
                   ideal.d_ev[1])
 
-    ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    ideal.evolve(max_loops=1000, save_bulk=False)
+    #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
+    ideal.evolve(max_loops=2000, save_bulk=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 

@@ -30,7 +30,7 @@ option ( USE_SINGLE_PRECISION "Use float instead of double" on )
 option ( CL_USE_DEPRECATED_OPENCL_1_1_APIS "Use Nvidia GPU" on )
 
 option ( LOEWE_CSC "Use LOEWE AMD GPUs for spec kernel" on )
-option ( VISCOUS_ON "Freeze out for viscous hydro" on )
+option ( VISCOUS_ON "Freeze out for viscous hydro" off )
 
 
 configure_file (

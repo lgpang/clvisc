@@ -1,7 +1,7 @@
 # comments start with '#'
 [path]
-fPathIni = /u/lpang/PyVisc/results/event0/edv0.txt
-fPathOut = /u/lpang/PyVisc/results/event0
+fPathIni = ../results/event0/edv0.txt
+fPathOut = ../results/event0
 
 [glauber]
 ########### Params for Glauber initial condition 
@@ -85,3 +85,17 @@ LAM1 = -10
 [opencl]
 
 local_workgroup_size = 32
+
+
+
+# 4 parameters for magnetic squeezing studies
+[magnetic]
+# decay ratio for the matnetic field
+TAUD = 0.5
+
+# maximum magnetic field at (x, y) = (0, 0)
+EB0 = 1.33
+
+# gaussian width along x and y
+SIGX = 1.3
+SIGY = 2.6
