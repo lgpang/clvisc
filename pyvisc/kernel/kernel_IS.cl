@@ -171,14 +171,14 @@ __kernel void visc_src_alongx(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        //d_udx[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
-        //                     minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
-        //                             THETA*(umu4(ev_ip1) - umu4(ev_i))
-        //                             ))/DX;
+        d_udx[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
+                             minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
+                                     THETA*(umu4(ev_ip1) - umu4(ev_i))
+                                     ))/DX;
 
         //d_udx[IND] = 0.5f*(umu4(ev_ip1)-umu4(ev_im1))/DX;
 
-        d_udx[IND] = (-umu4(ev_ip2) + 8.0f*umu4(ev_ip1) - 8.0f*umu4(ev_im1)+umu4(ev_im2))/(12.0f*DX);
+        //d_udx[IND] = (-umu4(ev_ip2) + 8.0f*umu4(ev_ip1) - 8.0f*umu4(ev_im1)+umu4(ev_im2))/(12.0f*DX);
 
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[idn(IND, mn)] = d_Src[idn(IND, mn)] - kt1d_real(
@@ -256,12 +256,12 @@ __kernel void visc_src_alongy(
         real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
         real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
         
-        //d_udy[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
-        //                     minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
-        //                             THETA*(umu4(ev_ip1) - umu4(ev_i))
-        //                             ))/DY;
+        d_udy[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
+                             minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
+                                     THETA*(umu4(ev_ip1) - umu4(ev_i))
+                                     ))/DY;
         //d_udy[IND] = 0.5f*(umu4(ev_ip1)-umu4(ev_im1))/DY;
-        d_udy[IND] = (-umu4(ev_ip2)+8.0f*umu4(ev_ip1)-8.0f*umu4(ev_im1)+umu4(ev_im2))/(12.0f*DY);
+        //d_udy[IND] = (-umu4(ev_ip2)+8.0f*umu4(ev_ip1)-8.0f*umu4(ev_im1)+umu4(ev_im2))/(12.0f*DY);
 
 
         for ( int mn = 0; mn < 10; mn ++ ) {
@@ -342,14 +342,14 @@ __kernel void visc_src_alongz(__global real * d_Src,
         
         real4 christoffel_term = (real4)(ev_i.s3, 0.0f, 0.0f, 1.0f)*u0_i/tau;
         
-        //d_udz[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
-        //                     minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
-        //                             THETA*(umu4(ev_ip1) - umu4(ev_i))
-        //                    ))/(DZ*tau) + christoffel_term;
+        d_udz[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
+                             minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
+                                     THETA*(umu4(ev_ip1) - umu4(ev_i))
+                            ))/(DZ*tau) + christoffel_term;
         //d_udz[IND] = 0.5f*(umu4(ev_ip1)-umu4(ev_im1))/(tau*DZ) + christoffel_term;
 
-        d_udz[IND] = (-umu4(ev_ip2)+8.0f*umu4(ev_ip1)-8.0f*umu4(ev_im1)+umu4(ev_im2)
-                      )/(12.0f*DZ*tau) + christoffel_term;
+        //d_udz[IND] = (-umu4(ev_ip2)+8.0f*umu4(ev_ip1)-8.0f*umu4(ev_im1)+umu4(ev_im2)
+        //              )/(12.0f*DZ*tau) + christoffel_term;
 
         for ( int mn = 0; mn < 10; mn ++ ) {
             d_Src[10*IND + mn] = d_Src[10*IND + mn] - kt1d_real(
