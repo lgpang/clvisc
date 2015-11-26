@@ -23,7 +23,7 @@ set ( BSZ 256 )
 
 set ( DUMPDATA_FROM_GPU "true" )
 
-set ( SWITCH_OFF_DECAY "true" )
+set ( SWITCH_OFF_DECAY "false" )
 
 option ( USE_DEVICE_GPU "Use GPU parallel" on )
 option ( USE_SINGLE_PRECISION "Use float instead of double" on )
