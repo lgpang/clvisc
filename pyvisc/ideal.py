@@ -27,7 +27,7 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self, configs, gpu_id=0, viscous_on=False):
+    def __init__(self, configs, gpu_id=0):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
         self.cfg = configs
@@ -42,9 +42,6 @@ class CLIdeal(object):
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
-
-        # set viscous on to cal fluid velocity gradients
-        self.viscous_on = viscous_on
         self.gpu_defines = self.__compile_options()
 
         # store 1D and 2d bulk info at each time step
@@ -109,8 +106,6 @@ class CLIdeal(object):
 
         #local memory size along x,y,z direction with 4 boundary cells
         gpu_defines.append('-D {key}={value}'.format(key='BSZ', value=self.cfg.BSZ))
-        if self.viscous_on:
-            gpu_defines.append( '-D VISCOUS_ON' )
         #determine float32 or double data type in *.cl file
         if self.cfg.use_float32:
             gpu_defines.append( '-D USE_SINGLE_PRECISION' )
@@ -135,8 +130,6 @@ class CLIdeal(object):
                                                  options=self.gpu_defines)
 
         hypersf_defines = list(self.gpu_defines)
-        ## use higher precision for hyper surface calculation
-        # hypersf_defines.remove('-D USE_SINGLE_PRECISION')
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
@@ -158,6 +151,7 @@ class CLIdeal(object):
         if remainder != 0:
             value += multiple - remainder
         return value
+
 
     def stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
