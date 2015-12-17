@@ -47,93 +47,112 @@ def pressure_gradient(edxy):
     return grad[0], grad[1]
 
 
-def plot_force_density(tau=0.2, system='Pb+Pb', s_x=1.3, s_y=2.6, eB0=1.33, lifetime=1.9):
+def plot_force_density(system='Pb+Pb', tau=0.2, s_x=1.3, s_y=2.6, eB0=1.33, lifetime=1.9):
     tau0 = tau
-    #T = np.loadtxt('../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33/Txy0.dat')
-    T = np.loadtxt('../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0p09/Txy0.dat')
+    T = None
+    if system == 'Pb+Pb':
+        T = np.loadtxt('../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33/Txy0.dat')
+    else:
+        T = np.loadtxt('../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0p09/Txy0.dat')
     Fx, Fy = forcedensity(T, tau0, s_x, s_y, eB0, lifetime)
-    fig, ax = plt.subplots(1, 2, figsize=(18, 8))
-    ax[0].text( -4.5, 4, r'(a) $f^x$')
-    ax[0].text( -4.5, -2, r'$%s$'%system)
-    ax[0].text( -4.5, -3, r'$\tau=0.2$ fm')
-    ax[0].text( -4.5, -4, r'$settings\ A$')
-
     x = np.linspace(-16, 16, 401)
     y = np.linspace(-16, 16, 401)
     x, y = np.meshgrid(x, y)
-    cs_dpdx = ax[0].contour(x, y, Fx.T, colors='k', linewidths=3)
-    ax[0].clabel(cs_dpdx, fontsize=16, inline=1, fmt='%1.1f')
 
-    cs_dpdy = ax[1].contour(x, y, Fy.T, colors='k', linewidths=3)
-    ax[1].clabel(cs_dpdy, fontsize=16, inline=1, fmt='%1.1f')
+    #cs_dpdx = ax[0].contour(x, y, Fx.T)
+    #ax[0].clabel(cs_dpdx, fontsize=16, inline=1, fmt='%1.1f')
+    #cs_dpdy = ax[1].contour(x, y, Fy.T)
+    #ax[1].clabel(cs_dpdy, fontsize=16, inline=1, fmt='%1.1f', levels=cs_dpdx.levels)
 
+    plt.figure(figsize=(8, 16))
+    plt.subplot(211)
+    cs_dpdx = plt.contourf(x, y, Fx.T, cmap=plt.cm.bone, aspect='auto')
+    cb = plt.colorbar(cs_dpdx)
+    #cb.formatter.set_powerlimits((0, 0))
+    #cb.update_ticks()
 
-    #im1 = ax[1].imshow(-dpdy.T, extent=extent,cmap=colormap, origin='lower')
-    ax[1].text( -4.5, 4, r'(b) $f^y$')
-    ax[1].text( -4.5, -2, r'$%s$'%system)
-    ax[1].text( -4.5, -3, r'$\tau=0.2$ fm')
-    ax[1].text( -4.5, -4, r'$settings\ A$')
+    plt.xlabel('$x\ [fm]$')
+    plt.ylabel('$y\ [fm]$')
+    rmax = 10
+    plt.xlim(-rmax, rmax)
+    plt.ylim(-rmax, rmax)
+    plt.text( -8, 7, r'(a) $f^x$')
+    plt.text( -9, -4, r'$%s$'%system)
+    plt.text( -9, -6, r'$\tau=0.2$ fm')
+    plt.text( -9, -8, r'$settings\ A$')
 
-    ax[0].set_xlabel('$x\ [fm]$')
-    ax[0].set_ylabel('$y\ [fm]$')
-    ax[1].set_xlabel('$x\ [fm]$')
-    ax[1].set_ylabel('$y\ [fm]$')
+    font_size = 15
+    cb.ax.tick_params(labelsize=font_size)
 
-    ax[0].set_xlim(-5.2, 5.2)
-    ax[1].set_xlim(-5.2, 5.2)
-    ax[0].set_ylim(-5.2, 5.2)
-    ax[1].set_ylim(-5.2, 5.2)
-    #smash_style.set()
-    plt.subplots_adjust(left=0.10, right=0.95, top=0.95, bottom=0.15, wspace=0.4)
+    plt.subplot(212)
+    cs_dpdy = plt.contourf(x, y, Fy.T, cmap=plt.cm.bone, aspect='auto')
+
+    cb = plt.colorbar(cs_dpdy)
+
+    font_size = 15
+    cb.ax.tick_params(labelsize=font_size)
+    #cb.formatter.set_powerlimits((0, 0))
+    #cb.update_ticks()
+
+    plt.text( -8, 7, r'(b) $f^y$')
+    plt.xlabel('$x\ [fm]$')
+    plt.ylabel('$y\ [fm]$')
+    plt.xlim(-rmax, rmax)
+    plt.ylim(-rmax, rmax)
+    smash_style.set()
+    plt.subplots_adjust(left=0.20, right=0.93, top=0.95, bottom=0.1, hspace=0.3)
     plt.show()
 
 
 def plot_pressure_gradient(system='Au+Au'):
     tau0 = 0.2
-    #edxy = np.loadtxt('../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33/edxy0.dat')
-    edxy = np.loadtxt('../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0p09/edxy0.dat')
+    edxy = None
+    if system == 'Pb+Pb':
+        edxy = np.loadtxt('../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33/edxy0.dat')
+    else:
+        edxy = np.loadtxt('../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0p09/edxy0.dat')
     dpdx, dpdy = pressure_gradient(edxy)
     extent = (-16, 16, -16, 16)
-
-    fig, ax = plt.subplots(1, 2, figsize=(18, 8))
-    
-    #ax[0].imshow(-dpdx.T, extent=extent, cmap=colormap, origin='lower')
-
-    ax[0].text( -9, 8, r'(a) $-\partial_xP$')
-    ax[0].text( -9, -4, r'$%s$'%system)
-    ax[0].text( -9, -6, r'$\tau=0.2$ fm')
-    ax[0].text( -9, -8, r'$b=10$ fm')
+    plt.figure(figsize=(8,16))
+    plt.subplot(211)
 
     x = np.linspace(-16, 16, 401)
     y = np.linspace(-16, 16, 401)
     x, y = np.meshgrid(x, y)
-    cs_dpdx = ax[0].contour(x, y, -dpdx.T, colors='k', linewidths=3)
-    ax[0].clabel(cs_dpdx, fontsize=16, inline=1, fmt='%1.0f')
 
-    cs_dpdy = ax[1].contour(x, y, -dpdy.T, colors='k', linewidths=3)
-    ax[1].clabel(cs_dpdy, fontsize=16, inline=1, fmt='%1.0f')
+    rmax = 10
+    cs_dpdx = plt.contourf(x, y, -dpdx.T, cmap=plt.cm.bone, aspect='auto')
+    cb = plt.colorbar(cs_dpdx)
+    plt.text( -9, 8, r'(a) $-\partial_xP$')
+    plt.text( -9, -4, r'$%s$'%system)
+    plt.text( -9, -6, r'$\tau=0.2$ fm')
+    plt.text( -9, -8, r'$b=10$ fm')
+    plt.xlabel('$x\ [fm]$')
+    plt.ylabel('$y\ [fm]$')
+    plt.xlim(-rmax, rmax)
+    plt.ylim(-rmax, rmax)
 
+    font_size = 15
+    cb.ax.tick_params(labelsize=font_size)
 
-    #im1 = ax[1].imshow(-dpdy.T, extent=extent,cmap=colormap, origin='lower')
-    ax[1].text( -9, 8, r'(b) $-\partial_yP\ [GeV/fm^4]$')
-    ax[1].text( -9, -4, r'$%s$'%system)
-    ax[1].text( -9, -6, r'$\tau=0.2$ fm')
-    ax[1].text( -9, -8, r'$b=10$ fm')
+    plt.subplot(212)
+    cs_dpdy = plt.contourf(x, y, -dpdy.T, cmap=plt.cm.bone, aspect='auto')
+    cb = plt.colorbar(cs_dpdy)
+    plt.text( -9, 8, r'(b) $-\partial_yP\ [GeV/fm^4]$')
+    plt.xlabel('$x\ [fm]$')
+    plt.ylabel('$y\ [fm]$')
+    plt.xlim(-rmax, rmax)
+    plt.ylim(-rmax, rmax)
 
-    ax[0].set_xlabel('$x\ [fm]$')
-    ax[0].set_ylabel('$y\ [fm]$')
-    ax[1].set_xlabel('$x\ [fm]$')
-    ax[1].set_ylabel('$y\ [fm]$')
+    cb.ax.tick_params(labelsize=font_size)
 
-    ax[0].set_xlim(-10., 10.)
-    ax[1].set_xlim(-10., 10.)
-    ax[0].set_ylim(-10., 10.)
-    ax[1].set_ylim(-10., 10.)
     smash_style.set()
-    plt.subplots_adjust(left=0.10, right=0.95, top=0.95, bottom=0.15, wspace=0.4)
+
+    plt.subplots_adjust(left=0.20, right=0.95, top=0.95, bottom=0.1, hspace=0.3)
     plt.show()
 
 if __name__ == '__main__':
     #plot_pressure_gradient('Au+Au')
-    plot_force_density(system='Au+Au')
+    plot_force_density(system='Au+Au', eB0=0.09)
+    #plot_force_density(system='Pb+Pb', eB0=1.33)
 

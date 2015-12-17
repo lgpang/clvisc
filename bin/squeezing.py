@@ -23,7 +23,7 @@ def get_edmax(tau0, IEOS, ed_ref=30.0, tau_ref=0.6):
     return fsolve(fzero, ed_ref)[0]
 
 
-def squeezing(tau0, sys='RHIC', b=10.0, tdec=0.1, eB0=0.1, sigx=1.3, sigy=2.6, path_out='../results/event0', gpu_id=1):
+def squeezing(tau0, sys='RHIC', b=10.0, tdec=0.1, eB0=0.1, sigx=1.3, sigy=2.6, path_out='../results/event0', gpu_id=2):
     cfg.IEOS = 2
     cfg.TAUD = tdec
     cfg.EB0 = eB0
@@ -43,8 +43,13 @@ def squeezing(tau0, sys='RHIC', b=10.0, tdec=0.1, eB0=0.1, sigx=1.3, sigy=2.6, p
     cfg.nxskip = 4
     cfg.nyskip = 4
     cfg.ImpactParameter = b
+    cfg.ETAOS = 0.08
 
     if sys == 'RHIC':
+        cfg.A = 197
+        cfg.Ra = 6.54
+        cfg.SQRTS = 200.0
+        cfg.Si0 = 4.0
         ed_ref = 55.0
         tau_ref = 0.4
         cfg.Eta_gw = 0.4
@@ -87,26 +92,31 @@ def squeezing(tau0, sys='RHIC', b=10.0, tdec=0.1, eB0=0.1, sigx=1.3, sigy=2.6, p
 
 def lifetime_dependence():
     '''lifetime dependence'''
-    #squeezing(tau0=0.4, sys='LHC', b=10.0, tdec=1.9, eB0=0.0, sigx=1.3, sigy=2.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p4_td1p9_eb0p00/')
-    squeezing(tau0=0.4, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.3, sigy=2.6, path_out='../results/td_dependence_tau0p4/squeezing_pbpb276_tau0p4_td1p9_eb1p33_noftau/')
-    #squeezing(tau0=0.4, sys='LHC', b=10.0, tdec=1.1, eB0=1.33, sigx=1.3, sigy=2.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p4_td1p1_eb1p33/')
-    #squeezing(tau0=0.4, sys='LHC', b=10.0, tdec=0.5, eB0=1.33, sigx=1.3, sigy=2.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p4_td0p5_eb1p33/')
-    #squeezing(tau0=0.4, sys='LHC', b=10.0, tdec=0.1, eB0=1.33, sigx=1.3, sigy=2.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p4_td0p1_eb1p33/')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.8, sigy=3.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p2_td1p9_eb0p33/')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.1, eB0=1.33, sigx=1.8, sigy=3.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p2_td1p1_eb1p33/')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=0.5, eB0=1.33, sigx=1.8, sigy=3.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p2_td0p5_eb1p33/')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=0.1, eB0=1.33, sigx=1.8, sigy=3.6, path_out='../results/td_dependence/squeezing_pbpb276_tau0p2_td0p1_eb1p33/')
 
 def tau0_dependence():
-    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=0.00, sigx=1.3, sigy=2.6,
-              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p6_td1p9_eb0')
+    #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=0.00, sigx=1.3, sigy=2.6,
+    #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb0')
     squeezing(tau0=0.2, sys='RHIC', b=10.0, tdec=1.9, eB0=0.0, sigx=1.3, sigy=2.6,
               path_out='../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0')
     #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.3, sigy=2.6,
     #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33')
     #squeezing(tau0=0.6, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.3, sigy=2.6,
     #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p6_td1p9_eb1p33')
-    #squeezing(tau0=0.2, sys='RHIC', b=10.0, tdec=1.9, eB0=0.09, sigx=1.3, sigy=2.6,
-    #          path_out='../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0p09')
-    #squeezing(tau0=0.6, sys='RHIC', b=10.0, tdec=1.9, eB0=0.09, sigx=1.3, sigy=2.6,
-    #          path_out='../results/tau0_dependence/squeezing_auau200_tau0p6_td1p9_eb0p09')
+    squeezing(tau0=0.2, sys='RHIC', b=10.0, tdec=1.9, eB0=0.09, sigx=1.3, sigy=2.6,
+              path_out='../results/tau0_dependence/squeezing_auau200_tau0p2_td1p9_eb0p09')
+    squeezing(tau0=0.6, sys='RHIC', b=10.0, tdec=1.9, eB0=0.09, sigx=1.3, sigy=2.6,
+              path_out='../results/tau0_dependence/squeezing_auau200_tau0p6_td1p9_eb0p09')
 
+
+def sigma_dependence():
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.8, sigy=3.6,
+              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p6')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.5, sigy=3.0,
+              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p0')
 
 
 
@@ -121,6 +131,7 @@ def dNdEta_tau0():
 
 
 if __name__ == '__main__':
-    #lifetime_dependence()
-    tau0_dependence()
+    lifetime_dependence()
+    #tau0_dependence()
+    #sigma_dependence()
 
