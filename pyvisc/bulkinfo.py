@@ -30,9 +30,16 @@ class BulkInfo(object):
         NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
         self.h_ev = np.zeros((NX*NY*NZ, 4), cfg.real)
 
+        # one dimensional
         self.ex, self.ey, self.ez = [], [], []
         self.vx, self.vy, self.vz = [], [], []
-        self.exy, self.exz, self.vx_xy, self.vy_xy = [], [], [], []
+
+        # in transverse plane (z==0)
+        self.exy, self.vx_xy, self.vy_xy, self.vz_xy = [], [], [], []
+
+        # in reaction plane
+        self.exz, self.vx_xz, self.vy_xz, self.vz_xz = [], [], [], []
+
         self.ecc_x = []
         self.ecc_p = []
         self.ecc2_vs_rapidity = []
@@ -142,6 +149,9 @@ class BulkInfo(object):
         self.vy_xy.append(h_evxy[:,2].reshape(NX, NY))
 
         self.exz.append(h_evxz[:,0].reshape(NX, NZ))
+        self.vx_xz.append(h_evxz[:,1].reshape(NX, NZ))
+        self.vy_xz.append(h_evxz[:,2].reshape(NX, NZ))
+        self.vz_xz.append(h_evxz[:,3].reshape(NX, NZ))
 
     def eccp(self, ed, vx, vy, vz=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
@@ -209,8 +219,12 @@ class BulkInfo(object):
             ecc2.append(self.eccp(exy, vx, vy)[1])
         
         for idx, exz in enumerate(self.exz):
-            np.savetxt(path_out+'/edxz%d.dat'%idx, exz)
-            np.savetxt(path_out+'/Txz%d.dat'%idx, self.eos.f_T(exz))
+            np.savetxt(path_out+'/ed_xz%d.dat'%idx, exz)
+            np.savetxt(path_out+'/vx_xz%d.dat'%idx, self.vx_xz[idx])
+            np.savetxt(path_out+'/vy_xz%d.dat'%idx, self.vy_xz[idx])
+            np.savetxt(path_out+'/vz_xz%d.dat'%idx, self.vz_xz[idx])
+            np.savetxt(path_out+'/T_xz%d.dat'%idx, self.eos.f_T(exz))
+
         np.savetxt(path_out + '/eccp.dat',
                    np.array(zip(self.time, ecc2)))
 
