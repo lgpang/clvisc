@@ -69,9 +69,11 @@ nzskip = 1
 TAU0 = 0.6            
 
 IEOS = 2              
+
 # IEOS = 0 for p = e/3
-# IEOS = 1 for s95p_v1 CE lattice QCD EOS
-# IEOS = 2 for WB2014 lattice QCD EOS
+# IEOS = 1 for s95p_PCE lattice QCD EOS (ed<310)
+# IEOS = 2 for WB2014 lattice QCD EOS 
+# IEOS = 3 for Pure SU3 glue EOS
 
 #in units GeV
 TFRZ = 0.137          
