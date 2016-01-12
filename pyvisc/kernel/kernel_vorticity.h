@@ -11,7 +11,7 @@ real ux(real4 ev, real etas) {
     real coef = cosh(Y-etas)/cosh(Y);
     real vx = ev.s1 * coef;
     real vy = ev.s2 * coef;
-    real gamma = 1.0f/sqrt(max(1.0f - vx*vx - vy*vy - vz*vz, 1.0E-9));
+    real gamma = 1.0f/sqrt(max(1.0f - vx*vx - vy*vy - vz*vz, 1.0E-9f));
 
     return -gamma * vx;
 }
@@ -23,7 +23,7 @@ real uz(real4 ev, real etas) {
     real coef = cosh(Y-etas)/cosh(Y);
     real vx = ev.s1 * coef;
     real vy = ev.s2 * coef;
-    real gamma = 1.0f/sqrt(max(1.0f - vx*vx - vy*vy - vz*vz, 1.0E-9));
+    real gamma = 1.0f/sqrt(max(1.0f - vx*vx - vy*vy - vz*vz, 1.0E-9f));
 
     return -gamma * vz;
 }

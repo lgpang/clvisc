@@ -233,7 +233,7 @@ class CLIdeal(object):
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
             # get vorticity omega_{xz} on hypersf
-            self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
+            self.kernel_hypersf.vorticity_hypersf(self.queue, (nx, ny, nz), None,
                     self.d_vorticity, self.d_num_of_vorticity, self.d_ev_old, self.d_ev[1],
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
