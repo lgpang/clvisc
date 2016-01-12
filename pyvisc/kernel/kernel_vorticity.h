@@ -36,12 +36,11 @@ real uz(real4 ev, real etas) {
 real omega_xz(real4 ev_old, real4 ev_new,
               real4 ev_im1, real4 ev_ip1,
               real4 ev_km1, real4 ev_kp1,
-              real tau, real etas) {
-    real dxuz = (uz(ev_ip1, etas)-uz(ev_im1, etas))/(2.0f*DX);
-    real dtau_ux = (ux(ev_new, etas) - ux(ev_old, etas))/DT;
-    real deta_ux = (ux(ev_kp1, etas) - ux(ev_km1, etas))/DZ;
+              real tau, real etas,
+              real dtd, real dxd, real dzd) {
+    real dxuz = (uz(ev_ip1, etas)-uz(ev_im1, etas))/(2.0f*dxd);
+    real dtau_ux = (ux(ev_new, etas) - ux(ev_old, etas))/dtd;
+    real deta_ux = (ux(ev_kp1, etas) - ux(ev_km1, etas))/(2.0f*dzd);
     real dzux = -sinh(etas)*dtau_ux + cosh(etas)/tau*deta_ux;
-    real dxuz = (uz(ev_ip1, etas)-uz(ev_im1, etas))/(2.0f*DX);
     return dxuz - dzux;
 }
-

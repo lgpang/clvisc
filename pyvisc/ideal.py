@@ -84,6 +84,10 @@ class CLIdeal(object):
         h_num_of_sf = np.zeros(1, np.int32)
         self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
 
+        # get the vorticity on the freeze out hypersurface
+        self.d_vorticity = cl.Buffer(self.ctx, mf.READ_WRITE, size=1500000*self.cfg.sz_real)
+        self.d_num_of_vorticity = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
+
         self.history = []
  
     def load_ini(self, dat):
@@ -223,9 +227,16 @@ class CLIdeal(object):
             ny = (self.cfg.NY-1)//self.cfg.nyskip + 1
             nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
             tau_new = self.tau
+            # get dSigma, vx, vy, veta, etas on hypersf
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
                     self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
+
+            # get vorticity omega_{xz} on hypersf
+            self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
+                    self.d_vorticity, self.d_num_of_vorticity, self.d_ev_old, self.d_ev[1],
+                    self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
+
 
             # update with current tau and d_ev[1]
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
@@ -244,6 +255,14 @@ class CLIdeal(object):
             print("hypersf save to ", out_path)
             np.savetxt(out_path, hypersf, fmt='%.6e', header =
               'Tfrz=%.6e ; other rows: dS0, dS1, dS2, dS3, vx, vy, veta, etas'%self.cfg.TFRZ)
+
+            # save vorticity on hypersf to data file
+            vorticity = np.empty(self.num_of_sf, dtype=self.cfg.real)
+            cl.enqueue_copy(self.queue, vorticity, self.d_vorticity).wait()
+            out_path = os.path.join(self.cfg.fPathOut, 'vorticity_xz.dat')
+            print("vorticity omega_{xz} on surface is saved to", out_path)
+            np.savetxt(out_path, vorticity, fmt='%.6e', header =
+              'omega_xz = dx u_z - dz u_x')
 
         if save_bulk:
             self.bulkinfo.save()
@@ -286,7 +305,7 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 0
+    #cfg.IEOS = 0
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber
