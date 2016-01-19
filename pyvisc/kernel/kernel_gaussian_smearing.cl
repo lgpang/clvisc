@@ -113,7 +113,8 @@ __kernel void smearing(
   real EPV = max(acu, K0+P(Ed, eos_table));
 
   d_EdV[get_global_id(0)*NY*NZ + get_global_id(1)*NZ + get_global_id(2)] = \
-       (real4){Ed, Tm0.s1/EPV, Tm0.s2/EPV, Tm0.s3/EPV};
+       (real4){Ed, 0.0f, 0.0f, 0.0f};
+       //(real4){Ed, Tm0.s1/EPV, Tm0.s2/EPV, Tm0.s3/EPV};
   
 }
 

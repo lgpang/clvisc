@@ -29,7 +29,7 @@ def event_by_event(fname_partons, fout):
     cfg.ntskip = 60
 
     cfg.TAU0 = 0.4
-    cfg.ETAOS = 0.08
+    cfg.ETAOS = 0.0
     cfg.fPathOut = fout
 
     write_config(cfg)
@@ -43,7 +43,7 @@ def event_by_event(fname_partons, fout):
 
 finis = glob('/u/lpang/AuAu200_0_80/P*.txt')
 
-for i, fname in enumerate(finis):
+for i, fname in enumerate(finis[1:2]):
     fname_partons = fname
     fpath_out = '/tmp/vorticity/event%d/'%i
     
