@@ -25,8 +25,8 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     real mass = HadronInfo.s0;
     real gspin = HadronInfo.s1;
     real fermi_boson = HadronInfo.s2;
-    real muB = HadronInfo.s3;
-    //real muB = 0.0f;
+    //real muB = HadronInfo.s3;
+    real muB = 0.0f;
     real dof = gspin / pown(2.0*M_PI_F, 3);
 
 #ifdef VISCOUS_ON
@@ -72,7 +72,11 @@ __kernel void get_sub_dNdYPtdPtdPhi(
                                2.0f*pmu.s3*(pmu.s1*pimn[3] + pmu.s2*pimn[6]));
 
             real df = feq*(1.0f - fermi_boson*feq)*p2pi_o_T2ep;
+
             feq += df;
+            //if ( p2pi_o_T2ep < 1.0f ) {
+            //    feq += df;
+            //}
 #endif
             dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq;
         }

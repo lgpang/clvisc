@@ -113,10 +113,12 @@ def tau0_dependence():
 
 
 def sigma_dependence():
-    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.8, sigy=3.6,
-              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p6')
-    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.5, sigy=3.0,
-              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p0')
+    #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.8, sigy=3.6,
+    #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p6')
+    #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.5, sigy=3.0,
+    #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p0')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=2.4, sigy=4.8,
+              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy4p8_chiTcorrect')
 
 
 
@@ -131,7 +133,7 @@ def dNdEta_tau0():
 
 
 if __name__ == '__main__':
-    lifetime_dependence()
+    #lifetime_dependence()
     #tau0_dependence()
-    #sigma_dependence()
+    sigma_dependence()
 

@@ -200,7 +200,7 @@ real dnpir2N (real phi, real costh, real w2, real y, real pt, real phi1, real m1
     plR = mr * sume * (pl - p0 * costh) /D;
     ptR = (eR * eR - plR * plR - mr * mr);
 
-    if (ptR < 1.0E-15f) ptR = 1.0E-15f;
+    if (ptR < 1.0E-6f) ptR = 1.0E-6f;
     else ptR = sqrt (ptR);
 
     //yR = 0.5 * log (max(ACU, eR + plR)/max(ACU, (eR - plR)));
@@ -210,12 +210,12 @@ real dnpir2N (real phi, real costh, real w2, real y, real pt, real phi1, real m1
     cphiR = -jac * (p0 * sinth * cos (phi + phi1) - pt * cos (phi1)) / (sume * ptR);
     sphiR = -jac * (p0 * sinth * sin (phi + phi1) - pt * sin (phi1)) / (sume * ptR);
 
-    if ((fabs (cphiR) > 0.999f))
+    if ((fabs (cphiR) > 0.99999f))
     {
         if (cphiR > 0.01f)
-            cphiR = 0.999f;
+            cphiR = 0.99999f;
         if (cphiR < -0.01f)
-            cphiR = -0.999f;
+            cphiR = -0.99999f;
     }
 
     phiR = atan2(sphiR, cphiR);
@@ -264,10 +264,14 @@ real dnpir1N (real costh, real w2, real y, real pt, real phi, real m1, real m2, 
     real xdiff = 0.5 * ( xhi - xlo );
     real s = 0.0;
 
-//    #pragma unroll 4
-    for( int ix=0; ix<4; ix ++ )
-        s += gaulew8[ ix ] * ( dnpir2N( xoffs + xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
-                dnpir2N( xoffs - xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+//    for( int ix=0; ix<4; ix ++ )
+//        s += gaulew8[ ix ] * ( dnpir2N( xoffs + xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+//                dnpir2N( xoffs - xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+
+    for( int ix=0; ix<6; ix ++ )
+        s += w12[ ix ] * ( dnpir2N( xoffs + xdiff*p12[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+                dnpir2N( xoffs - xdiff*p12[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+
 
     return s * xdiff;
 }
@@ -286,11 +290,13 @@ real dn2ptN ( real w2, real y, real pt, real phi, real m1, real m2, real mr, int
     real xdiff = 0.5f * ( xhi - xlo );
     real s = 0.0;
 
-//    #pragma unroll 4
-    for( int ix=0; ix<4; ix ++ )
-        s += gaulew8[ ix ] * ( dnpir1N( xoffs + xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
-                dnpir1N( xoffs - xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+//    for( int ix=0; ix<4; ix ++ )
+//        s += gaulew8[ ix ] * ( dnpir1N( xoffs + xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+//                dnpir1N( xoffs - xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
 
+    for( int ix=0; ix<6; ix ++ )
+        s += w12[ ix ] * ( dnpir1N( xoffs + xdiff*p12[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+                dnpir1N( xoffs - xdiff*p12[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
     return s * xdiff;
 }
 
@@ -403,7 +409,7 @@ __kernel void decay_3body(
     real m2 = mass.s2;
     real m3 = mass.s3;
 
-    while( n < NY*NPT*NPHI ){
+    while ( n < NY*NPT*NPHI ) {
         i = n / (NPT * NPHI );
         j = (n-i*NPT*NPHI) / NPHI ;
         k = n-i*NPT*NPHI - j*NPHI ;

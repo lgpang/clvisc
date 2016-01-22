@@ -2,7 +2,7 @@
 
 #define DUMPDATA_FROM_GPU true
 
-#define SWITCH_OFF_DECAY false
+#define SWITCH_OFF_DECAY true
 
 #define USE_DEVICE_GPU
 #define USE_SINGLE_PRECISION

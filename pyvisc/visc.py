@@ -139,6 +139,10 @@ class CLVisc(object):
                          self.ideal.tau, np.int32(step)
                          ).wait()
 
+        self.ideal.kernel_squeezing.kt_src_magnetic(self.queue, (NX, NY, NZ), None,
+                         self.ideal.d_Src, self.ideal.d_ev[step], self.eos_table,
+                         self.ideal.tau, np.int32(step)).wait()
+
         self.kernel_visc.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
                 self.ideal.d_Src, self.ideal.d_ev[step],
                 self.d_pi[step], self.eos_table,

@@ -118,10 +118,10 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     eos = EosWB()
     ed, pr, T = eos.create_table()
-    #pr = np.diff(pr[:])
     #plt.plot(ed[:100000], pr[:100000], 'r--')
-    plt.plot(ed[:100], T[:100], 'r--')
-    plt.plot(ed[:100], pr[:100], 'b--')
+    plt.plot(ed[:100000], T[:100000], 'r--')
+    #plt.plot(ed[:100], T[:100], 'r--')
+    #plt.plot(ed[:100], pr[:100], 'b--')
 
     T_test = T[1001]
     ed_test = ed[1001]
