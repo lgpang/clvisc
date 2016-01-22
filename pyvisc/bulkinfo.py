@@ -10,6 +10,7 @@ from pyopencl import array
 import os
 import sys
 from time import time
+from math import floor
 
 cwd, cwf = os.path.split(__file__)
 sys.path.append(cwd)
@@ -49,9 +50,9 @@ class BulkInfo(object):
         self.__loadAndBuildCLPrg()
         self.eos = Eos(cfg.IEOS)
 
-        self.x = np.linspace(-NX/2*cfg.DX, NX/2*cfg.DX, NX)
-        self.y = np.linspace(-NY/2*cfg.DY, NY/2*cfg.DY, NY)
-        self.z = np.linspace(-NZ/2*cfg.DZ, NZ/2*cfg.DZ, NZ)
+        self.x = np.linspace(-floor(NX/2)*cfg.DX, floor(NX/2)*cfg.DX, NX, endpoint=True)
+        self.y = np.linspace(-floor(NY/2)*cfg.DY, floor(NY/2)*cfg.DY, NY, endpoint=True)
+        self.z = np.linspace(-floor(NZ/2)*cfg.DZ, floor(NZ/2)*cfg.DZ, NZ, endpoint=True)
 
 
 
