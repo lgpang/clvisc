@@ -6,7 +6,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-path = '../../results/P30'
+path = '../../results/P30_s95p/'
 #number of eta (-9.0, 9.0) with deta=0.3
 NZ = 61 
 # number of x grid, (-15.0, 15.0) with dx=0.1
@@ -73,17 +73,15 @@ def dxuz_dzux(time_step):
         
     temperature = np.loadtxt(path+'/T_xz%s.dat'%time_step)
         
-    return (dx_uz(uz1) - dzux)*temperature
-    #return (- dzux)*temperature
-    #return (dx_uz(uz1))*temperature
-    #return (dx_uz(uz1) - dzux)
+    return (dx_uz(uz1) - dzux)*temperature, dx_uz(uz1)*temperature, - dzux*temperature
 
 
 
 def draw_vorticity_in_reaction_plane(time_step):
     '''make plot for different time step'''
     tau = tau0 + dtau*time_step
-    vorticity = dxuz_dzux(time_step)
+    dxuz, minus_dzux, vorticity = dxuz_dzux(time_step)
+
     extent = (-(NZ-1)/2*deta, (NZ-1)/2*deta, -(NX-1)/2*dx, (NX-1)/2*dx, )
     plt.imshow(vorticity, extent=extent, aspect='auto', origin='lower', vmin=-1., vmax=1.)
     #plt.imshow(vorticity, extent=extent, aspect='auto', origin='lower')
@@ -96,6 +94,13 @@ def draw_vorticity_in_reaction_plane(time_step):
     plt.show()
     
 
-draw_vorticity_in_reaction_plane(1)
-draw_vorticity_in_reaction_plane(5)
-draw_vorticity_in_reaction_plane(8)
+def save_dxuz_dzux(time_step):
+    dxuz, minus_dzux, vorticity = dxuz_dzux(time_step)
+    np.savetxt('dxuz_%d.dat'%time_step, dxuz)
+    np.savetxt('minus_dzux_%d.dat'%time_step, minus_dzux)
+    np.savetxt('omega_xz_%d.dat'%time_step, vorticity)
+
+
+for n in range(9):
+    save_dxuz_dzux(time_step=n)
+

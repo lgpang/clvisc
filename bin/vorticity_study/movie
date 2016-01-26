@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+# -*- noplot -*-
+
+from __future__ import print_function
+
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+from glob import glob
+from optparse import OptionParser
+
+import sys
+
+parser = OptionParser()
+parser.add_option("-x", "--xlabel", action="store", dest="xlabel", type="string", default='x')
+parser.add_option("-y", "--ylabel", action="store", dest="ylabel", type="string", default='y')
+parser.add_option("-t", "--title", action="store", dest="title", type="string", default='')
+parser.add_option("-e", "--extent", action="store", dest="extent", type="string", default='')
+parser.add_option("-m", "--vmax", action="store", dest="max", type="float")
+parser.add_option("--xlim", action="store", dest="xlim", type="float")
+parser.add_option("--ylim", action="store", dest="ylim", type="float")
+
+(options, args) = parser.parse_args(sys.argv[1:])
+print(options)
+
+print("usage: movie prefix*.dat --options")
+
+files = []
+
+finis = args
+
+print(finis)
+
+for i, fname in enumerate(finis):
+    plt.cla()
+    a = np.loadtxt(fname)
+    #extent = (-9.0, 9.0, -12.0, 12.0)
+    #plt.imshow(a.T, origin='lower', aspect='auto', vmax=options.max, vmin=-options.max)
+    plt.imshow(a.T, origin='lower', aspect='auto')
+    fname = '_tmp%03d.png' % i
+    print('Saving frame', fname)
+    plt.xlabel( options.xlabel,fontsize=30, family='serif')
+    plt.ylabel( options.ylabel,fontsize=30, family='serif')
+    plt.title(  options.title, fontsize=30, family='serif')
+    plt.xlim(-options.xlim, options.xlim)
+    plt.ylim(-options.ylim, options.ylim)
+    plt.colorbar()
+
+    plt.savefig(fname)
+    files.append(fname)
+    plt.close()
+
+print('Making movie animation.mpg - this make take a while')
+#os.system("mencoder 'mf://_tmp*.png' -mf type=png:fps=10 -ovc lavc -lavcopts vcodec=wmv2 -oac copy -o animation.mpg")
+
+os.system("ffmpeg -framerate 5 -i _tmp%03d.png -r 30 -pix_fmt yuv420p movie.mp4")
+#os.system("convert _tmp*.png animation.mng")
+
+# cleanup
+for fname in files:
+    os.remove(fname)
