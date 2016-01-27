@@ -117,8 +117,12 @@ def sigma_dependence():
     #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p6')
     #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=1.5, sigy=3.0,
     #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy3p0')
-    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=2.4, sigy=4.8,
-              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy4p8_chiTcorrect')
+    #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=2.4, sigy=4.8,
+    #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy4p8_chiTcorrect')
+    #squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=1.9, eB0=1.33, sigx=3.6, sigy=7.2,
+    #          path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td1p9_eb1p33_sigy7p2_chiTcorrect')
+    squeezing(tau0=0.2, sys='LHC', b=10.0, tdec=0.5, eB0=1.33, sigx=3.6, sigy=7.2,
+              path_out='../results/tau0_dependence/squeezing_pbpb276_tau0p2_td0p5_eb1p33_sigy7p2_chiTcorrect')
 
 
 
