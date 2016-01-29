@@ -6,7 +6,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-path = '../../results/P30_s95p/'
+path = '../../results/P30_WB/'
 #number of eta (-9.0, 9.0) with deta=0.3
 NZ = 61 
 # number of x grid, (-15.0, 15.0) with dx=0.1
@@ -101,6 +101,6 @@ def save_dxuz_dzux(time_step):
     np.savetxt('omega_xz_%d.dat'%time_step, vorticity)
 
 
-for n in range(9):
+for n in range(16):
     save_dxuz_dzux(time_step=n)
 
