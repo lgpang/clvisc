@@ -202,16 +202,9 @@ class CLIdeal(object):
         return self.submax.max()
 
 
-    def output(self, nstep):
-        if nstep%self.cfg.ntskip == 0:
-            cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev[1]).wait()
-            fout = '{pathout}/Ed{nstep}.dat'.format(
-                    pathout=self.cfg.fPathOut, nstep=nstep)
-            edxy = self.h_ev1[:,1].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)[:,:,self.cfg.NZ//2]
-            np.savetxt(fout, self.h_ev1[:,0].reshape(self.cfg.NX, self.cfg.NY, self.cfg.NZ)
-                    [::self.cfg.nxskip,::self.cfg.nyskip,::self.cfg.nzskip].flatten(), header='Ed, vx, vy, veta')
-            #plt.imshow(edxy)
-            #plt.show()
+    def ev_to_host(self):
+        '''copy energy density and fluid velocity from device to host'''
+        cl.enqueue_copy(self.queue, self.h_ev1, self.d_ev[1]).wait()
 
     def get_hypersf(self, n, ntskip):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
