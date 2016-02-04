@@ -4,16 +4,16 @@
 #createTime: Do 04 Feb 2016 5:38:06 CET
 '''Helmholtz-Hodge vector fields decomposition
    For any vector fields \vec{v}, it can be
-   decomposed to curl-free and divergent-free part;
-   This library is used to extract the vorticity development
+   decomposed to curl-free and divergence-free part;
+   This library is used to extract the vorticity developped
    during the QGP expansion in relativistic high energy heavy ion collisions,
    to visualize how does the initial angular momentum transfers to
    local vorticity'''
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pyopencl as cl
-from numba import jit
+#from numba import jit
+from common_plotting import smash_style
 
 
 class HelmholtzHodge2D(object):
@@ -30,6 +30,7 @@ class HelmholtzHodge2D(object):
         plt.xlabel(r'$x\ [fm]$')
         plt.ylabel(r'$y\ [fm]$')
         plt.title(r'$\mathbf{v}=(v_x, v_y)$')
+        smash_style.set()
         plt.show()
 
     def grad_v(self):
@@ -40,7 +41,7 @@ class HelmholtzHodge2D(object):
 
     #@jit
     def int_nabla_v(self):
-        ''' A(r) = \int dr' curl v(r') / (r-r') dr'
+        ''' \vec{A}(r) = \int dr' curl v(r') / (r-r') dr'
         '''
         N = len(self.x)
         x, y = np.meshgrid(self.x, self.y)
@@ -61,6 +62,7 @@ class HelmholtzHodge2D(object):
         return Ax*dxdy, Ay*dxdy
 
     def gradient_free(self):
+        ''' nabla \times \vec{A} '''
         Ax, Ay = self.int_nabla_v()
         dyAx = np.gradient(Ax)[1]
         dxAy = np.gradient(Ay)[0]
@@ -68,6 +70,7 @@ class HelmholtzHodge2D(object):
         plt.ylabel(r'$y\ [fm]$')
         plt.quiver(self.x, self.y, dyAx.T, dxAy.T, scale=2000)
         plt.title(r'$\nabla\times \mathbf{a}(\mathbf{r})$')
+        smash_style.set()
         plt.show()
 
     def curl_free(self):
@@ -96,19 +99,34 @@ class HelmholtzHodge2D(object):
         plt.xlabel(r'$x\ [fm]$')
         plt.ylabel(r'$y\ [fm]$')
         plt.title(r'$-\nabla\phi(\mathbf{r})$')
+        smash_style.set()
         plt.show()
 
 
 
 x = np.linspace(-15, 15, 301)
 y = np.linspace(-15, 15, 301)
-vx = np.loadtxt('../results/P30_idealgas/vx_xy3.dat')
-vy = np.loadtxt('../results/P30_idealgas/vy_xy3.dat')
+
+''' notice that vx, vy should be stored in the following way
+to 2 different files.
+for ( int i=0; i<Nx; i++ ) {
+    for ( int j=0; j<Ny; j++ ) {
+        fout << vx[i][j] << ' ';
+    }
+    fout << std::endl;
+}
+'''
+
+#vx = np.loadtxt('../results/P30_idealgas/vx_xy8.dat')
+#vy = np.loadtxt('../results/P30_idealgas/vy_xy8.dat')
+
+vx = np.loadtxt('../results/P30/vx_xy8.dat')
+vy = np.loadtxt('../results/P30/vy_xy8.dat')
 
 hh = HelmholtzHodge2D(vx[::5, ::5], vy[::5, ::5], x[::5], y[::5])
 #hh = HelmholtzHodge2D(vx, vy, x, y)
-#hh.nabla_v()
-hh.gradient_free()
+hh.quiver()
+#hh.gradient_free()
 #hh.curl_free()
 
 
