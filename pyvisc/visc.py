@@ -43,6 +43,9 @@ class CLVisc(object):
         self.d_udy = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
         self.d_udz = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
+        # d_omega vorticity vector omega^{mu}= epsilon^{mu nu a b} u_nu d_a u_b
+        self.d_omega = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
+
         # velocity difference between u_visc and u_ideal* for correction
         self.d_udiff = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
 
@@ -87,6 +90,10 @@ class CLVisc(object):
         with open(os.path.join(self.cwd, 'kernel', 'kernel_checkpi.cl'), 'r') as f:
             src = f.read()
             self.kernel_checkpi = cl.Program(self.ctx, src).build(options=self.compile_options)
+
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_vorticity.cl'), 'r') as f:
+            src = f.read()
+            self.kernel_vorticity = cl.Program(self.ctx, src).build(options=self.compile_options)
             
     def IS_initialize(self):
         '''initialize pi^{mu nu} tensor'''
@@ -195,6 +202,22 @@ class CLVisc(object):
                 self.d_udx, self.d_udy, self.d_udz, self.d_IS_src,
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
+
+    def get_vorticity(self, loop, step, save_data=False):
+        '''calc vorticity vector omega^{mu} and store them '''
+        NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+        self.kernel_vorticity.omegamu(self.queue, (NX*NY*NZ,), None,
+                self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
+                self.d_udx, self.d_udy, self.d_udz, self.d_omega,
+                self.eos_table, self.ideal.tau, np.int32(step)
+                ).wait()
+
+        if save_data:
+            h_omega = np.zeros((NX*NY*NZ, 4), self.cfg.real)
+            cl.enqueue_copy(self.queue, h_omega, self.d_omega).wait()
+            path_out = os.path.abspath(self.cfg.fPathOut)
+            np.savetxt(path_out + '/omegamu_%d.dat'%loop, h_omega,
+            header='omega^{tau} omega^{x} omega^{y} omega^{eta} for NX*NY*NZ cells')
 
 
     def update_udiff(self, d_ev0, d_ev1):
@@ -320,13 +343,14 @@ class CLVisc(object):
             self.visc_stepUpdate(step=1)
             self.update_time(loop)
             # update pi[1] with d_ev[0] and d_ev[2]_visc*
+
+            # remove the following 2 lines to speed up without vorticity calculation
+            if loop % self.cfg.ntskip == 0:
+                self.get_vorticity(loop, step=2, save_data=True)
+
             self.IS_stepUpdate(step=2)
             self.visc_stepUpdate(step=2)
             self.update_udiff(self.ideal.d_ev[0], self.ideal.d_ev[1])
-
-            #self.check_pizz()
-            #t1 = time()
-            #print 'time per loop: {dtime}'.format(dtime = t1-t0)
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk, 
                   save_pi = save_pi)
