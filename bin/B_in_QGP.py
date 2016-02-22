@@ -22,13 +22,14 @@ from ideal import CLIdeal
 from common_plotting import smash_style
 
 class MagneticField(object):
-    def __init__(self, eB0, sigx, sigy, hydro_cfg, bulkinfo=None):
+    def __init__(self, eB0, sigx, sigy, hydro_cfg, bulkinfo=None, sigma=5.8):
         '''eB0: maximum magnetic field
            sigx: gaussian width of magnetic field along x
            sigy: gaussian width of magnetic field along y
            nx, ny: grids along x and y direction
            dx, dy: space step along x and y direction
-           hydro_dir: directory with fluid velocity profile '''
+           hydro_dir: directory with fluid velocity profile
+           sigma: electric conductivity in units of MeV'''
         nx, ny = hydro_cfg.NX, hydro_cfg.NY
         dx, dy = hydro_cfg.DX, hydro_cfg.DY
         dt = hydro_cfg.DT * hydro_cfg.ntskip
@@ -43,10 +44,16 @@ class MagneticField(object):
 
         x, y = np.meshgrid(x, y, indexing='ij')
 
-        By0 = eB0 * np.exp(-x*x/(2*sigx*sigx)-y*y/(2*sigy*sigy))
-        Bx0 = np.zeros_like(By0)
+        #By0 = eB0 * np.exp(-x*x/(2*sigx*sigx)-y*y/(2*sigy*sigy))
+        By0 = eB0 * sigx*sigx/(x*x+sigx*sigx) * np.exp(-y*y/(2*sigy*sigy))
+        Bx0 = eB0 * sigx*np.arctan(x/sigx) * y/(sigy*sigy) * np.exp(-y*y/(2*sigy*sigy))
+        #Bx0 = np.zeros_like(By0)
         Bz0 = np.zeros_like(By0)
+
         self.B0 = [Bx0, By0, Bz0]
+
+        #converts MeV to fm^{-1}
+        self.sigma = sigma * 0.001 / 0.19732
 
         self.hydro_cfg = hydro_cfg
         self.bulkinfo = bulkinfo
@@ -54,12 +61,36 @@ class MagneticField(object):
         # self.B stores [[Bx, By, Bz], ...] array
         self.B = []
 
-    def E(self, v, B):
-        ''' E = - v cross B '''
-        Ex = -v[1]*B[2] + v[2]*B[1]
-        Ey = v[0]*B[2] - v[2]*B[0]
-        Ez = -v[0]*B[1] + v[1]*B[0]
+    def v_cross_B(self, v, B):
+        ''' v cross B '''
+        a = v[1]*B[2] - v[2]*B[1]
+        b = -v[0]*B[2] + v[2]*B[0]
+        c = v[0]*B[1] - v[1]*B[0]
+        return [a, b, c]
+
+    def curl_B(self, B):
+        ''' return: nabla X B '''
+        dBx = np.gradient(B[0])
+        dBy = np.gradient(B[1])
+        dBz = np.gradient(B[2])
+        zeros = np.zeros_like(B[0])
+        dyBz, dzBy = dBz[1]/self.dy, zeros
+        dxBz, dzBx = dBz[0]/self.dx, zeros
+        dxBy, dyBx = dBy[0]/self.dx, dBx[1]/self.dy
+        curl_x = dyBz - dzBy
+        curl_y = dzBx - dxBz
+        curl_z = dxBy - dyBx
+        return [curl_x, curl_y, curl_z]
+
+    def electric_field(self, En, v, B, dt, sigma):
+        ''' E^n+1 = (En + dt*(curl B - sigma vXB))/(1+sigma dt) '''
+        curl_B = self.curl_B(B)
+        v_cross_B = self.v_cross_B(v, B)
+        Ex = (En[0] + dt*(curl_B[0] - sigma*v_cross_B[0]))/(1+sigma*dt)
+        Ey = (En[1] + dt*(curl_B[1] - sigma*v_cross_B[1]))/(1+sigma*dt)
+        Ez = (En[2] + dt*(curl_B[2] - sigma*v_cross_B[2]))/(1+sigma*dt)
         return [Ex, Ey, Ez]
+
 
     def velocity(self, timestep):
         '''read fluid velocity from hydro_dir if
@@ -77,6 +108,12 @@ class MagneticField(object):
         vz = np.zeros_like(vx)
         return [vx, vy, vz]
 
+    def check_divB(self, Bfield):
+        dxBx = np.gradient(Bfield[0])[0]/self.dx
+        dyBy = np.gradient(Bfield[1])[1]/self.dy
+        err  = dxBx + dyBy
+        return err
+
 
     def evolve(self, nstep=20):
         '''time evolution of magnetic field for nstep '''
@@ -84,6 +121,13 @@ class MagneticField(object):
         By = np.empty_like(Bx)
         Bz = np.empty_like(Bx)
         Bold = self.B0
+        zeros = np.zeros_like(Bx)
+
+        Ex = np.empty_like(Bx)
+        Ey = np.empty_like(Bx)
+        Ez = np.empty_like(Bx)
+        E = [Ex, Ey, Ez]
+
         ax = self.dt / self.dx
         ay = self.dt / self.dy
 
@@ -93,10 +137,13 @@ class MagneticField(object):
 
         By_cent_vs_time = []
 
+        extent = (self.x[0], self.x[-1], self.y[0], self.y[-1])
+
         for n in range(1, nstep):
             # predict step, get B^{n+1'} from B^n and v^n
             v = self.velocity(n-1)
-            E = self.E(v, Bold)
+            #E =  - self.v_cross_B(v, Bold)
+            E = self.electric_field(E, v, Bold, self.dt, self.sigma)
             dEx = np.gradient(E[0])
             dEy = np.gradient(E[1])
             dEz = np.gradient(E[2])
@@ -108,7 +155,8 @@ class MagneticField(object):
             Bprim = [Bx, By, Bz]
 
             v = self.velocity(n)
-            E = self.E(v, Bprim)
+            #E = - self.v_cross_B(v, Bprim)
+            E = self.electric_field(E, v, Bprim, self.dt, self.sigma)
             dEx_1 = np.gradient(E[0])
             dEy_1 = np.gradient(E[1])
             dEz_1 = np.gradient(E[2])
@@ -116,12 +164,22 @@ class MagneticField(object):
 
             Bx = Bold[0] - 0.5*ay*(dE[2][1] + dE_prim[2][1])
             By = Bold[1] + 0.5*ax*(dE[2][0] + dE_prim[2][0])
-            Bz = 0.0
+            Bz = zeros
             Bold = [Bx, By, Bz]
+
+            time = self.hydro_cfg.TAU0+n*self.dt
+            divB = self.check_divB(Bold)
+            plt.contourf(divB.T, origin='lower', extent=extent)
+            plt.xlabel(r'$x\ [fm]$')
+            plt.ylabel(r'$y\ [fm]$')
+            plt.title(r'$div B\ @\ t=%s\ [fm]\ %s$'%(time, eos_type))
+            smash_style.set()
+            plt.colorbar()
+            plt.savefig('%s/divB_%03d.png'%(self.hydro_dir,n))
+            plt.close()
 
             self.B.append(Bold)
 
-            time = self.hydro_cfg.TAU0+n*self.dt 
             i_cent = self.hydro_cfg.NX//2
             j_cent = self.hydro_cfg.NY//2
             By_cent = By[i_cent, j_cent]
@@ -165,13 +223,15 @@ class MagneticField(object):
 
 
 
-def eB(eos_type='EOSL'):
+def eB(eos_type='EOSL', sigma=5.8):
+    '''sigma: electric conductivity'''
     if eos_type == 'EOSI':
         cfg.IEOS = 0
     else:
         cfg.IEOS = 1
 
-    fout = '%s_figs'%eos_type
+    fout = '%s_figs_BWx_sig%s'%(eos_type, sigma)
+    fout = fout.replace('\.', 'p')
 
     if not os.path.exists(fout):
         os.mkdir(fout)
@@ -203,13 +263,16 @@ def eB(eos_type='EOSL'):
 
     bulk = ideal.bulkinfo
 
-    eB_field = MagneticField(eB0=0.1, sigx=2.4, sigy=4.8, hydro_cfg=cfg, bulkinfo=bulk)
+    eB_field = MagneticField(eB0=0.1, sigx=2.4, sigy=4.8, hydro_cfg=cfg, bulkinfo=bulk, sigma=sigma)
 
     eB_field.evolve(nstep=240)
 
-    eB_field.plot()
+    #eB_field.plot()
 
 
 if __name__=='__main__':
-    eB('EOSL')
-    eB('EOSI')
+    #eB('EOSL', sigma=5.8)
+    eB('EOSL', sigma=10000000)
+    #eB('EOSL', sigma=20)
+    #eB('EOSL', sigma=100)
+    #eB('EOSI', sigma=5.8)
