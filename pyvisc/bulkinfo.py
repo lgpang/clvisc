@@ -41,8 +41,6 @@ class BulkInfo(object):
         # in reaction plane
         self.exz, self.vx_xz, self.vy_xz, self.vz_xz = [], [], [], []
 
-        self.ecc_x = []
-        self.ecc_p = []
         self.ecc2_vs_rapidity = []
         self.ecc1_vs_rapidity = []
         self.time = []
@@ -168,6 +166,15 @@ class BulkInfo(object):
         v1 = T0x.sum() / (Txx + Tyy).sum()
         return v1, v2
 
+    def mean_vr(self, ed, vx, vy, vz=0.0):
+        ''' <vr> = <gamma * ed * sqrt(vx*vx + vy*vy)>/<gamma*ed>
+        where <> are averaged over whole transverse plane'''
+        ed[ed<1.0E-10] = 1.0E-10
+        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
+        vr = (u0*ed*np.sqrt(vx*vx + vy*vy)).sum() / (u0*ed).sum()
+        return vr
+
+
 
     def ecc_vs_rapidity(self, d_ev):
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
@@ -206,6 +213,7 @@ class BulkInfo(object):
             np.savetxt(path_out+'/ecc1.dat',
                        np.array(self.ecc1_vs_rapidity).T)
 
+        vr = []
         ecc2 = []
         ecc1 = []
         for idx, exy in enumerate(self.exy):
@@ -218,6 +226,8 @@ class BulkInfo(object):
 
             ecc1.append(self.eccp(exy, vx, vy)[0])
             ecc2.append(self.eccp(exy, vx, vy)[1])
+            vr.append(self.mean_vr(exy, vx, vy))
+
         
         for idx, exz in enumerate(self.exz):
             np.savetxt(path_out+'/ed_xz%d.dat'%idx, exz)
@@ -231,3 +241,11 @@ class BulkInfo(object):
 
         np.savetxt(path_out + '/Tmax.dat',
                    np.array(zip(self.time, self.eos.f_T(self.edmax))))
+
+        np.savetxt(path_out + '/edmax.dat',
+                   np.array(zip(self.time, self.edmax)))
+
+        np.savetxt(path_out + '/vr.dat',
+                   np.array(zip(self.time, vr)))
+
+
