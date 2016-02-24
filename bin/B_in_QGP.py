@@ -123,10 +123,10 @@ class MagneticField(object):
         Bold = self.B0
         zeros = np.zeros_like(Bx)
 
-        Ex = np.empty_like(Bx)
-        Ey = np.empty_like(Bx)
-        Ez = np.empty_like(Bx)
-        E = [Ex, Ey, Ez]
+        Ex = np.zeros_like(Bx)
+        Ey = np.zeros_like(Bx)
+        Ez = np.zeros_like(Bx)
+        Eold = [Ex, Ey, Ez]
 
         ax = self.dt / self.dx
         ay = self.dt / self.dy
@@ -142,8 +142,7 @@ class MagneticField(object):
         for n in range(1, nstep):
             # predict step, get B^{n+1'} from B^n and v^n
             v = self.velocity(n-1)
-            #E =  - self.v_cross_B(v, Bold)
-            E = self.electric_field(E, v, Bold, self.dt, self.sigma)
+            E = self.electric_field(Eold, v, Bold, dt=0, sigma=self.sigma)
             dEx = np.gradient(E[0])
             dEy = np.gradient(E[1])
             dEz = np.gradient(E[2])
@@ -156,7 +155,7 @@ class MagneticField(object):
 
             v = self.velocity(n)
             #E = - self.v_cross_B(v, Bprim)
-            E = self.electric_field(E, v, Bprim, self.dt, self.sigma)
+            E = self.electric_field(Eold, v, Bprim, dt=self.dt, sigma=self.sigma)
             dEx_1 = np.gradient(E[0])
             dEy_1 = np.gradient(E[1])
             dEz_1 = np.gradient(E[2])
@@ -166,6 +165,8 @@ class MagneticField(object):
             By = Bold[1] + 0.5*ax*(dE[2][0] + dE_prim[2][0])
             Bz = zeros
             Bold = [Bx, By, Bz]
+
+            Eold = E
 
             time = self.hydro_cfg.TAU0+n*self.dt
             divB = self.check_divB(Bold)
@@ -230,7 +231,7 @@ def eB(eos_type='EOSL', sigma=5.8):
     else:
         cfg.IEOS = 1
 
-    fout = '%s_figs_BWx_sig%s'%(eos_type, sigma)
+    fout = '%s_figs_BW_sig%s'%(eos_type, sigma)
     fout = fout.replace('\.', 'p')
 
     if not os.path.exists(fout):
@@ -267,12 +268,13 @@ def eB(eos_type='EOSL', sigma=5.8):
 
     eB_field.evolve(nstep=240)
 
-    #eB_field.plot()
+    eB_field.plot()
 
 
 if __name__=='__main__':
+    #eB('EOSL', sigma=0)
     #eB('EOSL', sigma=5.8)
-    eB('EOSL', sigma=10000000)
+    #eB('EOSL', sigma=10000000)
     #eB('EOSL', sigma=20)
-    #eB('EOSL', sigma=100)
+    eB('EOSL', sigma=100)
     #eB('EOSI', sigma=5.8)
