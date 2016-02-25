@@ -590,7 +590,8 @@ __kernel void visc_hypersf(__global real8  * d_sf,
 }
 
 // calc the vorticity omega_{mu} on freeze out hypersf
-__kernel void vorticity_hypersf1(__global real4 * d_omega_onsf,
+__kernel void vorticity_hypersf1(
+                          __global real4 * d_omega_sf,
                           __global int * num_of_sf,
                           __global real4 * d_ev_old,
                           __global real4 * d_ev_new,
@@ -688,7 +689,7 @@ __kernel void vorticity_hypersf1(__global real4 * d_omega_onsf,
             //real4 ev = centroid_ev(ev_cube, mass_center);
             real4 omegamu = centroid_ev(vorticity_cube, mass_center);
                                   
-            d_omega_onsf[atomic_inc(num_of_sf)] = omegamu;
+            d_omega_sf[atomic_inc(num_of_sf)] = omegamu;
         } // end surface calculation
     } // end boundary check
 }
