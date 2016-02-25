@@ -19,6 +19,11 @@ class Eos(object):
             self.lattice_ce()
         elif IEOS == 3:
             self.pure_su3()
+        elif IEOS == 4:
+            '''use equal temperature interval dT'''
+            self.lattice_ce_mod()
+
+
 
     def ideal_gas(self):
         '''ideal gas eos, P=ed/3 '''
@@ -70,6 +75,22 @@ class Eos(object):
         self.ed_step = wb.ed_step
         self.num_of_ed = wb.num_ed
         self.eos_func_from_interp1d()
+
+    def lattice_ce_mod(self):
+        '''lattice qcd EOS from wuppertal budapest group
+        2014 with chemical equilibrium EOS
+        use T=np.linspace(0.03, 1.13, 1999) to create the table,
+        notice that ed_step is not constant'''
+        import wb_mod as wb
+        self.ed = wb.ed
+        self.pr = wb.pr
+        self.T = wb.T
+        self.s = (self.ed + self.pr)/(self.T + 1.0E-10)
+        self.ed_start = wb.ed_start
+        self.ed_step = wb.ed_step
+        self.num_of_ed = wb.num_ed
+        self.eos_func_from_interp1d()
+
 
     def pure_su3(self):
         '''pure su3 gauge EOS'''
