@@ -66,9 +66,9 @@ class MagneticField(object):
         a = v[1]*B[2] - v[2]*B[1]
         b = -v[0]*B[2] + v[2]*B[0]
         c = v[0]*B[1] - v[1]*B[0]
-        return [a, b, c]
+        return np.array([a, b, c])
 
-    def curl_B(self, B):
+    def curl(self, B):
         ''' return: nabla X B '''
         dBx = np.gradient(B[0])
         dBy = np.gradient(B[1])
@@ -80,16 +80,24 @@ class MagneticField(object):
         curl_x = dyBz - dzBy
         curl_y = dzBx - dxBz
         curl_z = dxBy - dyBx
-        return [curl_x, curl_y, curl_z]
+        return np.array([curl_x, curl_y, curl_z])
 
-    def electric_field(self, En, v, B, dt, sigma):
-        ''' E^n+1 = (En + dt*(curl B - sigma vXB))/(1+sigma dt) '''
-        curl_B = self.curl_B(B)
-        v_cross_B = self.v_cross_B(v, B)
-        Ex = (En[0] + dt*(curl_B[0] - sigma*v_cross_B[0]))/(1+sigma*dt)
-        Ey = (En[1] + dt*(curl_B[1] - sigma*v_cross_B[1]))/(1+sigma*dt)
-        Ez = (En[2] + dt*(curl_B[2] - sigma*v_cross_B[2]))/(1+sigma*dt)
-        return [Ex, Ey, Ez]
+    def electric_field(self, E0, v0, B0, v1, B1, dt, sigma):
+        '''No RungeKutta: E^n+1 = (En + dt*(curl B - sigma vXB))/(1+sigma dt)
+        with RungeKutta: E^n+1 = (En + 0.5dt*(curl B0 + J0 + curl B1 - sigma vxB))
+        /(1+0.5*sigma*dt)'''
+        curl_B0 = self.curl(B0)
+        curl_B1 = self.curl(B1)
+        v0_cross_B0 = self.v_cross_B(v0, B0)
+        v1_cross_B1 = self.v_cross_B(v1, B1)
+        def E_RungeKutta(i):
+            J0i = sigma*(E0[i] + v0_cross_B0[i])
+            return (E0[i] + 0.5*dt*(curl_B0[i] - J0i + curl_B1[i]
+                    - sigma*v1_cross_B1[i]))/(1+0.5*sigma*dt)
+        Ex = E_RungeKutta(0)
+        Ey = E_RungeKutta(1)
+        Ez = E_RungeKutta(2)
+        return np.array([Ex, Ey, Ez])
 
 
     def velocity(self, timestep):
@@ -106,7 +114,7 @@ class MagneticField(object):
             vx = self.bulkinfo.vx_xy[timestep]
             vy = self.bulkinfo.vy_xy[timestep]
         vz = np.zeros_like(vx)
-        return [vx, vy, vz]
+        return np.array([vx, vy, vz])
 
     def check_divB(self, Bfield):
         dxBx = np.gradient(Bfield[0])[0]/self.dx
@@ -120,16 +128,13 @@ class MagneticField(object):
         Bx = np.empty_like(self.B0[0])
         By = np.empty_like(Bx)
         Bz = np.empty_like(Bx)
-        Bold = self.B0
+        Bold = np.array(self.B0)
         zeros = np.zeros_like(Bx)
 
         Ex = np.zeros_like(Bx)
         Ey = np.zeros_like(Bx)
         Ez = np.zeros_like(Bx)
-        Eold = [Ex, Ey, Ez]
-
-        ax = self.dt / self.dx
-        ay = self.dt / self.dy
+        Eold = np.array([Ex, Ey, Ez])
 
         eos_type = 'EOSI'
         if self.hydro_cfg.IEOS == 1:
@@ -139,36 +144,26 @@ class MagneticField(object):
 
         extent = (self.x[0], self.x[-1], self.y[0], self.y[-1])
 
+        sigma = self.sigma
+        dt = self.dt
+
         for n in range(1, nstep):
-            # predict step, get B^{n+1'} from B^n and v^n
-            v = self.velocity(n-1)
-            E = self.electric_field(Eold, v, Bold, dt=0, sigma=self.sigma)
-            dEx = np.gradient(E[0])
-            dEy = np.gradient(E[1])
-            dEz = np.gradient(E[2])
-            dE = [dEx, dEy, dEz]
+            # predict step, get B^{n+1'} from B^n and E^n
+            v0 = self.velocity(n-1)
+            E0 = Eold
+            curl_E0 = self.curl(E0)
+            Bprim = Bold - dt * curl_E0
 
-            Bx = Bold[0] - ay*dE[2][1]
-            By = Bold[1] + ax*dE[2][0]
-            Bz = Bold[2] - ax*dE[1][0] + ay*dE[0][1]
-            Bprim = [Bx, By, Bz]
+            v1 = self.velocity(n)
+            #E1 = self.electric_field(E0, v0, Bold, v1, Bprim, dt=self.dt, sigma=self.sigma)
+            Eprim = (E0 + dt*(self.curl(Bprim) - sigma*self.v_cross_B(v1, Bprim)))/(1+sigma*dt)
 
-            v = self.velocity(n)
-            #E = - self.v_cross_B(v, Bprim)
-            E = self.electric_field(Eold, v, Bprim, dt=self.dt, sigma=self.sigma)
-            dEx_1 = np.gradient(E[0])
-            dEy_1 = np.gradient(E[1])
-            dEz_1 = np.gradient(E[2])
-            dE_prim = [dEx_1, dEy_1, dEz_1]
+            B1 = Bold - 0.5*dt*(self.curl(E0) + self.curl(Eprim))
 
-            Bx = Bold[0] - 0.5*ay*(dE[2][1] + dE_prim[2][1])
-            By = Bold[1] + 0.5*ax*(dE[2][0] + dE_prim[2][0])
-            Bz = zeros
-            Bold = [Bx, By, Bz]
+            Bold = B1
+            Eold = (E0 + dt*(self.curl(B1) - sigma*self.v_cross_B(v1, B1)))/(1+sigma*dt)
 
-            Eold = E
-
-            time = self.hydro_cfg.TAU0+n*self.dt
+            time = self.hydro_cfg.TAU0+n*dt
             divB = self.check_divB(Bold)
             plt.contourf(divB.T, origin='lower', extent=extent)
             plt.xlabel(r'$x\ [fm]$')
@@ -183,7 +178,7 @@ class MagneticField(object):
 
             i_cent = self.hydro_cfg.NX//2
             j_cent = self.hydro_cfg.NY//2
-            By_cent = By[i_cent, j_cent]
+            By_cent = Bold[1, i_cent, j_cent]
             By_cent_vs_time.append([time, By_cent])
 
         By_cent_vs_time = np.array(By_cent_vs_time)
