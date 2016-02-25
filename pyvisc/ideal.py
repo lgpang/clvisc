@@ -56,6 +56,9 @@ class CLIdeal(object):
         if self.cfg.IEOS == 1:
             self.eos_table = self.eos.create_table(self.ctx,
                     self.gpu_defines, nrow=100, ncol=1555)
+        elif self.cfg.IEOS == 4:
+            self.eos_table = self.eos.create_table(self.ctx,
+                    self.gpu_defines, nrow=4, ncol=1001)
         else:
             self.eos_table = self.eos.create_table(self.ctx,
                     self.gpu_defines)
@@ -84,10 +87,6 @@ class CLIdeal(object):
         h_num_of_sf = np.zeros(1, np.int32)
         self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
 
-        # get the vorticity on the freeze out hypersurface
-        self.d_vorticity = cl.Buffer(self.ctx, mf.READ_WRITE, size=1500000*self.cfg.sz_real)
-        self.d_num_of_vorticity = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
-
         self.history = []
  
     def load_ini(self, dat):
@@ -114,7 +113,13 @@ class CLIdeal(object):
         if self.cfg.use_float32:
             gpu_defines.append( '-D USE_SINGLE_PRECISION' )
         #choose EOS by ifdef in *.cl file
-        gpu_defines.append( '-D EOS_TABLE' ) # WB2014
+
+        if self.cfg.IEOS == 4:
+            '''delta ed is not constant; delta T is constant;
+            using binary search for energy density '''
+            gpu_defines.append( '-D EOS_BINARY_SEARCH' ) # WB2014
+        else:
+            gpu_defines.append( '-D EOS_TABLE' ) # WB2014
 
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
@@ -225,12 +230,6 @@ class CLIdeal(object):
                     self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
-            # get vorticity omega_{xz} on hypersf
-            self.kernel_hypersf.vorticity_hypersf(self.queue, (nx, ny, nz), None,
-                    self.d_vorticity, self.d_num_of_vorticity, self.d_ev_old, self.d_ev[1],
-                    self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
-
-
             # update with current tau and d_ev[1]
             cl.enqueue_copy(self.queue, self.d_ev_old, self.d_ev[1]).wait()
             self.tau_old = tau_new
@@ -248,14 +247,6 @@ class CLIdeal(object):
             print("hypersf save to ", out_path)
             np.savetxt(out_path, hypersf, fmt='%.6e', header =
               'Tfrz=%.6e ; other rows: dS0, dS1, dS2, dS3, vx, vy, veta, etas'%self.cfg.TFRZ)
-
-            # save vorticity on hypersf to data file
-            vorticity = np.empty(self.num_of_sf, dtype=self.cfg.real)
-            cl.enqueue_copy(self.queue, vorticity, self.d_vorticity).wait()
-            out_path = os.path.join(self.cfg.fPathOut, 'vorticity_xz.dat')
-            print("vorticity omega_{xz} on surface is saved to", out_path)
-            np.savetxt(out_path, vorticity, fmt='%.6e', header =
-              'omega_xz = dx u_z - dz u_x')
 
         if save_bulk:
             self.bulkinfo.save()
