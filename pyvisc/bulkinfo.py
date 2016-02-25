@@ -174,6 +174,12 @@ class BulkInfo(object):
         vr = (u0*ed*np.sqrt(vx*vx + vy*vy)).sum() / (u0*ed).sum()
         return vr
 
+    def total_entropy(self, tau, ed, vx, vy, vz=0.0):
+        '''get the total entropy as a function of time'''
+        ed[ed<1.0E-10] = 1.0E-10
+        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
+
+        return (u0*self.eos.f_S(ed)).sum() * tau * self.cfg.DX * self.cfg.DY
 
 
     def ecc_vs_rapidity(self, d_ev):
@@ -213,6 +219,7 @@ class BulkInfo(object):
             np.savetxt(path_out+'/ecc1.dat',
                        np.array(self.ecc1_vs_rapidity).T)
 
+        entropy = []
         vr = []
         ecc2 = []
         ecc1 = []
@@ -227,6 +234,8 @@ class BulkInfo(object):
             ecc1.append(self.eccp(exy, vx, vy)[0])
             ecc2.append(self.eccp(exy, vx, vy)[1])
             vr.append(self.mean_vr(exy, vx, vy))
+            tau = self.time[idx]
+            entropy.append(self.total_entropy(tau, exy, vx, vy))
 
         
         for idx, exz in enumerate(self.exz):
@@ -237,15 +246,18 @@ class BulkInfo(object):
             np.savetxt(path_out+'/T_xz%d.dat'%idx, self.eos.f_T(exz))
 
         np.savetxt(path_out + '/eccp.dat',
-                   np.array(zip(self.time, ecc2)))
+                   np.array(zip(self.time, ecc2)), header='tau  eccp')
 
         np.savetxt(path_out + '/Tmax.dat',
-                   np.array(zip(self.time, self.eos.f_T(self.edmax))))
+                   np.array(zip(self.time, self.eos.f_T(self.edmax))),
+                   header='tau, Tmax')
 
         np.savetxt(path_out + '/edmax.dat',
-                   np.array(zip(self.time, self.edmax)))
+                   np.array(zip(self.time, self.edmax)),
+                   header='tau, edmax')
 
         np.savetxt(path_out + '/vr.dat',
-                   np.array(zip(self.time, vr)))
+                   np.array(zip(self.time, vr)), header='tau <vr>')
 
-
+        np.savetxt(path_out + '/entropy.dat',
+                   np.array(zip(self.time, entropy)), header='tau  entropy')
