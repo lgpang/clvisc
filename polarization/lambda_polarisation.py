@@ -6,9 +6,9 @@
 '''calc the Lambda polarization on the freeze out hypersurface'''
 
 from __future__ import absolute_import, division, print_function
-from pyopencl import array
+#from pyopencl import array
 import numpy as np
-import pyopencl as cl
+#import pyopencl as cl
 import os
 import sys
 from time import time
@@ -27,7 +27,7 @@ class LambdaPolarisation(object):
         '''Def hydro in opencl with params stored in self.__dict__ '''
         # create opencl environment
         self.cwd, cwf = os.path.split(__file__)
-        self.mass = 1.0
+        self.mass = 1.115
         self.Tfrz = 0.137
         self.sf = sf
         self.omega = omega
@@ -80,16 +80,19 @@ class LambdaPolarisation(object):
         pdotu = u0*(mtcy-px*vx-py*vy-mtsy*vz)
         volum = mtcy*ds0 - px*ds1 - py*ds2 - mtsy*ds3
 
-        nf = 1.0/(np.exp(pdotu/Tfrz) + 1.0)
+        #nf = 1.0/(np.exp(pdotu/Tfrz) + 1.0)
+        tmp = np.exp(-pdotu/Tfrz)
+        nf = tmp/(1.0 + tmp)
 
         pbar_sqr = px*px + py*py + mtsy*mtsy
 
         beta = 1.0/Tfrz
 
-        #mass_fkt = 1.0 - pbar_sqr/(3*mass*(mass+pdotu))
-        mass_fkt = 1.0
+        mass_fkt = 1.0 - pbar_sqr/(3*mass*(mass+pdotu))
 
-        total_polarization = (volum*beta*omega_y*mass_fkt*pbar_sqr/(pdotu*pdotu)*nf*(1-nf)).sum()/6.0
+        # n \cdot omega = n0*omega0 - nx*omega_x - ny*omega_y - nz*omega_z
+        # n = (0, 1, 0, 0)
+        total_polarization = -(volum*beta*omega_y*mass_fkt*pbar_sqr/(pdotu*pdotu)*nf*(1-nf)).sum()/6.0
 
         total_density = (volum * nf).sum()
 
@@ -97,10 +100,16 @@ class LambdaPolarisation(object):
 
 
 
-sf = np.loadtxt('../results/P30_wbmod_etaos0/hypersf.dat')
-omega = np.loadtxt('../results/P30_wbmod_etaos0/omegamu_sf.dat')
+from numpy import genfromtxt
+#sf = np.loadtxt('../results/P30_wbmod_etaos0/hypersf.dat')
+#omega = np.loadtxt('../results/P30_wbmod_etaos0/omegamu_sf.dat')
+#sf = np.genfromtxt('../results/P3_wbmod_etaos0p08/hypersf.dat', filling_values=0.0)
+#omega = np.genfromtxt('../results/P3_wbmod_etaos0p08/omegamu_sf.dat', filling_values=0.0)
+
+sf = np.loadtxt('../results/P30_EOSI_etaos0_Tfrz0p02/hypersf.dat')
+omega = np.loadtxt('../results/P30_EOSI_etaos0_Tfrz0p02/omegamu_sf.dat')
 
 polar = LambdaPolarisation(sf, omega)
 
-for Y in range(-6, 6):
+for Y in range(-6, 7):
     polar.vorticity(Y)
