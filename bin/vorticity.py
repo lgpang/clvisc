@@ -22,13 +22,17 @@ def event_by_event(fname_partons, fout):
         os.mkdir(fout)
     cfg.NX = 301
     cfg.NY = 301
-    cfg.NZ = 61
+    cfg.NZ = 101
 
     cfg.DT = 0.005
     cfg.DX = 0.1
     cfg.DY = 0.1
+    cfg.DZ = 0.15
     cfg.IEOS = 0
+    cfg.TFRZ = 0.02
+
     cfg.ntskip = 60
+    cfg.nzskip = 2
 
     cfg.TAU0 = 0.4
     cfg.ETAOS = 0.0
@@ -37,9 +41,9 @@ def event_by_event(fname_partons, fout):
     write_config(cfg)
 
     t0 = time()
-    visc = CLVisc(cfg, gpu_id=1)
+    visc = CLVisc(cfg, gpu_id=2)
     visc.create_ini_from_partons(fname_partons, SIGR=0.6, SIGZ=0.6, KFACTOR=1.3)
-    visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=True)
+    visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=True, save_vorticity=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
@@ -87,7 +91,7 @@ def get_orbital_angular_momentum(fname_partons):
 
 def one_hydro_event():    
     fname = '/u/lpang/AuAu200_0_80/P30.txt'
-    fpath_out = '../results/P30_idealgas_etaos0'
+    fpath_out = '../results/P30_EOSI_etaos0_Tfrz0p02'
     event_by_event(fname, fpath_out)
 
 
@@ -108,7 +112,9 @@ def get_jy_vs_nparton():
     np.savetxt('jy_vs_np.dat', np.array(zip(nparton, jy)),
                fmt='%.3f', header='nparton, obital angular momentum')
 
-get_jy_vs_nparton()
+one_hydro_event()
+
+#get_jy_vs_nparton()
 
 #fname = '/u/lpang/AuAu200_0_80/P30.txt'
 #get_orbital_angular_momentum(fname)
