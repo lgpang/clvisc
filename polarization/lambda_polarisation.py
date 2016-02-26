@@ -36,10 +36,12 @@ class LambdaPolarisation(object):
     def vorticity(self, Y=4):
         nx, ny = 20, 20
         vor = np.zeros((nx, ny))
+        omg = np.zeros((nx, ny))
         for ix, px in enumerate(np.linspace(-3, 3, nx)):
             for iy, py in enumerate(np.linspace(-3, 3, ny)):
-                vor_y, rho = self.Pimu_rho(Y, px, py)
+                vor_y, omega_y, rho = self.Pimu_rho(Y, px, py)
                 vor[ix, iy] = vor_y/rho
+                omg[ix, iy] = omega_y/rho
             print(px, 'finished')
 
         plt.imshow(vor.T, extent=(-3,3,-3,3))
@@ -50,7 +52,16 @@ class LambdaPolarisation(object):
         smash_style.set()
         plt.savefig('vor_Y%s.png'%Y)
         plt.close()
-        np.savetxt('vor_Y%s.dat'%Y, vor, header='x=[-3,3], y=[-3, 3], 20*20 grids')
+
+        plt.imshow(vor.T, extent=(-3,3,-3,3))
+        plt.xlabel(r'$p_x\ [GeV]$')
+        plt.ylabel(r'$p_y\ [GeV]$')
+        plt.title(r'$\omega^{y}\ @\ rapidity=%s$'%Y)
+        plt.colorbar()
+        smash_style.set()
+        plt.savefig('omg_Y%s.png'%Y)
+        plt.close()
+
 
     #@jit
     def Pimu_rho(self, Y, px, py):
@@ -84,7 +95,7 @@ class LambdaPolarisation(object):
         tmp = np.exp(-pdotu/Tfrz)
         nf = tmp/(1.0 + tmp)
 
-        pbar_sqr = px*px + py*py + mtsy*mtsy
+        pbar_sqr = mass*mass - pdotu*pdotu
 
         beta = 1.0/Tfrz
 
@@ -94,9 +105,11 @@ class LambdaPolarisation(object):
         # n = (0, 1, 0, 0)
         total_polarization = -(volum*beta*omega_y*mass_fkt*pbar_sqr/(pdotu*pdotu)*nf*(1-nf)).sum()/6.0
 
+        total_omega = (volum*omega_y*nf).sum()
+
         total_density = (volum * nf).sum()
 
-        return total_polarization, total_density
+        return total_polarization, total_omega, total_density
 
 
 
