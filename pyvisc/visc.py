@@ -261,14 +261,15 @@ class CLVisc(object):
                     self.ideal.d_hypersf, self.d_pi_sf, self.ideal.d_num_of_sf,
                     self.ideal.d_ev_old, self.ideal.d_ev[1],
                     self.d_pi_old, self.d_pi[1],
+                    self.d_omega_sf, self.d_omega[0], self.d_omega[1],
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
-            # get vorticity omega_{mu} on hypersf
-            self.kernel_hypersf.vorticity_hypersf1(self.queue, (nx, ny, nz), None,
-                    self.d_omega_sf, self.d_num_of_vorticity,
-                    self.ideal.d_ev_old, self.ideal.d_ev[1],
-                    self.d_omega[0], self.d_omega[1],
-                    self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
+            ## get vorticity omega_{mu} on hypersf
+            # self.kernel_hypersf.vorticity_hypersf1(self.queue, (nx, ny, nz), None,
+            #         self.d_omega_sf, self.d_num_of_vorticity,
+            #         self.ideal.d_ev_old, self.ideal.d_ev[1],
+            #         self.d_omega[0], self.d_omega[1],
+            #         self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
 
             # update with current tau and d_ev[1], d_pi[1] and d_omega[1]

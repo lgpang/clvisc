@@ -1,5 +1,10 @@
 #include<real_type.h>
+
+#define CALC_VORTICITY_ON_SF
+
+#ifdef CALC_VORTICITY_ON_SF
 #include<kernel_vorticity.h>
+#endif
 
 /* Author: LongGang Pang, 2015 
 The idea of 3D hypersuface calculation in 4D time-space is based on
@@ -393,6 +398,32 @@ real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
     return centroid;
 }
 
+real4 centroid_omega(__global real4 * d_omega_old, __global real4 * d_omega_new, real4 mc,
+                   int i, int j, int k){
+/* get the vorticity vector on the mass center of the freeze out hyper surface */
+    real4 centroid;
+    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_omega_old[idn(i, j, k)]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_omega_old[idn(i+1, j, k)]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_omega_old[idn(i, j+1, k)]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_omega_old[idn(i+1, j+1, k)]
+
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_omega_old[idn(i, j, k+1)]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_omega_old[idn(i+1, j, k+1)]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_omega_old[idn(i, j+1, k+1)]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_omega_old[idn(i+1, j+1, k+1)]
+
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_omega_new[idn(i, j, k)]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_omega_new[idn(i+1, j, k)]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_omega_new[idn(i, j+1, k)]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_omega_new[idn(i+1, j+1, k)]
+
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_omega_new[idn(i, j, k+1)]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_omega_new[idn(i+1, j, k+1)]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_omega_new[idn(i, j+1, k+1)]
+             + mc.s0*mc.s1*mc.s2*mc.s3*d_omega_new[idn(i+1, j+1, k+1)];
+    return centroid;
+}
+
 
 // calc the hypersf and store them in one buffer DA0, DA1, DA2, DA3,
 // vx, vy, veta, tau, x, y, eta
@@ -493,6 +524,11 @@ __kernel void visc_hypersf(__global real8  * d_sf,
                           __global real4 * d_ev_new,
                           __global real * d_pi_old,
                           __global real * d_pi_new,
+#ifdef CALC_VORTICITY_ON_SF
+                          __global real4   * d_omega_sf,
+                          __global real4 * d_omega_old,
+                          __global real4 * d_omega_new,
+#endif
                           const real time_old,
                           const real time_new) {
     __private real4 ev_cube[16];
@@ -585,111 +621,10 @@ __kernel void visc_hypersf(__global real8  * d_sf,
             d_pi[10*id_ + 7] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 7, i, j, k);
             d_pi[10*id_ + 8] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 8, i, j, k);
             d_pi[10*id_ + 9] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 9, i, j, k);
-        } // end surface calculation
-    } // end boundary check
-}
 
-// calc the vorticity omega_{mu} on freeze out hypersf
-__kernel void vorticity_hypersf1(
-                          __global real4 * d_omega_sf,
-                          __global int * num_of_sf,
-                          __global real4 * d_ev_old,
-                          __global real4 * d_ev_new,
-                          __global real4 * d_omega_old,
-                          __global real4 * d_omega_new,
-                          const real time_old,
-                          const real time_new) {
-    __private real4 ev_cube[16];
-    __private real ed_cube[16];
-    __private real4 vorticity_cube[16];
-    int i = get_global_id(0);
-    int j = get_global_id(1);
-    int k = get_global_id(2);
-
-    real4 mass_center;
-    int num_of_intersection;
-    real4 d_Sigma;
-
-    bool is_surf = true;
-    if ( (i+1)*nxskip < NX && (j+1)*nyskip < NY && (k+1)*nzskip < NZ ) {
-        ev_cube[0] = d_ev_old[idn(i, j, k)];
-        ev_cube[1] = d_ev_old[idn(i+1, j, k)];
-        ev_cube[2] = d_ev_old[idn(i, j+1, k)];
-        ev_cube[3] = d_ev_old[idn(i+1, j+1, k)];
-
-        ev_cube[4] = d_ev_old[idn(i, j, k+1)];
-        ev_cube[5] = d_ev_old[idn(i+1, j, k+1)];
-        ev_cube[6] = d_ev_old[idn(i, j+1, k+1)];
-        ev_cube[7] = d_ev_old[idn(i+1, j+1, k+1)];
-
-        ev_cube[8] = d_ev_new[idn(i, j, k)];
-        ev_cube[9] = d_ev_new[idn(i+1, j, k)];
-        ev_cube[10] = d_ev_new[idn(i, j+1, k)];
-        ev_cube[11] = d_ev_new[idn(i+1, j+1, k)];
-
-        ev_cube[12] = d_ev_new[idn(i, j, k+1)];
-        ev_cube[13] = d_ev_new[idn(i+1, j, k+1)];
-        ev_cube[14] = d_ev_new[idn(i, j+1, k+1)];
-        ev_cube[15] = d_ev_new[idn(i+1, j+1, k+1)];
-
-        for ( int grid = 0; grid < 16; grid ++ ) {
-            ed_cube[grid] = ev_cube[grid].s0;
-        }
-
-       
-        if ( (ed_cube[0] - EFRZ)*(ed_cube[15] - EFRZ) > 0 && 
-             (ed_cube[1] - EFRZ)*(ed_cube[14] - EFRZ) > 0 &&
-             (ed_cube[2] - EFRZ)*(ed_cube[13] - EFRZ) > 0 &&
-             (ed_cube[3] - EFRZ)*(ed_cube[12] - EFRZ) > 0 &&
-             (ed_cube[4] - EFRZ)*(ed_cube[11] - EFRZ) > 0 &&
-             (ed_cube[5] - EFRZ)*(ed_cube[10] - EFRZ) > 0 &&
-             (ed_cube[6] - EFRZ)*(ed_cube[9] - EFRZ) > 0 &&
-             (ed_cube[7] - EFRZ)*(ed_cube[8] - EFRZ) > 0 ) {
-            is_surf = false;
-        }
-    
-        if ( is_surf ) {
-            __private real4 all_ints[32];
-
-            get_all_intersections(ed_cube, all_ints, &num_of_intersection);
-            real4 energy_flow_vector = energy_flow(ed_cube);
-            mass_center = get_mass_center(all_ints, num_of_intersection);
-            real dtd = time_new - time_old;
-            real dxd = nxskip*DX;
-            real dyd = nyskip*DY;
-            real dzd = nzskip*DZ;
-
-
-            // space-time centroid of the freeze out hyper-surface
-            real tau = time_old + mass_center.s0*dtd;
-            real x = -NX/2*DX + i*dxd + mass_center.s1*dxd;
-            real y = -NY/2*DY + j*dyd + mass_center.s2*dyd;
-            real eta = -NZ/2*DZ + k*dzd + mass_center.s3*dzd;
-
-            vorticity_cube[0] = d_omega_old[idn(i, j, k)];
-            vorticity_cube[1] = d_omega_old[idn(i+1, j, k)];
-            vorticity_cube[2] = d_omega_old[idn(i, j+1, k)];
-            vorticity_cube[3] = d_omega_old[idn(i+1, j+1, k)];
-    
-            vorticity_cube[4] = d_omega_old[idn(i, j, k+1)];
-            vorticity_cube[5] = d_omega_old[idn(i+1, j, k+1)];
-            vorticity_cube[6] = d_omega_old[idn(i, j+1, k+1)];
-            vorticity_cube[7] = d_omega_old[idn(i+1, j+1, k+1)];
-    
-            vorticity_cube[8] = d_omega_new[idn(i, j, k)];
-            vorticity_cube[9] = d_omega_new[idn(i+1, j, k)];
-            vorticity_cube[10] = d_omega_new[idn(i, j+1, k)];
-            vorticity_cube[11] = d_omega_new[idn(i+1, j+1, k)];
-    
-            vorticity_cube[12] = d_omega_new[idn(i, j, k+1)];
-            vorticity_cube[13] = d_omega_new[idn(i+1, j, k+1)];
-            vorticity_cube[14] = d_omega_new[idn(i, j+1, k+1)];
-            vorticity_cube[15] = d_omega_new[idn(i+1, j+1, k+1)];
-
-            //real4 ev = centroid_ev(ev_cube, mass_center);
-            real4 omegamu = centroid_ev(vorticity_cube, mass_center);
-                                  
-            d_omega_sf[atomic_inc(num_of_sf)] = omegamu;
+#ifdef CALC_VORTICITY_ON_SF
+            d_omega_sf[id_] = centroid_omega(d_omega_old, d_omega_new, mass_center, i, j, k);
+#endif
         } // end surface calculation
     } // end boundary check
 }
