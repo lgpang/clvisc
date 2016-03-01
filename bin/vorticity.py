@@ -28,20 +28,20 @@ def event_by_event(fname_partons, fout):
     cfg.DX = 0.1
     cfg.DY = 0.1
     cfg.DZ = 0.15
-    cfg.IEOS = 0
-    cfg.TFRZ = 0.02
+    cfg.IEOS = 4
+    cfg.TFRZ = 0.136
 
     cfg.ntskip = 60
     cfg.nzskip = 2
 
     cfg.TAU0 = 0.4
-    cfg.ETAOS = 0.0
+    cfg.ETAOS = 0.08
     cfg.fPathOut = fout
 
     write_config(cfg)
 
     t0 = time()
-    visc = CLVisc(cfg, gpu_id=2)
+    visc = CLVisc(cfg, gpu_id=3)
     visc.create_ini_from_partons(fname_partons, SIGR=0.6, SIGZ=0.6, KFACTOR=1.3)
     visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=True, save_vorticity=True)
     t1 = time()
@@ -91,7 +91,7 @@ def get_orbital_angular_momentum(fname_partons):
 
 def one_hydro_event():    
     fname = '/u/lpang/AuAu200_0_80/P30.txt'
-    fpath_out = '../results/P30_EOSI_etaos0_Tfrz0p02'
+    fpath_out = '../results/P30_WB_etaos0p08'
     event_by_event(fname, fpath_out)
 
 
