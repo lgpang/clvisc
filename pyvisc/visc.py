@@ -123,6 +123,15 @@ class CLVisc(object):
         Smearing(self.cfg, self.ctx, self.queue, self.compile_options,
             self.ideal.d_ev[1], fname, self.eos_table, SIGR, SIGZ, KFACTOR)
 
+    def smear_from_p4x4(self, p4x4, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0):
+        '''generate initial condition from a list of partons given by p4x4,
+        SIGR: the gaussian smearing width in transverse direction
+        SIGZ: the gaussian smearing width along longitudinal direction
+        KFACTOR: scale factor to fit dNch/deta in most central collisions'''
+        from smearing import SmearingP4X4
+        SmearingP4X4(self.cfg, self.ctx, self.queue, self.compile_options,
+            self.ideal.d_ev[1], p4x4, self.eos_table, SIGR, SIGZ, KFACTOR)
+
 
 
     def check_pizz(self):
