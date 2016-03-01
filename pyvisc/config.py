@@ -10,7 +10,7 @@ if sys.version_info <= (3, 0):
 else:
     import configparser
 
-def write_config(configs):
+def write_config(configs, comments=''):
     '''write the current setting to hydro.info in the output directory'''
     fPathOut = configs.fPathOut
     configfile_name = os.path.join(fPathOut, 'hydro.info')
@@ -57,6 +57,7 @@ def write_config(configs):
         Config.set('intrinsic', 'BSZ', configs.BSZ)
 
         Config.write(cfgfile)
+        cfgfile.write('#comments: '+comments)
 
 
 def read_config():
