@@ -364,6 +364,14 @@ __kernel void update_ev(
     real ed_find;
     rootFinding_newton(&ed_find, T00, M, eos_table);
     //rootFinding(&ed_find, T00, M, eos_table);
+
+    // set the fluid velocity to 0 if the energy density is too small
+    if ( ed_find < acu ) {
+        T01 = 0.0f;
+        T02 = 0.0f;
+        T03 = 0.0f;
+    }
+
     ed_find = max(0.0f, ed_find);
 
     real pr = P(ed_find, eos_table);
