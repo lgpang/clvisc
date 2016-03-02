@@ -24,22 +24,23 @@ def integrated_Piy_vs_rapidity(event_id):
 
 
 
-def plot_int_Piy():
-    Y, integrated_polarization = integrated_Piy_vs_rapidity(0)
+def plot_int_Piy(eid=0):
+    Y, integrated_polarization = integrated_Piy_vs_rapidity(eid)
 
     plt.plot(Y, integrated_polarization)
     plt.xlabel(r'$rapidity$')
     plt.ylabel(r'$int P^y dp_x dp_y$')
     smash_style.set()
     plt.savefig('%s/Pi_int_pxpy.png'%fpath)
-    plt.close()
-    #plt.show()
+    plt.show()
+    #plt.close()
 
 def plot_2d_Piy():
     pass
 
 
 if __name__ == '__main__':
+    plot_int_Piy()
 
 
 
