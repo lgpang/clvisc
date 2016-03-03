@@ -25,7 +25,7 @@ dset_px = f_h5.create_dataset('mom/px', data=px)
 dset_py = f_h5.create_dataset('mom/py', data=py)
 dset_rapidity = f_h5.create_dataset('mom/Y', data=rapidity)
 
-def plot_vor(vor, Y, fpath='./'):
+def plot_vor(vor, Y, fpath='./', kind='visc'):
     vmax = vor.max()
     vmin = vor.min()
     if vmax < -vmin:
@@ -36,7 +36,7 @@ def plot_vor(vor, Y, fpath='./'):
     plt.title(r'$\Pi^{y}\ @\ rapidity=%s$'%Y)
     plt.colorbar()
     smash_style.set()
-    plt.savefig('%s/vor_Y%s.png'%(fpath, Y))
+    plt.savefig('%s/vor_Y%s_%s.png'%(fpath, Y, kind))
     plt.close()
 
 
@@ -63,12 +63,12 @@ def polarization_vs_pxpy(fpath, event_id):
         name = 'event%s/rapidity%s/rho_vs_px_py'%(event_id, Y)
         dset_rho = f_h5.create_dataset(name, data=rho)
 
-        #plot_vor(vor/rho, Y)
+        plot_vor(vor/rho, Y, kind='ideal')
 
         print(Y, 'finished')
 
 
 if __name__ == '__main__':
-    polarization_vs_pxpy(fpath='./', event_id=0)
+    polarization_vs_pxpy(fpath='/tmp/lgpang/cent20_25_etas0p00/cent20_25_event3/', event_id=3)
     f_h5.close()
 
