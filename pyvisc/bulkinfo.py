@@ -158,7 +158,10 @@ class BulkInfo(object):
         ed[ed<1.0E-10] = 1.0E-10
         pre = self.eos.f_P(ed)
 
-        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
+        vr2 = vx*vx + vy*vy + vz*vz
+        vr2[vr2>1.0] = 0.999999
+
+        u0 = 1.0/np.sqrt(1.0 - vr2)
         Tyy = (ed + pre)*u0*u0*vy*vy + pre
         Txx = (ed + pre)*u0*u0*vx*vx + pre
         T0x = (ed + pre)*u0*u0*vx
@@ -170,15 +173,18 @@ class BulkInfo(object):
         ''' <vr> = <gamma * ed * sqrt(vx*vx + vy*vy)>/<gamma*ed>
         where <> are averaged over whole transverse plane'''
         ed[ed<1.0E-10] = 1.0E-10
-        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
+        vr2 = vx*vx + vy*vy + vz*vz
+        vr2[vr2>1.0] = 0.999999
+        u0 = 1.0/np.sqrt(1.0 - vr2)
         vr = (u0*ed*np.sqrt(vx*vx + vy*vy)).sum() / (u0*ed).sum()
         return vr
 
     def total_entropy(self, tau, ed, vx, vy, vz=0.0):
         '''get the total entropy as a function of time'''
         ed[ed<1.0E-10] = 1.0E-10
-        u0 = 1.0/np.sqrt(1.0 - vx*vx - vy*vy - vz*vz)
-
+        vr2 = vx*vx + vy*vy + vz*vz
+        vr2[vr2>1.0] = 0.999999
+        u0 = 1.0/np.sqrt(1.0 - vr2)
         return (u0*self.eos.f_S(ed)).sum() * tau * self.cfg.DX * self.cfg.DY
 
 
