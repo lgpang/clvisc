@@ -86,7 +86,7 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
     if eostype == 'SU3':
         cfg.IEOS = 3
     elif eostype == 'QCD':
-        cfg.IEOS = 2
+        cfg.IEOS = 4
 
     eos = Eos(cfg.IEOS)
     # update the configuration
@@ -108,8 +108,8 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
     cfg.Ra = 0.8
     cfg.Eta = 0.6
     cfg.Si0 = 6.4
-    cfg.TAU0 = 0.2
-    cfg.ImpactParameter = 0.5
+    cfg.TAU0 = 0.6
+    cfg.ImpactParameter = 0.0
     cfg.ETAOS = 0.0
     cfg.SQRTS = 2760
 
@@ -126,7 +126,7 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
     #plt.imshow(ed)
     #plt.show()
 
-    ideal = CLIdeal(cfg, gpu_id=2)
+    ideal = CLIdeal(cfg, gpu_id=0)
     edv = np.zeros((ideal.size, 4), ideal.cfg.real)
     print edv.shape
     edv[:, 0] = ed.T.flatten()
