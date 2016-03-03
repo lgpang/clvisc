@@ -168,16 +168,28 @@ class LambdaPolarisation(object):
 
 
 
-for eid in range(50):
-    fpath = '/tmp/lgpang/vorticity/cent30_35_event%s_mod/'%eid
-    sf = np.loadtxt('%s/hypersf.dat'%fpath)
-    omega = np.loadtxt('%s/omegamu_sf.dat'%fpath)
+#for eid in range(50):
+#    fpath = '/tmp/lgpang/vorticity/cent30_35_event%s_mod/'%eid
+#    sf = np.loadtxt('%s/hypersf.dat'%fpath)
+#    omega = np.loadtxt('%s/omegamu_sf.dat'%fpath)
+#
+#    polar = LambdaPolarisation(sf, omega, fpath, eid)
+#    polar.vorticity_int()
 
-    polar = LambdaPolarisation(sf, omega, fpath, eid)
-    polar.vorticity_int()
+
+eid = 2
+fpath = '/tmp/lgpang/cent20_25_etas0p08/cent20_25_event%s'%eid
+sf = np.loadtxt('%s/hypersf.dat'%fpath)
+omega = np.loadtxt('%s/omegamu_sf.dat'%fpath)
+
+polar = LambdaPolarisation(sf, omega, './', eid)
+
+print(polar.Pimu_rho(0, 2, 0))
 
 #vor = []
 #for Y in range(-6, 7):
-#    vor_int_px = polar.vorticity(Y)
+#    vor_int_px = polar.vorticity_vs_pxpy(Y)
 #    vor.append(vor_int_px)
+#
+#print(vor)
 

@@ -95,6 +95,14 @@ def rapidity_integral(spec_along_y, ylo=-0.5, yhi=0.5):
     tck = splrep(Y, spec_along_y)
     return splint(ylo, yhi, tck)
 
+def pt_phi_integral(spec):
+    '''2D integration along pt and phi,
+    The spec is: dN/dYptdptdphi'''
+    spec_along_pt = np.empty(NPT)
+    for i in range(NPT):
+        spec_along_pt[i] = PT[i] * phi_integral(spec[i, :])
+    return pt_integral(spec_along_pt)
+
 if __name__ == '__main__':
     print(phi_integral(np.sin(0.25*PHI)))
     print(pt_integral(np.exp(-PT)))

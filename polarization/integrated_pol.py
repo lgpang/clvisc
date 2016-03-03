@@ -15,11 +15,14 @@ import matplotlib.pyplot as plt
 import h5py
 
 # store the data in hdf5 file
-f_h5 = h5py.File('vor_int.hdf5', 'w')
-dset_pt = f_h5.create_dataset('mom/PT', data=mom.PT)
-dset_phi = f_h5.create_dataset('mom/PHI', data=mom.PHI)
+f_h5 = h5py.File('vor_int_ideal.hdf5', 'r+')
+
 rapidity = np.linspace(-5, 5, 11, endpoint=True)
-dset_rapidity = f_h5.create_dataset('mom/Y', data=rapidity)
+
+def init_momentum():
+    dset_pt = f_h5.create_dataset('mom/PT', data=mom.PT)
+    dset_phi = f_h5.create_dataset('mom/PHI', data=mom.PHI)
+    dset_rapidity = f_h5.create_dataset('mom/Y', data=rapidity)
 
 def integrated_polarization(fpath, event_id):
     '''calc the pt, phi integrated lambda polarization as a function of
@@ -60,9 +63,10 @@ def integrated_polarization(fpath, event_id):
 
 
 if __name__ == '__main__':
-    for event_id in range(1, 13):
-        fpath = '/tmp/lgpang/cent20_25_etas0p08/cent20_25_event%s'%event_id
+    for event_id in range(11, 15):
+        fpath = '/tmp/lgpang/cent20_25_etas0p00/cent20_25_event%s'%event_id
         integrated_polarization(fpath, event_id)
+        print('event', event_id, 'finished')
 
     f_h5.close()
 
