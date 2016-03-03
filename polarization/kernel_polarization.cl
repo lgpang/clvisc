@@ -40,5 +40,7 @@ __kernel void polarization_on_sf(
         d_vorticity[i] = volum*omega_y*nf;
 
         d_density[i] = volum * nf;
+
+        // why d_polarization and d_vorticity are not correct? compared to the python version.
     }
 }
