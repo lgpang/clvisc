@@ -37,7 +37,7 @@ def read_p4x4(cent='30_35', idx=0,
         p4x4 = f[key]
         return p4x4[...], event_id[idx], impact[idx], nw[idx], nparton[idx]
 
-def event_by_event(fout, cent='30_35', idx=0):
+def event_by_event(fout, cent='30_35', idx=0, etaos=0.0):
     ''' Run event_by_event hydro, with initial condition 
     from smearing on the particle list'''
     if not os.path.exists(fout):
@@ -57,7 +57,7 @@ def event_by_event(fout, cent='30_35', idx=0):
     cfg.nzskip = 2
 
     cfg.TAU0 = 0.4
-    cfg.ETAOS = 0.08
+    cfg.ETAOS = etaos
     cfg.fPathOut = fout
 
     t0 = time()
@@ -78,12 +78,12 @@ def event_by_event(fout, cent='30_35', idx=0):
 
 
 if __name__ == '__main__':
-    cent = '30_35'
-    path = '/tmp/lgpang/vorticity/'
+    cent = '20_25'
+    path = '/tmp/lgpang/cent20_25_etas0p08/'
 
-    for idx in range(10):
-        fpath_out = path + 'cent%s_event%s.dat'%(cent, idx)
-        event_by_event(fpath_out, cent, idx)
+    for idx in range(0, 50):
+        fpath_out = path + 'cent%s_event%s'%(cent, idx)
+        event_by_event(fpath_out, cent, idx, etaos=0.08)
 
         cwd = os.getcwd()
         os.chdir('../CLSmoothSpec/build')
