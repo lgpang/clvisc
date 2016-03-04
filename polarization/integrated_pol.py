@@ -59,13 +59,16 @@ def integrated_polarization(f_h5, fpath, event_id):
 
 
 
+def create_file():
+    f_h5 = h5py.File('vor_int_ideal_cent45_50.hdf5', 'w')
+    init_momentum(f_h5)
+
 def update_h5_ideal(start_id, end_id):
     # store the data in hdf5 file
-    f_h5 = h5py.File('vor_int_ideal.hdf5', 'r+')
+    f_h5 = h5py.File('vor_int_ideal_cent45_50.hdf5', 'r+')
 
-    # init_momentum(f_h5)
     for event_id in range(start_id, end_id):
-        fpath = '/tmp/lgpang/cent20_25_etas0p00/cent20_25_event%s'%event_id
+        fpath = '/tmp/lgpang/cent45_50_etas0p00/cent45_50_event%s'%event_id
         integrated_polarization(f_h5, fpath, event_id)
         print('event', event_id, 'finished')
     f_h5.close()
@@ -83,5 +86,6 @@ def update_h5_visc(start_id, end_id):
 
 
 if __name__ == '__main__':
-    update_h5_ideal(15, 50)
-    update_h5_visc(50, 100)
+    create_file()
+    update_h5_ideal(1, 9)
+    #update_h5_visc(50, 100)

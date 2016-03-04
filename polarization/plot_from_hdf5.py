@@ -26,11 +26,17 @@ def integrated_Piy_vs_rapidity(h5, event_id):
 def int_Piy(h5, fpath='./', kind='ideal'):
     mean_int_pol = np.zeros(11)
     num_good_events = 0.0
-    events = range(1, 50)
+    events = range(1, 100)
     if kind == 'ideal':
-        events = range(0, 15)
+        events = range(0, 50)
+    if kind == '45':
+        events = range(1, 9)
 
     for eid in events:
+        if kind == 'visc' and (eid==14 or eid==15):
+            '''these 2 events are bad events'''
+            continue
+
         Y, integrated_polarization = integrated_Piy_vs_rapidity(h5, eid)
         if not np.isnan(integrated_polarization[0]):
             mean_int_pol = mean_int_pol + integrated_polarization
@@ -41,21 +47,26 @@ def int_Piy(h5, fpath='./', kind='ideal'):
     return Y, mean_int_pol
 
 def plot_visc_vs_ideal():
-    h5_visc = h5py.File('vor_int.hdf5', 'r')
-    h5_ideal= h5py.File('vor_int_ideal.hdf5', 'r')
+    h5_visc = h5py.File('vor_int_visc_cent20_25.hdf5', 'r')
+    h5_ideal= h5py.File('vor_int_ideal_cent20_25.hdf5', 'r')
+
+    h5_ideal_cent45_50 = h5py.File('vor_int_ideal_cent45_50.hdf5', 'r')
 
     Y, mean_pol_visc = int_Piy(h5_visc, kind='visc')
     Y, mean_pol_ideal = int_Piy(h5_ideal, kind='ideal')
+    Y, mean_pol_ideal_45 = int_Piy(h5_ideal_cent45_50, kind='45')
 
-    plt.plot(Y, mean_pol_visc, label=r'$\eta/s=0.08$')
-    plt.plot(Y, mean_pol_ideal, label=r'ideal fluid')
+    plt.errorbar(Y, mean_pol_visc, 0.1*mean_pol_visc, fmt='rs-', label=r'$\eta/s=0.08$')
+    plt.errorbar(Y, mean_pol_ideal, np.sqrt(1.0/50.0)*mean_pol_ideal, fmt='bo-', label=r'ideal fluid')
+    plt.errorbar(Y, mean_pol_ideal_45, np.sqrt(1.0/8.0)*mean_pol_ideal_45, fmt='g^-', label=r'ideal 45-50')
     plt.xlabel(r'$rapidity$')
     plt.ylabel(r'$P^y_{int}$')
-    smash_style.set()
+    smash_style.set(line_styles=False)
 
-    plt.legend(loc='best')
+    plt.legend(loc='upper center')
     plt.subplots_adjust(left=0.2)
-    plt.savefig('Pi_ideal_vs_visc.png')
+    plt.title(r'$Au+Au\ \sqrt{s_{NN}}=200\ GeV,\ cent=20-25\%$')
+    plt.savefig('Pi_ideal_vs_visc.pdf')
     #plt.show()
     plt.close()
 
