@@ -14,17 +14,14 @@ import matplotlib.pyplot as plt
 
 import h5py
 
-# store the data in hdf5 file
-f_h5 = h5py.File('vor_int_ideal.hdf5', 'r+')
-
 rapidity = np.linspace(-5, 5, 11, endpoint=True)
 
-def init_momentum():
+def init_momentum(f_h5):
     dset_pt = f_h5.create_dataset('mom/PT', data=mom.PT)
     dset_phi = f_h5.create_dataset('mom/PHI', data=mom.PHI)
     dset_rapidity = f_h5.create_dataset('mom/Y', data=rapidity)
 
-def integrated_polarization(fpath, event_id):
+def integrated_polarization(f_h5, fpath, event_id):
     '''calc the pt, phi integrated lambda polarization as a function of
     rapidity.
     The results is stored in hdf5 file'''
@@ -62,11 +59,29 @@ def integrated_polarization(fpath, event_id):
 
 
 
-if __name__ == '__main__':
-    for event_id in range(11, 15):
-        fpath = '/tmp/lgpang/cent20_25_etas0p00/cent20_25_event%s'%event_id
-        integrated_polarization(fpath, event_id)
-        print('event', event_id, 'finished')
+def update_h5_ideal(start_id, end_id):
+    # store the data in hdf5 file
+    f_h5 = h5py.File('vor_int_ideal.hdf5', 'r+')
 
+    # init_momentum(f_h5)
+    for event_id in range(start_id, end_id):
+        fpath = '/tmp/lgpang/cent20_25_etas0p00/cent20_25_event%s'%event_id
+        integrated_polarization(f_h5, fpath, event_id)
+        print('event', event_id, 'finished')
     f_h5.close()
 
+
+def update_h5_visc(start_id, end_id):
+    # store the data in hdf5 file
+    f_h5 = h5py.File('vor_int.hdf5', 'r+')
+    # init_momentum(f_h5)
+    for event_id in range(start_id, end_id):
+        fpath = '/tmp/lgpang/cent20_25_etas0p08/cent20_25_event%s'%event_id
+        integrated_polarization(f_h5, fpath, event_id)
+        print('event', event_id, 'finished')
+    f_h5.close()
+
+
+if __name__ == '__main__':
+    update_h5_ideal(15, 50)
+    update_h5_visc(50, 100)

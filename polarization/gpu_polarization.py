@@ -18,7 +18,7 @@ from pyopencl.array import Array
 import pyopencl.array as cl_array
 
 
-os.environ['PYOPENCL_CTX']=':0'
+os.environ['PYOPENCL_CTX']=':1'
 
 class Polarization(object):
     '''The pyopencl version for lambda polarisation,
