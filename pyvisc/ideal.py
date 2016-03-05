@@ -13,7 +13,6 @@ from time import time
 cwd, cwf = os.path.split(__file__)
 sys.path.append(cwd)
 from eos.eos import Eos
-from bulkinfo import BulkInfo
 #import matplotlib.pyplot as plt
 
 
@@ -27,11 +26,20 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self, configs, gpu_id=0):
-        '''Def hydro in opencl with params stored in self.__dict__ '''
+    def __init__(self, configs, gpu_id=0, h5py_out=True):
+        '''Params:
+        :param configs: hydrodynamic configurations, from configs import cfg
+        :param gpu_id: use which gpu for the calculation if there are many per node
+        :param h5py_out: if True, bulkinfo will be saved to hdf5 file bulkinfo.h5
+                         if False, bulkinfo will be saved to common text file
+        '''
         # create opencl environment
         self.cfg = configs
         self.cwd, cwf = os.path.split(__file__)
+        # create the fPathOut directory if not exists
+        path = self.cfg.fPathOut
+        if not os.path.exists(path):
+            os.makedirs(path)
 
         from backend_opencl import OpenCLBackend
         self.backend = OpenCLBackend(self.cfg, gpu_id)
@@ -45,6 +53,11 @@ class CLIdeal(object):
         self.gpu_defines = self.__compile_options()
 
         # store 1D and 2d bulk info at each time step
+        if h5py_out:
+            from bulkinfo_h5 import BulkInfo
+        else:
+            from bulkinfo import BulkInfo
+
         self.bulkinfo = BulkInfo(self.cfg, self.ctx, self.queue,
                 self.gpu_defines)
 
@@ -289,15 +302,16 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    #cfg.IEOS = 0
+    cfg.IEOS = 0
+    cfg.ImpactParameter = 0.0
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
                   ideal.d_ev[1])
 
-    ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    ideal.evolve(max_loops=1000, save_bulk=False)
+    #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
+    ideal.evolve(max_loops=200, save_bulk=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
