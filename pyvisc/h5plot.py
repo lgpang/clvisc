@@ -250,27 +250,20 @@ if __name__ == '__main__':
     parser.add_argument('--save_data', nargs='?', const=1, type=bool,
             default=False, help='true to save the data to txt file')
 
-
     args, unknown = parser.parse_known_args()
 
     # directory for the bulkinfo.h5 file
-    fpath = '../results/event0'
+    fpath = './'
     if args.path is not '':
         fpath = args.path
 
     f_h5 = h5py.File(fpath+'/bulkinfo.h5', 'r')
 
-    data_name = 'exz_tau1p5'
-
-    if len(sys.argv) == 2:
-        data_name = sys.argv[1]
-
     coord, avg, bulk1d, bulk2d = get_all_files(f_h5)
     color_ls(coord, avg, bulk1d, bulk2d)
 
-    plot(data_name, coord, avg, bulk1d, bulk2d, args.save_fig, args.save_data)
-
-    if args.save_data:
-        save_txt(data_name)
+    if len(sys.argv) == 2:
+        data_name = sys.argv[1]
+        plot(data_name, coord, avg, bulk1d, bulk2d, args.save_fig, args.save_data)
 
     f_h5.close()
