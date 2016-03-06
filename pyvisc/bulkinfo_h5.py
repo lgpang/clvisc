@@ -173,6 +173,21 @@ class BulkInfo(object):
 
         np.savetxt(path_out + '/avg.dat',
                    np.array(zip(self.time, self.eccp_vs_tau, self.edcent, self.entropy, self.vr)),
-                   header='tau, eccp, ed(0,0,0), s(0,0,0), <vr>')
+                   header='tau, eccp, ed(0,0,0), stotal, <vr>')
+
+        self.f_hdf5.create_dataset('coord/tau', data = self.time)
+        self.f_hdf5.create_dataset('coord/x', data = self.x)
+        self.f_hdf5.create_dataset('coord/y', data = self.y)
+        self.f_hdf5.create_dataset('coord/etas', data = self.z)
+
+        self.f_hdf5.create_dataset('avg/eccp', data = np.array(self.eccp_vs_tau))
+        self.f_hdf5.create_dataset('avg/edcent', data = np.array(self.edcent))
+        self.f_hdf5.create_dataset('avg/Tcent', data = self.eos.f_T(np.array(self.edcent)))
+        self.f_hdf5.create_dataset('avg/entropy', data = np.array(self.entropy))
+        self.f_hdf5.create_dataset('avg/vr', data = np.array(self.vr))
+
+        self.f_hdf5.close()
+
+
 
 
