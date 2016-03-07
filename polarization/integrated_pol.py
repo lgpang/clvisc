@@ -11,7 +11,7 @@ import four_momentum as mom
 from common_plotting import smash_style
 from numba import jit
 import matplotlib.pyplot as plt
-
+import os
 import h5py
 
 rapidity = np.linspace(-5, 5, 11, endpoint=True)
@@ -59,33 +59,28 @@ def integrated_polarization(f_h5, fpath, event_id):
 
 
 
-def create_file():
-    f_h5 = h5py.File('vor_int_ideal_cent45_50.hdf5', 'w')
+def create_file(fname='vor_auau62p4.hdf5'):
+    f_h5 = h5py.File(fname, 'w')
     init_momentum(f_h5)
+    return f_h5
 
-def update_h5_ideal(start_id, end_id):
+def update_h5(start_id, end_id, f_h5name, path, create=False):
     # store the data in hdf5 file
-    f_h5 = h5py.File('vor_int_ideal_cent45_50.hdf5', 'r+')
+    f_h5 = None
+    if not os.path.exists(f_h5name):
+        f_h5 = create_file(f_h5name)
+    else:
+        f_h5 = h5py.File(f_h5name, 'r+')
 
     for event_id in range(start_id, end_id):
-        fpath = '/tmp/lgpang/cent45_50_etas0p00/cent45_50_event%s'%event_id
+        fpath = '%s/event%s'%(path, event_id)
         integrated_polarization(f_h5, fpath, event_id)
         print('event', event_id, 'finished')
     f_h5.close()
 
-
-def update_h5_visc(start_id, end_id):
-    # store the data in hdf5 file
-    f_h5 = h5py.File('vor_int.hdf5', 'r+')
-    # init_momentum(f_h5)
-    for event_id in range(start_id, end_id):
-        fpath = '/tmp/lgpang/cent20_25_etas0p08/cent20_25_event%s'%event_id
-        integrated_polarization(f_h5, fpath, event_id)
-        print('event', event_id, 'finished')
-    f_h5.close()
 
 
 if __name__ == '__main__':
-    create_file()
-    update_h5_ideal(1, 9)
-    #update_h5_visc(50, 100)
+    f_h5name = 'vor_int_visc0p12_auau62p4_cent45_50.hdf5'
+    path = '/lustre/nyx/hyihp/lpang/auau62p4_results/cent45_50/etas0p12/'
+    update_h5(62, 96, f_h5name, path, create=False)
