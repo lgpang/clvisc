@@ -118,3 +118,17 @@ __kernel void smearing(
   
 }
 
+
+__kernel void force_bjorken(
+    __global real4  * d_EdV, \
+    const int size )
+{
+  int i = get_global_id(0);
+  int j = get_global_id(1);
+  int k = get_global_id(2);
+  int idx = i*NY*NZ + j*NZ + k;
+  int mid_rapidity = i*NY*NZ + j*NZ + NZ/2;
+  if ( idx < size ) {
+      d_EdV[idx] = d_EdV[mid_rapidity];
+  }
+}

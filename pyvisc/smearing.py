@@ -48,10 +48,11 @@ class Smearing(object):
 class SmearingP4X4(object):
     '''The pyopencl version for gaussian smearing ini condition'''
     def __init__(self, cfg, ctx, queue, compile_options, d_ev1,
-        p4x4, eos_table, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0):
+        p4x4, eos_table, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0, force_bjorken=False):
         '''initialize d_ev1 with partons p4x4, which is one size*8 np.array '''
         self.cwd, cwf = os.path.split(__file__)
         self.gpu_defines = compile_options
+
         self.__loadAndBuildCLPrg(ctx, cfg, SIGR, SIGZ, KFACTOR)
         size = cfg.NX*cfg.NY*cfg.NZ
         h_p4x4 = np.zeros((size, 8), cfg.real)
@@ -65,6 +66,11 @@ class SmearingP4X4(object):
 
         self.prg.smearing(queue, (cfg.NX, cfg.NY, cfg.NZ), (5,5,5),
                 d_ev1, d_p4x4, eos_table, np.int32(npartons), np.int32(size)).wait()
+
+        if force_bjorken:
+            self.prg.force_bjorken(queue, (cfg.NX, cfg.NY, cfg.NZ), None,
+                d_ev1, np.int32(size)).wait()
+
 
     def __loadAndBuildCLPrg(self, ctx, cfg, SIGR, SIGZ, KFACTOR):
         #load and build *.cl programs with compile self.gpu_defines
