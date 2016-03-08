@@ -35,7 +35,7 @@ class Smearing(object):
         h_p4x4 = dat.astype(cfg.real)
         print('num_of_partons=', npartons)
         d_p4x4 = cl.Buffer(ctx, cl.mem_flags.READ_ONLY, size=h_p4x4.nbytes)
-        cl.enqueue_copy(queue, d_p4x4, h_p4x4)
+        cl.enqueue_copy(queue, d_p4x4, h_p4x4).wait()
 
         # use roundUp make sure globalsize is multiply of localsize
         NX5 = roundUp(cfg.NX, 5)
@@ -77,7 +77,7 @@ class SmearingP4X4(object):
         h_p4x4 = dat.astype(cfg.real)
         print('num_of_partons=', npartons)
         d_p4x4 = cl.Buffer(ctx, cl.mem_flags.READ_ONLY, size=h_p4x4.nbytes)
-        cl.enqueue_copy(queue, d_p4x4, h_p4x4)
+        cl.enqueue_copy(queue, d_p4x4, h_p4x4).wait()
 
         # use roundUp make sure globalsize is multiply of localsize
         NX5 = roundUp(cfg.NX, 5)
