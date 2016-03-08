@@ -291,6 +291,26 @@ class CLVisc(object):
 
         return is_finished
 
+    def save_pimn_sf(self, set_to_zero=False):
+        '''save pimn information on freeze out hyper surface'''
+        num_of_sf = self.ideal.num_of_sf
+        ed = self.ideal.efrz
+        pr = self.ideal.eos.f_P(ed)
+        T = self.cfg.TFRZ
+        const_for_deltaf = 1.0/(2.0*T**2*(ed + pr))
+
+        pi_onsf = np.zeros(10*num_of_sf, dtype=self.cfg.real)
+        if not set_to_zero:
+            cl.enqueue_copy(self.queue, pi_onsf, self.d_pi_sf).wait()
+        out_path = os.path.join(self.cfg.fPathOut, 'pimnsf.dat')
+        print("pimn on frzsf is saved to ", out_path)
+
+        comment_line = 'one_o_2TsqrEplusP=%.6e '%const_for_deltaf + \
+               'pi00 01 02 03 11 12 13 22 23 33'
+        np.savetxt(out_path, pi_onsf.reshape(num_of_sf, 10), fmt='%.6e',
+                   header = comment_line)
+
+
 
     def save(self, save_hypersf = True, save_bulk = False, 
              save_pi = False, save_vorticity=False):
@@ -299,23 +319,8 @@ class CLVisc(object):
         if save_pi:
             self.pimn_info.save()
 
-        num_of_sf = self.ideal.num_of_sf
-
-        ed = self.ideal.efrz
-        pr = self.ideal.eos.f_P(ed)
-        T = self.cfg.TFRZ
-        const_for_deltaf = 1.0/(2.0*T**2*(ed + pr))
-
         if save_hypersf:
-            pi_onsf = np.empty(10*num_of_sf, dtype=self.cfg.real)
-            cl.enqueue_copy(self.queue, pi_onsf, self.d_pi_sf).wait()
-            out_path = os.path.join(self.cfg.fPathOut, 'pimnsf.dat')
-            print("pimn on frzsf is saved to ", out_path)
-
-            comment_line = 'one_o_2TsqrEplusP=%.6e '%const_for_deltaf + \
-                   'pi00 01 02 03 11 12 13 22 23 33'
-            np.savetxt(out_path, pi_onsf.reshape(num_of_sf, 10), fmt='%.6e',
-                       header = comment_line)
+            self.save_pimn_sf()
 
         if save_vorticity:
             # save vorticity on hypersf to data file
@@ -341,6 +346,14 @@ class CLVisc(object):
         '''The main loop of hydrodynamic evolution
         default parameters: save_hypersf, don't save bulk info
         store bulk info by switch on plot_bulk'''
+        # if etaos<1.0E-6, use ideal hydrodynamics which is much faster
+        if self.cfg.ETAOS < 1.0E-6 and not save_vorticity:
+            self.ideal.evolve(max_loops, save_hypersf, save_bulk,
+                    plot_bulk, force_run_to_maxloop)
+
+            self.save_pimn_sf(set_to_zero=True)
+            return
+
         if save_pi:
             from pimninfo import PimnInfo
             self.pimn_info = PimnInfo(self.cfg, self.ctx, self.queue,
