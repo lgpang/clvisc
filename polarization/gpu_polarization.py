@@ -80,5 +80,3 @@ class Polarization(object):
         vorticity = cl_array.sum(self.d_vor).get()
         density = cl_array.sum(self.d_rho).get()
         return polarization, vorticity, density
-
-

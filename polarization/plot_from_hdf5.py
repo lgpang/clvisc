@@ -58,34 +58,40 @@ def plot_auau200_ideal_cent():
 
     plt.legend(loc='upper center')
     plt.subplots_adjust(left=0.2)
-    plt.title(r'$Au+Au\ \sqrt{s_{NN}}=200\ GeV,\ cent=20-25\%$')
-    #plt.savefig('Pi_ideal_vs_visc.pdf')
-    plt.show()
+    plt.title(r'$Au+Au\ \sqrt{s_{NN}}=200\ GeV,\ \eta/s=0$')
+    plt.savefig('Pi_auau200.pdf')
+    #plt.show()
     plt.close()
 
 
 
 
 def plot_visc_vs_ideal():
-    h5_visc = h5py.File('vor_int_visc_cent20_25.hdf5', 'r')
-    h5_ideal= h5py.File('vor_int_ideal_cent20_25.hdf5', 'r')
+    h5_visc = h5py.File('vor_int_visc0p08_cent20_25.hdf5', 'r')
+    #h5_ideal= h5py.File('vor_int_ideal_cent20_25.hdf5', 'r')
+    h5_ideal= h5py.File('vor_int_visc0p12_auau62p4_cent20_25.hdf5', 'r')
     h5_ideal_cent45_50 = h5py.File('vor_int_visc0p12_auau62p4_cent45_50.hdf5', 'r')
+
+    h5_39 = h5py.File('vor_int_visc0p08_auau39_cent20_25.hdf5', 'r')
 
     n0, Y, mean_pol_visc = int_Piy(h5_visc)
     n1, Y, mean_pol_ideal = int_Piy(h5_ideal)
     n2, Y, mean_pol_ideal_45 = int_Piy(h5_ideal_cent45_50)
+    n3, Y, mean_pol_3 = int_Piy(h5_39)
 
-    plt.errorbar(Y, mean_pol_visc, np.sqrt(1.0/n0)*mean_pol_visc, fmt='rs-', label=r'auau200 20-25 $\eta/s=0.08$')
-    plt.errorbar(Y, mean_pol_ideal, np.sqrt(1.0/n1)*mean_pol_ideal, fmt='bo-', label='auau200 20-25 $\eta/s=0.0$')
-    plt.errorbar(Y, mean_pol_ideal_45, np.sqrt(1.0/n2)*mean_pol_ideal_45, fmt='g^-', label=r'auau62.4 45-50% $\eta/s=0.12$')
+    plt.errorbar(Y, mean_pol_ideal_45, np.sqrt(1.0/n2)*mean_pol_ideal_45, fmt='g^', label=r'auau62.4 45-50 $\eta/s=0.12$')
+    plt.errorbar(Y, mean_pol_ideal, np.sqrt(1.0/n1)*mean_pol_ideal, fmt='bo', label='auau62.4 20-25 $\eta/s=0.12$')
+    plt.errorbar(Y, mean_pol_visc, np.sqrt(1.0/n0)*mean_pol_visc, fmt='rs', label=r'auau200 20-25 $\eta/s=0.08$')
+    plt.errorbar(Y, mean_pol_3, np.sqrt(1.0/n3)*mean_pol_3, fmt='cd', label=r'auau39 20-25 $\eta/s=0.08$')
     plt.xlabel(r'$rapidity$')
     plt.ylabel(r'$P^y_{int}$')
-    smash_style.set(line_styles=False)
+    #smash_style.set(line_styles=False)
+    smash_style.set()
 
+    plt.ylim(0.0002, 0.005)
     plt.legend(loc='upper center')
     plt.subplots_adjust(left=0.2)
-    plt.title(r'$Au+Au\ \sqrt{s_{NN}}=200\ GeV,\ cent=20-25\%$')
-    #plt.savefig('Pi_ideal_vs_visc.pdf')
+    plt.savefig('Pi_visc_cent.pdf')
     plt.show()
     plt.close()
 
