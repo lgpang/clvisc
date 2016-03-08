@@ -10,6 +10,16 @@ import os
 import sys
 from time import time
 
+
+def roundUp(value, multiple):
+    '''This function rounds one integer up to the nearest multiple of another integer,
+    to get the global work size (which are multiples of local work size) from NX, NY, NZ.  '''
+    remainder = value % multiple
+    if remainder != 0:
+        value += multiple - remainder
+    return value
+
+
 class Smearing(object):
     '''The pyopencl version for gaussian smearing ini condition'''
     def __init__(self, cfg, ctx, queue, compile_options, d_ev1,
@@ -27,8 +37,13 @@ class Smearing(object):
         d_p4x4 = cl.Buffer(ctx, cl.mem_flags.READ_ONLY, size=h_p4x4.nbytes)
         cl.enqueue_copy(queue, d_p4x4, h_p4x4)
 
-        self.prg.smearing(queue, (cfg.NX, cfg.NY, cfg.NZ), (5,5,5),
-                d_ev1, d_p4x4, eos_table, np.int32(npartons), np.int32(size)).wait()
+        # use roundUp make sure globalsize is multiply of localsize
+        NX5 = roundUp(cfg.NX, 5)
+        NY5 = roundUp(cfg.NY, 5)
+        NZ5 = roundUp(cfg.NZ, 5)
+        self.prg.smearing(queue, (NX5, NY5, NZ5), (5,5,5),
+                d_ev1, d_p4x4, eos_table, np.int32(npartons),
+                np.int32(size)).wait()
 
     def __loadAndBuildCLPrg(self, ctx, cfg, SIGR, SIGZ, KFACTOR):
         #load and build *.cl programs with compile self.gpu_defines
@@ -64,7 +79,11 @@ class SmearingP4X4(object):
         d_p4x4 = cl.Buffer(ctx, cl.mem_flags.READ_ONLY, size=h_p4x4.nbytes)
         cl.enqueue_copy(queue, d_p4x4, h_p4x4)
 
-        self.prg.smearing(queue, (cfg.NX, cfg.NY, cfg.NZ), (5,5,5),
+        # use roundUp make sure globalsize is multiply of localsize
+        NX5 = roundUp(cfg.NX, 5)
+        NY5 = roundUp(cfg.NY, 5)
+        NZ5 = roundUp(cfg.NZ, 5)
+        self.prg.smearing(queue, (NX5, NY5, NZ5), (5,5,5),
                 d_ev1, d_p4x4, eos_table, np.int32(npartons), np.int32(size)).wait()
 
         if force_bjorken:

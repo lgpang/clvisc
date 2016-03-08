@@ -18,9 +18,8 @@ __kernel void smearing(
   int i = get_global_id(0);
   int j = get_global_id(1);
   int k = get_global_id(2);
-  if ( (i*NY*NZ+j*NZ+k) > size ) {
-     return;
-  }
+
+  if ( i < NX && j < NY && k < NZ ) {
 
   real4 grid = (real4)(TAU0, (i-NX/2)*DX, (j-NY/2)*DY, (k-NZ/2)*DZ);
 
@@ -115,7 +114,9 @@ __kernel void smearing(
   d_EdV[get_global_id(0)*NY*NZ + get_global_id(1)*NZ + get_global_id(2)] = \
        (real4){Ed, 0.0f, 0.0f, 0.0f};
        //(real4){Ed, Tm0.s1/EPV, Tm0.s2/EPV, Tm0.s3/EPV};
-  
+
+
+  }
 }
 
 
