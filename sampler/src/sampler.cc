@@ -499,7 +499,10 @@ namespace {
 
                 pmag = particle_dist_.at(nid).get_one_sample();
 
+                int while_loop_num = 0;
+
                 while ( true ) {
+
 
                     direction.distribute_isotropically();
 
@@ -512,7 +515,7 @@ namespace {
                     double p0_star = momentum_in_lrf[0];
                     double weight_visc = pdotsigma/(p0_star*sigmamax);
 
-                    if (viscous_correction_ ) {
+                    if ( viscous_correction_ ) {
                         double pmu_pnu_pimn = momentum_in_lrf[0]*momentum_in_lrf[0]*ele.pimn[0]
                                       + momentum_in_lrf[1]*momentum_in_lrf[1]*ele.pimn[4]
                                       + momentum_in_lrf[2]*momentum_in_lrf[2]*ele.pimn[7]
@@ -553,14 +556,20 @@ namespace {
                             weight_visc /= (1.0+2.1*p0_star*p0_star*
                                     ele.pimn_max*one_over_2TsqrEplusP_);
                         }
-
-                        //if ( weight_visc < 0.0 ) {
-                        //  std::cout << "weight_visc=" << weight_visc << std::endl;
-                        //  std::cout << "f0=" << f0 << std::endl;
-                        //  std::cout << "pmu_pnu_pimn=" << pmu_pnu_pimn << std::endl;
-                        //  std::cout << "pdotsigma=" << pdotsigma << std::endl;
-                        //}
                     }
+
+                    while_loop_num ++;
+                    if ( while_loop_num > 1000 &&  weight_visc <= 0.0 ) {
+                      std::cout << "smaller than 0 weight_visc=" << weight_visc << std::endl;
+                      std::cout << "pdotsigma=" << pdotsigma << std::endl;
+                      std::cout << "p0_star=" << p0_star << std::endl;
+                      std::cout << "sigmamax=" << sigmamax << std::endl;
+                      std::cout << "momentum_lrf=" << momentum_in_lrf << std::endl;
+                      std::cout << "sigma_lrf=" << sigma_lrf << std::endl;
+                      std::cout << "mass = " << mass << std::endl;
+                      std::cout << std::endl;
+                    }
+
 
                     /// keep or reject 
                     if ( Random::canonical() < weight_visc ) {
@@ -590,7 +599,6 @@ namespace {
                             }
 
                             // if one hadron is sampled, break while true loop
-                            particles_.push_back(particle);
                             break;
                     }
                 } // end while(true)
