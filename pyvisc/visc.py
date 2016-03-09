@@ -321,7 +321,7 @@ class CLVisc(object):
 
         if save_vorticity:
             # save vorticity on hypersf to data file
-            omega_mu = np.empty(num_of_sf, dtype=self.cfg.real4)
+            omega_mu = np.empty(self.ideal.num_of_sf, dtype=self.cfg.real4)
             cl.enqueue_copy(self.queue, omega_mu, self.d_omega_sf).wait()
             out_path = os.path.join(self.cfg.fPathOut, 'omegamu_sf.dat')
             print("vorticity omega_{mu} on surface is saved to", out_path)
