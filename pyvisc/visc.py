@@ -247,11 +247,14 @@ class CLVisc(object):
         self.kernel_IS.get_udiff(self.queue, (NX*NY*NZ,), None,
             self.d_udiff, d_ev0, d_ev1).wait()
                 
-    def get_hypersf(self, n, ntskip):
+    def get_hypersf(self, n, ntskip, is_finished):
         '''get the freeze out hyper surface from d_ev_old and d_ev_new
-        global_size=(NX//nxskip, NY//nyskip, NZ//nzskip} '''
-        is_finished = self.ideal.edmax < self.ideal.efrz
-
+        global_size=(NX//nxskip, NY//nyskip, NZ//nzskip}
+        Params:
+            :param n: the time step number
+            :param ntskip: time step interval for hypersf calc
+            :param is_finished: if True, the last time interval for hypersf
+                   calculation will be different'''
         if n == 0:
             cl.enqueue_copy(self.queue, self.ideal.d_ev_old,
                             self.ideal.d_ev[1]).wait()
@@ -274,14 +277,6 @@ class CLVisc(object):
                     self.d_omega_sf, self.d_omega[0], self.d_omega[1],
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
-            ## get vorticity omega_{mu} on hypersf
-            # self.kernel_hypersf.vorticity_hypersf1(self.queue, (nx, ny, nz), None,
-            #         self.d_omega_sf, self.d_num_of_vorticity,
-            #         self.ideal.d_ev_old, self.ideal.d_ev[1],
-            #         self.d_omega[0], self.d_omega[1],
-            #         self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
-
-
             # update with current tau and d_ev[1], d_pi[1] and d_omega[1]
             cl.enqueue_copy(self.queue, self.ideal.d_ev_old,
                             self.ideal.d_ev[1]).wait()
@@ -289,10 +284,12 @@ class CLVisc(object):
             cl.enqueue_copy(self.queue, self.d_omega[0], self.d_omega[1]).wait()
             self.tau_old = tau_new
 
-        return is_finished
 
     def save_pimn_sf(self, set_to_zero=False):
-        '''save pimn information on freeze out hyper surface'''
+        '''save pimn information on freeze out hyper surface
+        Params:
+            :param set_to_zero: True to set pimn on surface to 0.0,
+            in case eta/s=0, ideal evolution is switch on'''
         num_of_sf = self.ideal.num_of_sf
         ed = self.ideal.efrz
         pr = self.ideal.eos.f_P(ed)
@@ -365,10 +362,10 @@ class CLVisc(object):
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
             print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
 
-            is_finished = False
+            is_finished = self.ideal.edmax < self.ideal.efrz
 
             if save_hypersf:
-                is_finished = self.get_hypersf(loop, self.cfg.ntskip)
+                self.get_hypersf(loop, self.cfg.ntskip, is_finished)
 
             if is_finished and not force_run_to_maxloop:
                 break
