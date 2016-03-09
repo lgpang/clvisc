@@ -1,0 +1,321 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+
+%SetFonts
+
+%SetFonts
+
+
+\title{Monte Carlo Sampler to get hadrons from freeze out hypersurface}
+\author{LongGang Pang}
+%\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+\section{Overview}
+
+The number of particle species $i$ emmited from freeze out hypersurface
+element $\Sigma^{\mu}$ is:
+
+\[
+dN_{i}=\frac{p\cdot\Sigma}{(2\pi)^{3}}\frac{d^{3}p}{p^{0}}f({\rm p})\Theta(p\cdot\Sigma)
+\]
+
+
+Where $\Theta(p\cdot\Sigma)$ is a heavyside step function that will
+throw particles when $p\cdot\Sigma<0$. This function should work
+for both $(t,x,y,z)$ coordinates and $(\tau,x,y,\eta_{s})$ coordinates,
+except that the definitions of $p^{\mu}$ and $\Sigma^{\mu}$ are
+different,
+
+\begin{eqnarray*}
+p^{\mu} & = & (E,p^{x},p^{y},p^{z})\ in\ (t,z)\\
+p^{\mu} & = & (m_{T}\cosh(Y-\eta_{s}),p^{x},p^{y},m_{T}\sinh(Y-\eta_{s}))\ in\ (\tau,\eta_{s})
+\end{eqnarray*}
+
+
+The $f({\rm p})=\frac{1}{\exp((p\cdot u-\mu)/T)+\lambda}$ is the
+distribution function which can be Bose-Einstein distribution for
+mesons with $\lambda=-1$ , Fermi-Dirac distribution for baryons with
+$\lambda=1$ or Juttner distribution with $\lambda=0$ when $\exp((p\cdot u-\mu)/T)\gg1$
+for massive hadrons. There is big difference between Bose-Einstein
+distribution and Juttner distribution for pion, while for other hadrons
+the difference is quite negligible and we can use Juttner distribution
+as an approximation of Bose-Einstein or Fermi-Dirac distribution for
+all the hadrons except pion. 
+
+In Local Rest Frame of $(t,x,y,z)$ coordinates, $u^{\mu}=(u^{t},u^{x},u^{y},u^{z})=(1,0,0,0)$
+and $f({\rm p})=\exp\left(-(E-\mu)/T\right)$.
+
+In Local Rest Frame of $(\tau,x,y,\eta_{s})$ coordinates, 
+\[
+u^{\mu}=(u^{\tau},u^{x},u^{y},u^{\eta})=\left(u^{t}\cosh\eta_{s}-u^{z}\sinh\eta_{s},u^{x},u^{y},-u^{t}\sinh\eta_{s}+u^{z}\cosh\eta_{s}\right)=(1,0,0,0)
+\]
+which means $v_{z}=\tanh\eta_{s}$ and the rapidity of fluid velocity
+becomes $Y_{v}=\eta_{s}$ and the 4 momentum 
+\[
+p^{\mu}=(m_{T}\cosh(Y'+Y_{v}-\eta_{s}),p^{x},p^{y},m_{T}\sinh(Y'+Y_{v}-\eta_{s}))
+\]
+becomes $\tilde{p}^{\mu}=(m_{T}\cosh Y',p^{x},p^{y},m_{T}\sinh Y')=(E,p^{x},p^{y},p^{z})$
+at local rest frame. 
+The distribution function again becomes 
+$f({\rm p})=\exp\left(-(p^{0}-\mu)/T\right)=\exp\left(-(m_{T}\cosh(Y)-\mu)/T\right)=\exp\left(-(E-\mu)/T\right)$.
+It is not straight forward, but finally we see even in $(\tau,x,y,\eta_{s})$
+coordinates, the distribution function in local rest frame equals
+to thermal distribution in $(t,x,y,z)$ coordinates. 
+
+$dN_{i}$ is Lorentz invariant quantity, so it is straight foward
+to do the 3D momentum phase space integration in local rest frame
+where the integration is anlytically equals to modified Bessel function
+for isotime freeze out {[}H. Petersen{]} or simplified to 1D numerical
+integration for arbitrary freeze out hyper surface {[}Hirano{]}. Once
+we know the total number of hadrons $dN$ where $dN=\sum_{i}dN_{i}$,
+we may do poisson sampling with $dN$ as the probability to determine
+how many hadrons will actually be created. One may wonder whether
+the results are different if we do poisson sampling for each species
+with probability $dN_{i}$ (obviousely this is much slower). There
+is a proof tells us that the results are equal to each other,
+
+Theorem: Let $x_{1}$, $x_{2}$ are independent Poisson random variable
+where $x_{i}$ has Poisson probability $\lambda_{i}$, then $x_{1}+x_{2}$
+has a Poisson distribution with $\lambda_{1}+\lambda_{2}$.
+
+\begin{eqnarray*}
+\\
+P(x_{1}+x_{2}=z) & = & f_{Z}(z)=\sum_{x=0}^{z}f_{x_{1}}(x)f_{x_{2}}(z-x)\\
+ & = & \sum_{x=0}^{z}\frac{\lambda_{1}^{x}}{x!}e^{-\lambda_{1}}\frac{\lambda_{2}^{z-x}}{(z-x)!}e^{-\lambda_{2}}\\
+ & = & e^{-(\lambda_{1}+\lambda_{2})}\sum_{x=0}^{z}\frac{\lambda_{1}^{x}}{x!}\frac{\lambda_{2}^{z-x}}{(z-x)!}\\
+ & = & \frac{(\lambda_{1}+\lambda_{2})^{z}}{z!}e^{-(\lambda_{1}+\lambda_{2})}
+\end{eqnarray*}
+
+
+Where binormial formule has been used here $(a+b)^{z}=\sum_{x=0}^{z}C_{z}^{x}a^{x}b^{z-x}=\sum_{x=0}^{z}\frac{z!}{x!(z-x)!}a^{x}b^{z-x}$.
+
+After the real number of hadrons is determined, the next step is to
+determine the particle type, which can be done by using the discrete
+distribution with probabilities given by $dN_{i}$. And there is sampling
+functions in c++11 for poisson distribution and discrete distribution
+which can be used directly. 
+
+
+\section{Mometum sampling}
+
+It is easy to sample the 4 momentum from distribution function $f(p)=p^{2}\exp(-\sqrt{p^{2}+m^{2}}/T)$
+by rejection method.This is a good idea. Scott Pratt introduces a
+smart way to sample 4 momentum from thermal distributions, the math
+trick is used here: for probability distribution $x^{n-1}e^{-x}$,
+one can sample the distribution by taking the natural log of $n$
+random numbers $x=-\ln(r_{1}r_{2}...r_{n})$ where $r_{i}$ are random
+numbers uniformly distributed between zero and one. For three dimentional
+thermal distribution for massless particle whose distribution function
+reads $f(p)=p^{2}e^{-p/T}$, 
+
+\begin{eqnarray*}
+p & = & -T\ln(r_{1}r_{2}r_{3})\\
+\cos\theta & = & \frac{\ln(r_{1})-\ln(r_{2})}{\ln(r_{1})+\ln(r_{2})}\\
+\phi & = & \frac{2\pi\left[\ln(r_{1}r_{2})\right]^{2}}{\left[\ln(r_{1}r_{2}r_{3})\right]^{2}}
+\end{eqnarray*}
+
+
+By checking the Jacobian, indeed
+
+\begin{eqnarray*}
+dpd\cos\theta d\phi & = & |J|\ dr_{1}dr_{2}dr_{3}\\
+ & = & \frac{8\pi T}{r_{1}r_{2}r_{3}\left[\ln(r_{1}r_{2}r_{3})\right]^{2}}dr_{1}dr_{2}dr_{3}\\
+ & = & \frac{8\pi T}{e^{-p/T}p^{2}/T^{2}}dr_{1}dr_{2}dr_{3}
+\end{eqnarray*}
+
+
+And $dr_{1}dr_{2}dr_{3}=\frac{1}{8\pi T^{3}}p^{2}e^{-p/T}dpd\cos\theta d\phi$.
+
+For massive hadrons with Juttner distribution,
+
+\[
+p^{2}e^{-(E-\mu)/T}=p^{2}e^{-p/T}e^{(p-E+\mu)/T}
+\]
+
+
+Use acceptance-rejection method, draw $p$ from $p^{2}e^{-p/T}$ distribution,
+accept or reject with weight function $\omega(p)=e^{(p-E)/T}=e^{(p-\sqrt{p^{2}+m^{2}})/T}$.
+Notice that $\omega(p)<1$ is always satisfied, while for heavy hadrons
+$\omega(p)\ll1$ and many samplings are rejected which makes this
+method inefficient.
+
+
+\subsection*{For $\pi$}
+
+\[
+p^{2}/(e^{(E-\mu)/T}-1)=p^{2}e^{-p/T}*e^{p/T}/(e^{(E-\mu)/T}-1)
+\]
+
+
+Use acceptance-rejection method, draw $p$ from $p^{2}e^{-p/T}$ distribution,
+accept or rejection with weight function $\omega(p)=e^{p/T}/(e^{(E-\mu)/T}-1)$.
+However in this case we don't know when $\omega(p)<1$ will break
+down. Do a simple test with $mass=0.139$, $T=0.150$ shows that $\omega(p)<1$
+will break down soon at large $p$ for $\mu=0$ and every where for
+non-zero $\mu$. This is frustrating because most of the hadrons produced
+are pions and we already know that there are big difference for Juttner
+distribution and Bose-Einstein distribution for pion. However if we
+know one simple relationship betwen the maximum value of $\omega(p)$
+and $p,\mu$, we can scale the weight function by $\omega(p)/\omega_{max}(\mu)$
+to fix it. For big $\mu$ the probability for rejection is around
+$50\%$ which is still acceptable as shown in Fig 2. One remaining
+question is to find the maximum value of $\omega(p)$, as you can
+see there are $2$ points with $\frac{d\omega(p)}{dp}=0$ for $\mu\neq0$
+and one can not determine if it is maximum. For $\mu=0$, non of these
+2 points around $p=0.1$ produce maximum since $\omega(p)$ may exceed
+unity at large $p$. So further check should be done if $\omega_{max}(p\sim0.1)>\omega(p_{max})$
+where $p_{max}$ is the biggest momentum cut that will be used. Another
+way to keep $\omega(p)<1$ is to rescale it by $\exp(a*\mu/T)$ however
+the optimised value of $a$ is unknow.
+
+For heavy hadrons there is no difference between BoseEinstein, FermiDirac
+and Juttner distribution, so Juttner distribution can be used to sample
+the 4 momentum of all hadrons except $\pi.$ The weight function $\omega(p)=e^{(p-E)/T}$
+is much smaller for heavier hadrons, so there are many rejections
+which will make the program slow. However, The philosophy is for $T/m<0.6$
+do variable transformation:
+
+
+\begin{eqnarray}
+p & = & \sqrt{E^{2}-m^{2}},\ dp=E/pdE\\
+dpp^{2}e^{-E/T} & = & dE\frac{E}{p}p^{2}e^{-E/T}\\
+ & = & dEpEe^{-E/T}\\
+ & = & dk\frac{p}{E}(k+m)^{2}e^{-k/T}e^{-m/T}\\
+ & = & dk(k+m)^{2}e^{-k/T}\omega(p)\\
+ & = & dk(k^{2}+2mk+m^{2})e^{-k/T}\omega(p)
+\end{eqnarray}
+
+
+where $k=E-m$ and $\omega(p)=\frac{p}{E}e^{-m/T}$ is weight function.
+The excelent part of this algorithm is that $E-m>0$ and $p/E<1$.
+The $e^{-m/T}$ and $e^{-\mu/T}$ terms are not important and can
+be dropped. By split the upper distributions into 3 parts and determine
+which part is domainant by their integrated weight.
+
+\begin{eqnarray}
+\int dkk^{2}e^{-k/T} & = & 2T^{3}\\
+\int dk2mke^{-k/T} & = & 2mT^{2}\\
+\int dkm^{2}e^{-k/T} & = & m^{2}T
+\end{eqnarray}
+
+
+Once picked k one can do rejection and repeat with weight $p/E$. 
+
+\section{Adaptive Rjection Sampling}
+
+Since the Bose-Einstein distribution for pion is quite special, and
+the 4-momentum is not easy to sample with finite chemical potential
+$\mu$ where weight function $\omega(p)<1$ is not satisfied, it is
+possible to further rescale $\omega(p)$ so that it is smaller than
+unity. But the best scale factor is arbitrary with unkown parameter
+$a$. It is possible to use Adaptive Rejection Sampling (ARS) which
+will construct one upper bound and refine this bound with rejected
+points. ARS asks for the probability distribution function $f(x)$
+to be log concave, which means if we set $h(x)=\log f(x)$, $h''(x)<0$
+should be true for any $x$, fortunatelly all the Juttner, Bose-Einstein
+and Fermi-Dirac distributions obey this rule. The ARS method is developed
+further to isolate the distribution function to concave and convex
+part which will produce upper bounds separately. 
+
+The philosophy of ARS is to generate a piecewise exponential distribution
+upper bound for $f(x)$. Where the distribution function $q(x)$ is
+piecewise exponential distribution $\mbox{q(x)\ensuremath{\propto\exp}(g(x))}$if
+$g(x)$ is piecewise linear. The ordered change points are $z_{0}<z_{1}<z_{2}...<z_{n}$
+and $g(x)$ has slope $m_{i}$ in $(z_{i-1},z_{i})$. The area under
+each piece of exponential segment $\exp(g(x_{i}))$ is,
+
+\[
+A_{i}=\int_{z_{i}-1}^{z_{i}}e^{g(x)}dx=\frac{1}{m_{i}}\left(e^{g(z_{i})}-e^{g(z_{i-1})}\right)
+\]
+
+
+First sample $j$ from discrete\_distribution(\{$A_{i}$\}), then
+sampling $x\in(z_{j-1,}z_{j})$ from distribution function $q(x)=\exp(a+m_{i}x)$.
+By inversely sampling uniform distribution $r\in[0,1]$ from the cumulative
+propability 
+
+\[
+Q(x)=\int_{z_{i-1}}^{x}q(y)dy=\frac{q(x)-q(z_{i-1})}{q(z_{i})-q(z_{i-1})}=r
+\]
+
+
+we get $x$ from the exponential distribution,
+
+\[
+x=\frac{1}{m_{i}}\ln\left(re^{m_{i}z_{i}}+(1-r)e^{m_{i}z_{i-1}}\right)
+\]
+
+
+With this $x$ we can do rejection test: $ran()<\frac{f(x)}{q(x)}=\exp(h(x)-g(x))$.
+
+If a point is rejected, it will be used to refine the upper bound
+which will make the upper bound close to $f(x)$ as soon as possible.
+In squeezing test step, lower bound is also needed which we call $l(x)$.
+Squeezing test is true if $ran()<\frac{l(x)}{q(x)}$. 
+
+There are 3 kinds of different upper bounds, one is from tangent lines,
+the other two are from scants, the upper bounds given by scants is
+looser but there will less derivtive calculations.
+
+
+
+\section{(3+1)D viscous hydrodynamics hydrodynamics}
+
+
+For ideal hydrodynamics, sample $n d\Sigma_{max}$ number of hadrons, determine the particle type using discrete distribution
+with the probabilities given by their equilibrium density $n_i$, where $n=\sum_i n_i$.
+
+Once the particle type is determine, we sample the four-momenta of the particle in the local rest frame of the fluid cell,
+and keep the particle if $r<\frac{p^*\cdot d\Sigma^*}{p^{0*}d\Sigma_{max}}$.
+
+For viscous hydrodynamics, one needs to consider the non-equilibrium contributions. However, the $\pi^{\mu\nu}$ terms
+does not contribute to the total number since the particle flow on freeze out hypersurface $n^{\mu} = n u^{\mu}$ is perpendicular
+to $\pi^{\mu \nu}$. This property is really helpful since we don't need to calculate equilibrium density for each freeze out hyper-surface.
+
+And we can sample N hadrons, where N equals to,
+\[
+N = n d\Sigma_{max} K_{max}
+\]
+where the non-equilibrium scale factor $K_{max}$ is used to get more hadrons for the additional rejection procedure,
+\[
+K_{max} = \left[ 1 + (1 \mp f_0) \frac{p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*}}{2T^2(\varepsilon+P)}\right]_{max}
+\]
+After $N$ is determine, sample how many particles will be produced with Poisson distribution whose mean probability is $N$.
+Then determine the particle type as before, sample four-momenta in LRF, do keep or rejection according to,
+\[
+r < \frac{p^*\cdot d\Sigma}{p^{0*}d\Sigma_{max}}  w_{visc} 
+\]
+where the rejection weight $w_{visc}$ from non-equilibrium corrections is,
+\[
+w_{visc} = \frac{A + (1\mp f_0)p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*}}{\left[ A + (1\mp f_0)p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*}\right]_{max}}
+\]
+where $A=2T^2(\epsilon+P)$  is constant on the freeze out hyper-surface.
+
+Then for Fermions, 
+\begin{eqnarray}
+K_{max} &=& 1 + \left[ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*} \right]_{max}/A \\
+w_{visc} &=& \frac{A + (1 - f_0)p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*}}{A + \left[ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*} \right]_{max}}
+\end{eqnarray}
+and for Bosons,
+\begin{eqnarray}
+K_{max} &=& 1 + 2 \left[ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*} \right]_{max}/A \\
+w_{visc} &=& \frac{A + (1 + f_0)p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*}}{A + 2 \left[ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*} \right]_{max}}
+\end{eqnarray}
+
+The easiest way to get $\left[ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*} \right]_{max}$ is as follows,
+\begin{eqnarray}
+ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*}  & \le & \sum_{\mu \nu} | p^{\mu*} p^{\nu*} \pi^{\mu\nu*} |  \\
+   & \le & E^{*2} \sum_{\mu \nu}  | \pi^{\mu\nu*} |  
+\end{eqnarray}
+thus we have $\left[ p_{\mu}^*p_{\nu}^*\pi^{\mu\nu*} \right]_{max} = E_{max}^{*2} \sum_{\mu \nu}  | \pi^{\mu\nu*}|$.
+
+Now the only difficulty is how to boost $\pi^{\mu\nu}$ tensor to the comoving frame of the fluid.
+\end{document}  
