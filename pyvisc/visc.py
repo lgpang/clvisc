@@ -31,10 +31,14 @@ class CLVisc(object):
         self.h_pi0  = np.zeros(10*self.size, self.cfg.real)
 
         mf = cl.mem_flags
-        self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
-                     cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
-                     cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes) ]
+        #self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
+        #             cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
+        #             cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes) ]
 
+        # initialize the d_pi^{mu nu} with 0
+        self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
+                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
+                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0) ]
 
         self.d_IS_src = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
