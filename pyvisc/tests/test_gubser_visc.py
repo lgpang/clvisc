@@ -51,7 +51,7 @@ def CreateIni(ctx, queue, d_ev, d_pi, tau=1.0, L=10.0, lam1=10.0, NX=201, NY=201
     pixx, pixy, piyy = GetLimit(tau, L, lam1)
     cwd, cwf = os.path.split(__file__)
     prg_src = open(os.path.join(cwd, '../kernel/kernel_gubser_visc.cl'), 'r').read()
-    options = ['-D NX=%s'%NX, '-D NY=%s'%NY, '-D NZ=%s'%NZ, '-D DX=%s'%DX, '-D DY=%s'%DY, '-D DZ=%s'%DZ, '-D tau=%s'%tau, '-D L=%s'%L, '-D lam1=%s'%lam1]
+    options = ['-D NX=%s'%NX, '-D NY=%s'%NY, '-D NZ=%s'%NZ, '-D DX=%s'%DX, '-D DY=%s'%DY, '-D DZ=%s'%DZ, '-D tau=%s'%tau, '-D L0=%s'%L, '-D lam1=%s'%lam1]
     print options
     
     prg = cl.Program(ctx, prg_src).build(options=options)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     cfg.LAM1 = Lam
     cfg.ntskip = 100
     cfg.gubser_visc_test = True
-    visc = CLVisc(cfg, gpu_id=2)
+    visc = CLVisc(cfg, gpu_id=0)
     ctx = visc.ctx
     queue = visc.queue
     CreateIni(ctx, queue, visc.ideal.d_ev[1], visc.d_pi[1], tau=cfg.TAU0,  L=L, lam1=Lam,
