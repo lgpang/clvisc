@@ -80,6 +80,8 @@ if __name__ == '__main__':
     cfg.LAM1 = Lam
     cfg.ntskip = 100
     cfg.gubser_visc_test = True
+    cfg.save_to_hdf5 = False
+
     visc = CLVisc(cfg, gpu_id=0)
     ctx = visc.ctx
     queue = visc.queue

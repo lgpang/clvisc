@@ -26,12 +26,10 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self, configs, gpu_id=0, h5py_out=True):
+    def __init__(self, configs, gpu_id=0):
         '''Params:
         :param configs: hydrodynamic configurations, from configs import cfg
         :param gpu_id: use which gpu for the calculation if there are many per node
-        :param h5py_out: if True, bulkinfo will be saved to hdf5 file bulkinfo.h5
-                         if False, bulkinfo will be saved to common text file
         '''
         # create opencl environment
         self.cfg = configs
@@ -53,7 +51,7 @@ class CLIdeal(object):
         self.gpu_defines = self.__compile_options()
 
         # store 1D and 2d bulk info at each time step
-        if h5py_out:
+        if self.cfg.save_to_hdf5:
             from bulkinfo_h5 import BulkInfo
         else:
             from bulkinfo import BulkInfo

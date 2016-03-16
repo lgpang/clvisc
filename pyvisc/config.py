@@ -178,6 +178,9 @@ def read_config():
     parser.add_argument('--use_float32', nargs='?', const=1, type=bool, 
             default=True, help='true for float and false for double precision')
 
+    parser.add_argument('--save_to_hdf5', nargs='?', const=1, type=bool, 
+            default=True, help='true to save bulkinfo to hdf5 file, otherwise save to .txt file')
+
     parser.add_argument('--opencl_interactive', nargs='?', const=1, type=bool, 
             default=False, help='true to choose device type and device id at run time')
     
