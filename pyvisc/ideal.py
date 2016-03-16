@@ -82,11 +82,14 @@ class CLIdeal(object):
         self.h_ev1 = np.zeros((self.size, 4), self.cfg.real)
 
         # d_ev[0/1/2]: old/current/new value at time step n-1/n/n+1
-        self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
-                     cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
-                     cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)]
+        #self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
+        #             cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
+        #             cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)]
 
-        self.d_Src = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)
+        self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1),
+                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1),
+                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1)]
+        self.d_Src = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1)
 
         self.submax = np.empty(64, self.cfg.real)
         self.d_submax = cl.Buffer(self.ctx, cl.mem_flags.READ_WRITE, self.submax.nbytes)
