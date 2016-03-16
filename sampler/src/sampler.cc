@@ -559,7 +559,8 @@ namespace {
                     }
 
                     while_loop_num ++;
-                    if ( while_loop_num > 1000 &&  weight_visc <= 0.0 ) {
+                    if ( while_loop_num > 10000 &&  weight_visc <= 0.0 ) {
+                      std::cout << "more than 10000 loops for this cell, skip it ..." << std::endl;
                       std::cout << "smaller than 0 weight_visc=" << weight_visc << std::endl;
                       std::cout << "pdotsigma=" << pdotsigma << std::endl;
                       std::cout << "p0_star=" << p0_star << std::endl;
@@ -568,6 +569,7 @@ namespace {
                       std::cout << "sigma_lrf=" << sigma_lrf << std::endl;
                       std::cout << "mass = " << mass << std::endl;
                       std::cout << std::endl;
+                      break;
                     }
 
 

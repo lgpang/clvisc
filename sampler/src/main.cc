@@ -92,17 +92,21 @@ int main(int argc, char ** argv) {
     fname_particle_list << path << "/mc_particle_list.dat";
     std::ofstream fpmag(fname_particle_list.str());
 
-    fpmag << "#E px py pz Y pid\n";
+    fpmag << "#E px py pz Y pid eta\n";
     for ( const auto & par : sampler.particles_ ) {
         int nid = sampler.newpid[par.pdgcode];
         if ( sampler.list_hadrons_.at(nid).stable &&
              sampler.list_hadrons_.at(nid).charge ) {
         FourVector momentum = par.momentum;
+        double pmag = std::sqrt(momentum.sqr3());
+        double pseudo_rapidity = 0.5*std::log((pmag+momentum.x3())/
+                    (pmag-momentum.x3())); 
+
         fpmag << momentum.x0() << ' ' << momentum.x1() << ' '
             << momentum.x2() << ' ' << momentum.x3() << ' '
             << 0.5*std::log((momentum.x0()+momentum.x3())/
                     (momentum.x0()-momentum.x3())) << ' '
-            << par.pdgcode << std::endl;
+            << par.pdgcode << ' ' << pseudo_rapidity << std::endl;
         }
         if ( nid == 1 ) num_of_pion_plus ++;
     }
