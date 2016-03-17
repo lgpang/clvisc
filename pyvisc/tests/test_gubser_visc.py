@@ -22,6 +22,9 @@ def gubser_pizz(tau, r, L, lam1):
             - np.power(tau, 2) + np.power(r, 2), 2))/(np.power(L, 2)*np.power(tau, 2)),
             (-1.33333333333333*lam1 + 1)/lam1)/(lam1*np.power(tau, 6)) ;
 
+def gubser_pixx(tau, x, L, lam1, y=0):
+    x[np.abs(x)<1.0E-8] = 1.0E-8
+    return -tau**2*((4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)/(4*L**2*tau**2))**(-(1.33333333333333*lam1 - 1)/lam1)*(4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)*(x**2*(L**2 + tau**2 + x**2 + y**2)**2 + y**2*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2))/(lam1*tau**6*(x**2 + y**2)*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2)**2)
 
 ##### Calc the limit of pixx, pixy, piyy at (x->0, y->0 )
 def GetLimit(tau_input=1.0, L_input=10.0, lam1_input=10.0):
@@ -116,7 +119,7 @@ if __name__ == '__main__':
         #ax[0, 0].text(bulk.x[xcent], bulk.ex[xcent], r'$\tau=%s$ fm'%i)
 
     for i in range(5):
-        ax[0, 1].plot(bulk.x, 'k-', bulk.vx[i])
+        ax[0, 1].plot(bulk.x, bulk.vx[i],'k-')
         ax[0, 1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), 'r--')
         ax[0, 1].set_xlabel(r'$r_{\perp}$', fontsize=25)
         ax[0, 1].set_ylabel(r'$v_r$', fontsize=25)
@@ -131,7 +134,7 @@ if __name__ == '__main__':
     for i in range(5):
         tau = 1.0 + i*cfg.ntskip*cfg.DT
         ax[1, 1].plot(pimn.x, pimn.pixx_x[i], 'k-')
-        ax[1, 1].plot(pimn.x, -0.5*tau*tau*gubser_pizz(tau, bulk.x, L, Lam), 'r--')
+        ax[1, 1].plot(pimn.x, gubser_pixx(tau, bulk.x, L, Lam), 'r--')
         ax[1, 1].set_xlabel(r'$r_{\perp}$', fontsize=25)
         ax[1, 1].set_ylabel(r'$\pi^{xx}$', fontsize=25)
 
