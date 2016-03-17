@@ -468,7 +468,7 @@ __kernel void update_pimn(
 
     real etav = ETAOS * S(ed_step, eos_table) * hbarc;
 
-    real one_over_taupi = T(ed_step, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
+    real one_over_taupi = T(ed_step, eos_table)/(5.0f*max(acu, ETAOS)*hbarc);
 
 // the following definition is switchon if cfg.gubser_visc_test is set to True
 //#define GUBSER_VISC_TEST
@@ -506,7 +506,12 @@ __kernel void update_pimn(
 
             real piNS = etav*sigma;
 
-            real pi_old = d_pi1[10*I + mn] * u_old.s0;
+            // assume u[0] does not change with time in a very small time interval
+            //real stiff_update = (d_pi1[10*I + mn] - piNS)*exp(-DT/u[0]* one_over_taupi) + piNS;
+            //real pi_old = stiff_update;
+            real u0_avg = 0.5f*(u_old.s0 + u_new.s0);
+            real pi_old = d_pi1[10*I + mn] * u0_avg;
+            //real pi_old = d_pi1[10*I + mn] * u_old.s0;
 
             // /** step==1: Q' = Q0 + Src*DT
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
@@ -529,9 +534,12 @@ __kernel void update_pimn(
             d_Src[idn(I, mn)] += src;
 
             // use implicit method for stiff term; 
-            pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
-                      DT*one_over_taupi*piNS) / (u_new.s0 + DT*one_over_taupi);
+            //pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
+            //          DT*one_over_taupi*piNS) / (0.5*(u_old.s0+u_new.s0) + DT*one_over_taupi);
 
+            pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
+                      DT*one_over_taupi*piNS) / (u0_avg + DT*one_over_taupi);
+            //pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step);
             if ( fabs(pi_old) > max_pimn_abs ) max_pimn_abs = fabs(pi_old);
 
             d_pinew[10*I + mn] = pi_old;
