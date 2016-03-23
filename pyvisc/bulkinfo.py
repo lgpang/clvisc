@@ -30,6 +30,7 @@ class BulkInfo(object):
 
         NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
         self.h_ev = np.zeros((NX*NY*NZ, 4), cfg.real)
+        self.h_pi = np.zeros(10*NX*NY*NZ, self.cfg.real)
 
         # one dimensional
         self.ex, self.ey, self.ez = [], [], []
@@ -37,6 +38,8 @@ class BulkInfo(object):
 
         # in transverse plane (z==0)
         self.exy, self.vx_xy, self.vy_xy, self.vz_xy = [], [], [], []
+
+        self.pixx_xy, self.piyy_xy, self.pitx_xy = [], [], []
 
         # in reaction plane
         self.exz, self.vx_xz, self.vy_xz, self.vz_xz = [], [], [], []
@@ -97,10 +100,28 @@ class BulkInfo(object):
                     d_ev_z0[gid] = d_ev[i*NY*NZ + j*NZ + gid];
                 }
             }
+
+            __kernel void get_pimn(__global real * d_pi,
+                                 __global real * d_pixx_xy,
+                                 __global real * d_piyy_xy,
+                                 __global real * d_pitx_xy)
+            {
+                int gid_x = get_global_id(0);
+                int gid_y = get_global_id(1);
+
+                int oid = gid_x*NY*(NZ/2) + gid_y*(NZ/2) + NZ/2;
+
+                int nid = gid_x*NY + gid_y;
+
+                d_pixx_xy[nid] = d_pi[oid];
+                d_piyy_xy[nid] = d_pi[oid];
+                d_pitx_xy[nid] = d_pi[oid];
+            }
             '''
         self.kernel_edslice = cl.Program(self.ctx, edslice_src).build(
                                          options=self.compile_options)
-    def get(self, tau, d_ev1, edmax):
+
+    def get(self, tau, d_ev1, edmax, d_pi=None):
         self.time.append(tau)
         self.edmax.append(edmax)
         mf = cl.mem_flags
@@ -122,7 +143,7 @@ class BulkInfo(object):
         d_evyz = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_evyz.nbytes)
 
         self.kernel_edslice.get_ed(self.queue, (2000,), None, d_ev1,
-                d_evx0, d_evy0, d_evz0, d_evxy, d_evxz, d_evyz)
+                d_evx0, d_evy0, d_evz0, d_evxy, d_evxz, d_evyz).wait()
 
         h_evx0 = np.zeros((NX, 4), self.cfg.real)
         h_evy0 = np.zeros((NY, 4), self.cfg.real)
@@ -152,7 +173,27 @@ class BulkInfo(object):
         self.vy_xz.append(h_evxz[:,2].reshape(NX, NZ))
         self.vz_xz.append(h_evxz[:,3].reshape(NX, NZ))
 
-    def eccp(self, ed, vx, vy, vz=0.0):
+        if d_pi is not None:
+            h_pixx = np.zeros(NX*NY, self.cfg.real)
+            h_piyy = np.zeros(NX*NY, self.cfg.real)
+            h_pitx = np.zeros(NX*NY, self.cfg.real)
+            d_pixx = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_pixx.nbytes)
+            d_piyy = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_pixx.nbytes)
+            d_pitx = cl.Buffer(self.ctx, mf.READ_WRITE, size=h_pixx.nbytes)
+            self.kernel_edslice.get_pimn(self.queue, (NX, NY), None, d_pi,
+                    d_pixx, d_piyy, d_pitx).wait()
+
+            cl.enqueue_copy(self.queue, h_pixx, d_pixx).wait()
+            self.pixx_xy.append(h_pixx.reshape(NX, NY))
+
+            cl.enqueue_copy(self.queue, h_piyy, d_piyy).wait()
+            self.piyy_xy.append(h_piyy.reshape(NX, NY))
+
+            cl.enqueue_copy(self.queue, h_pitx, d_pitx).wait()
+            self.pitx_xy.append(h_pitx.reshape(NX, NY))
+
+
+    def eccp(self, ed, vx, vy, vz=0.0, pixx=0.0, piyy=0.0, pitx=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
         ed[ed<1.0E-10] = 1.0E-10
@@ -162,9 +203,9 @@ class BulkInfo(object):
         vr2[vr2>1.0] = 0.999999
 
         u0 = 1.0/np.sqrt(1.0 - vr2)
-        Tyy = (ed + pre)*u0*u0*vy*vy + pre
-        Txx = (ed + pre)*u0*u0*vx*vx + pre
-        T0x = (ed + pre)*u0*u0*vx
+        Tyy = (ed + pre)*u0*u0*vy*vy + pre + piyy
+        Txx = (ed + pre)*u0*u0*vx*vx + pre + pixx
+        T0x = (ed + pre)*u0*u0*vx + pitx
         v2 = (Txx - Tyy).sum() / (Txx + Tyy).sum()
         v1 = T0x.sum() / (Txx + Tyy).sum()
         return v1, v2
@@ -203,7 +244,7 @@ class BulkInfo(object):
         self.ecc1_vs_rapidity.append(ecc1)
         self.ecc2_vs_rapidity.append(ecc2)
         
-    def save(self):
+    def save(self, viscous_on=False):
         # use absolute path incase call bulkinfo.save() from other directory
         path_out = os.path.abspath(self.cfg.fPathOut)
 
@@ -229,6 +270,7 @@ class BulkInfo(object):
         vr = []
         ecc2 = []
         ecc1 = []
+        ecc2_visc = []
         for idx, exy in enumerate(self.exy):
             vx= self.vx_xy[idx]
             vy= self.vy_xy[idx]
@@ -236,12 +278,21 @@ class BulkInfo(object):
             np.savetxt(path_out+'/Txy%d.dat'%idx, self.eos.f_T(exy))
             np.savetxt(path_out+'/vx_xy%d.dat'%idx, vx)
             np.savetxt(path_out+'/vy_xy%d.dat'%idx, vy)
-
-            ecc1.append(self.eccp(exy, vx, vy)[0])
-            ecc2.append(self.eccp(exy, vx, vy)[1])
+            tmp0, tmp1 = self.eccp(exy, vx, vy)
+            ecc1.append(tmp0)
+            ecc2.append(tmp1)
             vr.append(self.mean_vr(exy, vx, vy))
             tau = self.time[idx]
             entropy.append(self.total_entropy(tau, exy, vx, vy))
+
+            if viscous_on:
+                pixx = self.pixx_xy[idx]
+                piyy = self.piyy_xy[idx]
+                pitx = self.pitx_xy[idx]
+                ecc_visc1, ecc_visc2 = self.eccp(exy, vx, vy,
+                        pixx=pixx, piyy=piyy, pitx=pitx)
+
+                ecc2_visc.append(ecc_visc2)
 
         
         for idx, exz in enumerate(self.exz):
@@ -253,6 +304,11 @@ class BulkInfo(object):
 
         np.savetxt(path_out + '/eccp.dat',
                    np.array(zip(self.time, ecc2)), header='tau  eccp')
+
+        if viscous_on:
+            np.savetxt(path_out + '/eccp_visc.dat',
+                   np.array(zip(self.time, ecc2_visc)), header='tau  eccp_visc')
+
 
         np.savetxt(path_out + '/Tmax.dat',
                    np.array(zip(self.time, self.eos.f_T(self.edmax))),
