@@ -250,7 +250,7 @@ class CLIdeal(object):
 
         return is_finished
 
-    def save(self, save_hypersf=True, save_bulk=False):
+    def save(self, save_hypersf=True, save_bulk=False, viscous_on=False):
         self.num_of_sf = np.zeros(1, dtype=np.int32)
         cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
         print("num of sf=", self.num_of_sf)
@@ -263,7 +263,7 @@ class CLIdeal(object):
               'Tfrz=%.6e ; other rows: dS0, dS1, dS2, dS3, vx, vy, veta, etas'%self.cfg.TFRZ)
 
         if save_bulk:
-            self.bulkinfo.save()
+            self.bulkinfo.save(viscous_on=viscous_on)
 
     def update_time(self, loop):
         '''update time with TAU0 and loop, convert its type to np.float32 or 
@@ -303,8 +303,16 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 0
-    cfg.ImpactParameter = 0.0
+    cfg.IEOS = 4
+    cfg.NX = 201
+    cfg.NY = 201
+    cfg.NZ = 101
+    cfg.dx = 0.15
+    cfg.dy = 0.15
+    cfg.dz = 0.15
+    cfg.ImpactParameter = 7.8
+
+    cfg.save_to_hdf5 = False
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber
@@ -312,7 +320,7 @@ def main():
                   ideal.d_ev[1])
 
     #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    ideal.evolve(max_loops=200, save_bulk=True)
+    ideal.evolve(max_loops=2000, save_bulk=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 

@@ -54,7 +54,7 @@ class BulkInfo(object):
         self.eccx = []
         self.vr= []
 
-    def get(self, tau, d_ev, edmax):
+    def get(self, tau, d_ev, edmax, d_pi=None):
         ''' store the bulkinfo to hdf5 file '''
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
         self.time.append(tau)
@@ -167,7 +167,7 @@ class BulkInfo(object):
         return ecc1, ecc2
 
         
-    def save(self):
+    def save(self, viscous_on=False):
         # use absolute path incase call bulkinfo.save() from other directory
         path_out = os.path.abspath(self.cfg.fPathOut)
 

@@ -17,6 +17,10 @@ sys.path.append(cwd)
 from eos.eos import Eos
 #import matplotlib.pyplot as plt
 
+import logging
+
+logging.basicConfig(filename='bulkinfo.log', level=logging.DEBUG)
+
 
 class BulkInfo(object):
     '''The bulk information like:
@@ -113,9 +117,9 @@ class BulkInfo(object):
 
                 int nid = gid_x*NY + gid_y;
 
-                d_pixx_xy[nid] = d_pi[oid];
-                d_piyy_xy[nid] = d_pi[oid];
-                d_pitx_xy[nid] = d_pi[oid];
+                d_pixx_xy[nid] = d_pi[10*oid + 4];
+                d_piyy_xy[nid] = d_pi[10*oid + 7];
+                d_pitx_xy[nid] = d_pi[10*oid + 1];
             }
             '''
         self.kernel_edslice = cl.Program(self.ctx, edslice_src).build(
@@ -173,6 +177,7 @@ class BulkInfo(object):
         self.vy_xz.append(h_evxz[:,2].reshape(NX, NZ))
         self.vz_xz.append(h_evxz[:,3].reshape(NX, NZ))
 
+        logging.debug('d_pi is not None: %s'%(d_pi is not None))
         if d_pi is not None:
             h_pixx = np.zeros(NX*NY, self.cfg.real)
             h_piyy = np.zeros(NX*NY, self.cfg.real)

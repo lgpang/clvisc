@@ -315,7 +315,7 @@ class CLVisc(object):
 
     def save(self, save_hypersf = True, save_bulk = False, 
              save_pi = False, save_vorticity=False):
-        self.ideal.save(save_hypersf, save_bulk)
+        self.ideal.save(save_hypersf, save_bulk, viscous_on=True)
 
         if save_pi:
             self.pimn_info.save()
@@ -360,8 +360,13 @@ class CLVisc(object):
             self.pimn_info = PimnInfo(self.cfg, self.ctx, self.queue,
                                  self.compile_options)
 
-        for loop in xrange(max_loops):
-            #t0 = time()
+        loop = 0
+        #for loop in xrange(max_loops):
+        while True:
+            # stop at max_loops if force_run_to_maxloop set to True
+            if force_run_to_maxloop and loop == max_loops:
+                break
+
             self.ideal.edmax = self.ideal.max_energy_density()
             self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
             print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
@@ -371,15 +376,17 @@ class CLVisc(object):
             if save_hypersf:
                 self.get_hypersf(loop, self.cfg.ntskip, is_finished)
 
-            if is_finished and not force_run_to_maxloop:
-                break
-
             if (plot_bulk or save_bulk) and loop % self.cfg.ntskip == 0:
                 self.ideal.bulkinfo.get(self.ideal.tau,
-                        self.ideal.d_ev[1], self.ideal.edmax)
+                        self.ideal.d_ev[1], self.ideal.edmax,
+                        self.d_pi[1])
 
             if save_pi and loop % self.cfg.ntskip == 0:
                 self.pimn_info.get(self.ideal.tau, self.d_pi[1])
+
+            # finish if edmax < freeze out energy density
+            if is_finished and not force_run_to_maxloop:
+                break
 
             # store d_pi[0] for self.visc_stepUpdate()
             cl.enqueue_copy(self.queue, self.d_pi[0],
@@ -403,6 +410,7 @@ class CLVisc(object):
             self.IS_stepUpdate(step=2)
             self.visc_stepUpdate(step=2)
             self.update_udiff(self.ideal.d_ev[0], self.ideal.d_ev[1])
+            loop = loop + 1
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk, 
                   save_pi = save_pi, save_vorticity = save_vorticity)
@@ -415,21 +423,27 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg, write_config
-    cfg.NX = 201
-    cfg.NY = 201
-    cfg.NZ = 61
+    cfg.NX = 401
+    cfg.NY = 401
+    cfg.NZ = 5
 
-    cfg.DT = 0.005
-    cfg.DX = 0.16
-    cfg.DY = 0.16
-    cfg.ImpactParameter = 10.0
-    cfg.IEOS = 1
-    cfg.ntskip = 60
+    cfg.DT = 0.01
+    cfg.DX = 0.08
+    cfg.DY = 0.08
+    cfg.ImpactParameter = 7.0
+    cfg.IEOS = 0
+    cfg.ntskip = 20
     cfg.nxskip = 2
     cfg.nyskip = 2
     cfg.nzskip = 1
+    cfg.TFRZ = 0.13
+
+    cfg.Hwn = 1.0
 
     cfg.ETAOS = 0.08
+    cfg.fPathOut = '../results/event_visc_cmp_song_b7/'
+    cfg.save_to_hdf5 = False
+
     write_config(cfg)
 
     visc = CLVisc(cfg, gpu_id=0)
@@ -437,9 +451,12 @@ def main():
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
 
-    visc.evolve(max_loops=2000)
+    visc.evolve(max_loops=1600, save_bulk=True, force_run_to_maxloop=False)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
+
+    from subprocess import call
+    call(['python', './spec.py', cfg.fPathOut])
 
 
 if __name__ == '__main__':
