@@ -13,6 +13,9 @@ else:
 def write_config(configs, comments=''):
     '''write the current setting to hydro.info in the output directory'''
     fPathOut = configs.fPathOut
+    if not os.path.exists(fPathOut):
+        os.makedirs(fPathOut)
+
     configfile_name = os.path.join(fPathOut, 'hydro.info')
     #if not os.path.isfile(configfile_name):
     with open(configfile_name, 'w') as cfgfile:
