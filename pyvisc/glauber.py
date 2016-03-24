@@ -9,7 +9,6 @@ from pyopencl import array
 import os
 import sys
 from time import time
-#import matplotlib.pyplot as plt
 
 class Glauber(object):
     '''The pyopencl version for glauber ini condition'''
