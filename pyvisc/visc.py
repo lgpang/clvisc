@@ -49,16 +49,14 @@ class CLVisc(object):
         self.d_udy = cl.Buffer(self.ctx, mf.READ_WRITE, size=nbytes_edv)
         self.d_udz = cl.Buffer(self.ctx, mf.READ_WRITE, size=nbytes_edv)
 
-        # d_omega vorticity vector omega^{mu}= epsilon^{mu nu a b} u_nu d_a u_b
-
-        self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE, size=nbytes_edv),
-                        cl.Buffer(self.ctx, mf.READ_WRITE, size=nbytes_edv)]
+        # d_omega thermal vorticity vector omega^{mu nu} = epsilon^{mu nu a b} d_a (beta u_b)
+        # anti-symmetric 6 independent components
+        self.h_omega = np.zeros(6*self.size, self.cfg.real)
+        self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes),
+                        cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes)]
 
         # get the vorticity on the freeze out hypersurface
-        self.d_omega_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1500000*self.cfg.sz_real4)
-
-        h_num_of_sf = np.zeros(1, np.int32)
-        self.d_num_of_vorticity = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
+        self.d_omega_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1800000*self.cfg.sz_real)
 
         # velocity difference between u_visc and u_ideal* for correction
         self.d_udiff = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
@@ -227,22 +225,18 @@ class CLVisc(object):
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
 
-    def get_vorticity(self, loop, step, save_data=False):
+    def get_vorticity(self, loop, save_data=False):
         '''calc vorticity vector omega^{mu} and store them '''
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
-        self.kernel_vorticity.omegamu(self.queue, (NX*NY*NZ,), None,
-                self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_udiff,
-                self.d_udx, self.d_udy, self.d_udz, self.d_omega[1],
-                self.eos_table, self.ideal.tau, np.int32(step)
-                ).wait()
+        self.kernel_vorticity.omega(self.queue, (NX, NY, NZ), None,
+                self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_omega[1],
+                self.eos_table, self.ideal.tau).wait()
 
         if save_data:
-            h_omega = np.empty((NX*NY*NZ, 4), self.cfg.real)
-            cl.enqueue_copy(self.queue, h_omega, self.d_omega[1]).wait()
+            cl.enqueue_copy(self.queue, self.h_omega, self.d_omega[1]).wait()
             path_out = os.path.abspath(self.cfg.fPathOut)
-            np.savetxt(path_out + '/omegamu_%d.dat'%loop, h_omega,
-            header='omega^{tau} omega^{x} omega^{y} omega^{eta} for NX*NY*NZ cells')
-
+            np.savetxt(path_out + '/omega_munu_%d.dat'%loop, h_omega.reshape(NX*NY*NZ, 6),
+                header='omega^{01, 02, 03, 12, 13, 23}')
 
     def update_udiff(self, d_ev0, d_ev1):
         '''get d_udiff = u_{visc}^{n} - u_{visc}^{n-1}, it is possible to 
@@ -325,11 +319,13 @@ class CLVisc(object):
 
         if save_vorticity:
             # save vorticity on hypersf to data file
-            omega_mu = np.empty(self.ideal.num_of_sf, dtype=self.cfg.real4)
+            num_of_sf = self.ideal.num_of_sf
+            omega_mu = np.empty(6*num_of_sf, dtype=self.cfg.real)
             cl.enqueue_copy(self.queue, omega_mu, self.d_omega_sf).wait()
             out_path = os.path.join(self.cfg.fPathOut, 'omegamu_sf.dat')
-            print("vorticity omega_{mu} on surface is saved to", out_path)
-            np.savetxt(out_path, omega_mu, fmt='%.6e', header = 'omega_mu ')
+            print("vorticity omega_{mu, nu} on surface is saved to", out_path)
+            np.savetxt(out_path, omega_mu.reshape(self.ideal.num_of_sf, 6),
+                       fmt='%.6e', header = 'omega^{01, 02, 03, 12, 13, 23}')
 
 
     def update_time(self, loop):
@@ -403,13 +399,14 @@ class CLVisc(object):
             self.update_time(loop)
             # update pi[1] with d_ev[0] and d_ev[2]_visc*
 
-            # remove the following 2 lines to speed up without vorticity calculation
-            if loop % self.cfg.ntskip == 0 and save_vorticity:
-                self.get_vorticity(loop, step=2, save_data=False)
-
             self.IS_stepUpdate(step=2)
             self.visc_stepUpdate(step=2)
             self.update_udiff(self.ideal.d_ev[0], self.ideal.d_ev[1])
+
+            # add the thermal vorticity calculation here
+            if loop % self.cfg.ntskip == 0 and save_vorticity:
+                self.get_vorticity(loop, save_data=False)
+
             loop = loop + 1
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk, 
@@ -423,9 +420,9 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg, write_config
-    cfg.NX = 401
-    cfg.NY = 401
-    cfg.NZ = 5
+    cfg.NX = 201
+    cfg.NY = 201
+    cfg.NZ = 3
 
     cfg.DT = 0.01
     cfg.DX = 0.08
@@ -451,7 +448,7 @@ def main():
     Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
             visc.ideal.d_ev[1])
 
-    visc.evolve(max_loops=1600, save_bulk=True, force_run_to_maxloop=False)
+    visc.evolve(max_loops=1600, save_bulk=True, force_run_to_maxloop=False, save_vorticity=True)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
 
