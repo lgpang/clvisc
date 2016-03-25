@@ -198,7 +198,7 @@ class BulkInfo(object):
             self.pitx_xy.append(h_pitx.reshape(NX, NY))
 
 
-    def eccp(self, ed, vx, vy, vz=0.0, pixx=0.0, piyy=0.0, pitx=0.0):
+    def eccp(self, ed, vx, vy, vz=0.0, pixx=None, piyy=None, pitx=None):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
         ed[ed<1.0E-10] = 1.0E-10
@@ -208,10 +208,19 @@ class BulkInfo(object):
         vr2[vr2>1.0] = 0.999999
 
         u0 = 1.0/np.sqrt(1.0 - vr2)
-        Tyy = (ed + pre)*u0*u0*vy*vy + pre + piyy
-        Txx = (ed + pre)*u0*u0*vx*vx + pre + pixx
-        T0x = (ed + pre)*u0*u0*vx + pitx
-        v2 = (Txx - Tyy).sum() / (Txx + Tyy).sum()
+        Tyy = (ed + pre)*u0*u0*vy*vy + pre 
+        Txx = (ed + pre)*u0*u0*vx*vx + pre
+        T0x = (ed + pre)*u0*u0*vx
+
+        v2 = 0.0
+
+        if pixx is not None:
+            pi_sum = (pixx + piyy).sum()
+            pi_dif = (pixx - piyy).sum()
+            v2 = ((Txx - Tyy).sum() + pi_dif) / ((Txx + Tyy).sum() + pi_sum)
+        else:
+            v2 = (Txx - Tyy).sum()/(Txx + Tyy).sum()
+
         v1 = T0x.sum() / (Txx + Tyy).sum()
         return v1, v2
 
