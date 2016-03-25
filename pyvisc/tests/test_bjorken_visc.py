@@ -9,6 +9,7 @@ import os, sys
 from time import time
 import numpy as np
 import unittest
+from common_plotting import smash_style
 
 cwd, cwf = os.path.split(__file__)
 sys.path.append(os.path.join(cwd, '..'))
@@ -77,12 +78,17 @@ class TestBjorken(unittest.TestCase):
 
         import matplotlib.pyplot as plt
         plt.plot(tau-tau[0], lhs, 'r-', label='CLVisc')
-        plt.plot(tau-tau[0], rhs, 'b--', label='Analytic')
-        plt.text(2.5, 0.8, r'$\tau_0=0.6\ fm,\ T_0=360\ MeV$', fontsize=25)
+        plt.plot(tau-tau[0], rhs, 'b--', label='Bjorken')
+        plt.text(2., 0.9, r'$\tau_0=0.6\ fm$')
+        plt.text(2., 0.82, r'$T_0=0.36\ GeV$')
+        plt.text(2., 0.74, r'$\eta/s=0.08$')
+
+        plt.xlabel(r'$\tau - \tau_0\ [fm]$')
+        plt.ylabel(r'$T/T_0$')
+        smash_style.set()
         plt.legend(loc='best')
-        plt.xlabel(r'$\tau - \tau_0\ [fm]$', fontsize=25)
-        plt.ylabel(r'$T/T_0$', fontsize=25)
-        plt.show()
+        #plt.show()
+        plt.savefig('bjorken_visc.pdf')
         #np.testing.assert_almost_equal(lhs, rhs, 2)
     
 

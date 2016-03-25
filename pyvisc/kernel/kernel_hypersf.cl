@@ -89,10 +89,8 @@ void get_all_intersections(__private real ed[16],
                __private real4 all_ints[32],
                __private int size_of_ints[1]);
 
-real centroid_omegaxz(__private real vorticity_cube[16], real4 mc);
-
-real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
-                   int mn, int i, int j, int k);
+real centroid_intp(__global real * d_old, __global real* d_new, real4 mc,
+                   int mn, int i, int j, int k, int skip);
 // get the ourward norm vector of one hyper surface
 // mass_center is the center for all intersections
 // vector_out = surf_center - mass_center
@@ -348,53 +346,28 @@ real4 centroid_ev(__private real4 ev_cube[16], real4 mc){
     return centroid;
 }
 
-// get the ed, v at the mass center by 4d interpolation
-// mc means mass_center
-real centroid_omegaxz(__private real vorticity_cube[16], real4 mc){
+real centroid_intp(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
+                   int mn, int i, int j, int k, int skip){
     real centroid;
-    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*vorticity_cube[0]
-             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*vorticity_cube[1]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*vorticity_cube[2]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*vorticity_cube[3]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*vorticity_cube[4]
-             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*vorticity_cube[5]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*vorticity_cube[6]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*vorticity_cube[7]
-             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*vorticity_cube[8]
-             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*vorticity_cube[9]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*vorticity_cube[10]
-             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*vorticity_cube[11]
-             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*vorticity_cube[12]
-             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*vorticity_cube[13]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*vorticity_cube[14]
-             + mc.s0*mc.s1*mc.s2*mc.s3*vorticity_cube[15];
-    return centroid;
-}
+    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i, j, k)*skip+mn]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i+1, j, k)*skip+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)*skip+mn]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)*skip+mn]
 
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i, j, k+1)*skip+mn]
+             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i+1, j, k+1)*skip+mn]
+             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)*skip+mn]
+             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)*skip+mn]
 
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i, j, k)*skip+mn]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i+1, j, k)*skip+mn]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)*skip+mn]
+             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)*skip+mn]
 
-real centroid_pimn(__global real * d_pi_old, __global real* d_pi_new, real4 mc,
-                   int mn, int i, int j, int k){
-    real centroid;
-    centroid = (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i, j, k)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_old[idn(i+1, j, k)*10+mn]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i, j+1, k)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_old[idn(i+1, j+1, k)*10+mn]
-
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i, j, k+1)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_old[idn(i+1, j, k+1)*10+mn]
-             + (1.0f - mc.s0)*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_old[idn(i, j+1, k+1)*10+mn]
-             + (1.0f - mc.s0)*mc.s1*mc.s2*mc.s3*d_pi_old[idn(i+1, j+1, k+1)*10+mn]
-
-             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i, j, k)*10+mn]
-             + mc.s0*mc.s1*(1.0f - mc.s2)*(1.0f - mc.s3)*d_pi_new[idn(i+1, j, k)*10+mn]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i, j+1, k)*10+mn]
-             + mc.s0*mc.s1*mc.s2*(1.0f - mc.s3)*d_pi_new[idn(i+1, j+1, k)*10+mn]
-
-             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i, j, k+1)*10+mn]
-             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i+1, j, k+1)*10+mn]
-             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)*10+mn]
-             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)*10+mn];
+             + mc.s0*(1.0f - mc.s1)*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i, j, k+1)*skip+mn]
+             + mc.s0*mc.s1*(1.0f - mc.s2)*mc.s3*d_pi_new[idn(i+1, j, k+1)*skip+mn]
+             + mc.s0*(1.0f - mc.s1)*mc.s2*mc.s3*d_pi_new[idn(i, j+1, k+1)*skip+mn]
+             + mc.s0*mc.s1*mc.s2*mc.s3*d_pi_new[idn(i+1, j+1, k+1)*skip+mn];
     return centroid;
 }
 
@@ -525,9 +498,9 @@ __kernel void visc_hypersf(__global real8  * d_sf,
                           __global real * d_pi_old,
                           __global real * d_pi_new,
 #ifdef CALC_VORTICITY_ON_SF
-                          __global real4   * d_omega_sf,
-                          __global real4 * d_omega_old,
-                          __global real4 * d_omega_new,
+                          __global real * d_omega_sf,
+                          __global real * d_omega_old,
+                          __global real * d_omega_new,
 #endif
                           const real time_old,
                           const real time_new) {
@@ -611,19 +584,25 @@ __kernel void visc_hypersf(__global real8  * d_sf,
             int id_ = atomic_inc(num_of_sf);
                                    
             d_sf[id_] = result;
-            d_pi[10*id_ + 0] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 0, i, j, k);
-            d_pi[10*id_ + 1] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 1, i, j, k);
-            d_pi[10*id_ + 2] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 2, i, j, k);
-            d_pi[10*id_ + 3] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 3, i, j, k);
-            d_pi[10*id_ + 4] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 4, i, j, k);
-            d_pi[10*id_ + 5] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 5, i, j, k);
-            d_pi[10*id_ + 6] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 6, i, j, k);
-            d_pi[10*id_ + 7] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 7, i, j, k);
-            d_pi[10*id_ + 8] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 8, i, j, k);
-            d_pi[10*id_ + 9] = centroid_pimn(d_pi_old, d_pi_new, mass_center, 9, i, j, k);
+            d_pi[10*id_ + 0] = centroid_intp(d_pi_old, d_pi_new, mass_center, 0, i, j, k, 10);
+            d_pi[10*id_ + 1] = centroid_intp(d_pi_old, d_pi_new, mass_center, 1, i, j, k, 10);
+            d_pi[10*id_ + 2] = centroid_intp(d_pi_old, d_pi_new, mass_center, 2, i, j, k, 10);
+            d_pi[10*id_ + 3] = centroid_intp(d_pi_old, d_pi_new, mass_center, 3, i, j, k, 10);
+            d_pi[10*id_ + 4] = centroid_intp(d_pi_old, d_pi_new, mass_center, 4, i, j, k, 10);
+            d_pi[10*id_ + 5] = centroid_intp(d_pi_old, d_pi_new, mass_center, 5, i, j, k, 10);
+            d_pi[10*id_ + 6] = centroid_intp(d_pi_old, d_pi_new, mass_center, 6, i, j, k, 10);
+            d_pi[10*id_ + 7] = centroid_intp(d_pi_old, d_pi_new, mass_center, 7, i, j, k, 10);
+            d_pi[10*id_ + 8] = centroid_intp(d_pi_old, d_pi_new, mass_center, 8, i, j, k, 10);
+            d_pi[10*id_ + 9] = centroid_intp(d_pi_old, d_pi_new, mass_center, 9, i, j, k, 10);
 
 #ifdef CALC_VORTICITY_ON_SF
-            d_omega_sf[id_] = centroid_omega(d_omega_old, d_omega_new, mass_center, i, j, k);
+            // the theraml vorticity on the freeze out hypersf
+            d_omega_sf[6*id_ + 0] = centroid_intp(d_omega_old, d_omega_new, mass_center, 0, i, j, k, 6);
+            d_omega_sf[6*id_ + 1] = centroid_intp(d_omega_old, d_omega_new, mass_center, 1, i, j, k, 6);
+            d_omega_sf[6*id_ + 2] = centroid_intp(d_omega_old, d_omega_new, mass_center, 2, i, j, k, 6);
+            d_omega_sf[6*id_ + 3] = centroid_intp(d_omega_old, d_omega_new, mass_center, 3, i, j, k, 6);
+            d_omega_sf[6*id_ + 4] = centroid_intp(d_omega_old, d_omega_new, mass_center, 4, i, j, k, 6);
+            d_omega_sf[6*id_ + 5] = centroid_intp(d_omega_old, d_omega_new, mass_center, 5, i, j, k, 6);
 #endif
         } // end surface calculation
     } // end boundary check
