@@ -35,16 +35,25 @@ inline float pity(float x, float y){
 
 
 inline float pixx(float x, float y){
+    // avoid the  NAN problem when x=0, y=0
+    if ( fabs(x) < 1.0E-6 ) x = 1.0E-6;
+    if ( fabs(y) < 1.0E-6 ) y = 1.0E-6;
     return  -pow((0.25)*(4*pow(L0, 2)*pow(tau, 2) + pow(pow(L0, 2) - pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))/(pow(L0, 2)*pow(tau, 2)), (-1.33333333333333*lam1 + 1)/lam1)*(4*pow(L0, 2)*pow(tau, 2) + pow(pow(L0, 2) - pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))*(pow(x, 2)*pow(pow(L0, 2) + pow(tau, 2) + pow(x, 2) + pow(y, 2), 2) + pow(y, 2)*(4*pow(L0, 2)*(pow(x, 2) + pow(y, 2)) + pow(pow(L0, 2) + pow(tau, 2) - pow(x, 2) - pow(y, 2), 2)))/(lam1*pow(tau, 4)*(pow(x, 2) + pow(y, 2))*pow(4*pow(L0, 2)*(pow(x, 2) + pow(y, 2)) + pow(pow(L0, 2) + pow(tau, 2) - pow(x, 2) - pow(y, 2), 2), 2)) ;
 }
 
 
 inline float pixy(float x, float y){
+    // avoid the  NAN problem when x=0, y=0
+    if ( fabs(x) < 1.0E-6 ) x = 1.0E-6;
+    if ( fabs(y) < 1.0E-6 ) y = 1.0E-6;
     return  x*y*pow((0.25)*(4*pow(L0, 2)*pow(tau, 2) + pow(pow(L0, 2) - pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))/(pow(L0, 2)*pow(tau, 2)), (-1.33333333333333*lam1 + 1)/lam1)*(4*pow(L0, 2)*pow(tau, 2) + pow(pow(L0, 2) - pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))*(4*pow(L0, 2)*(pow(x, 2) + pow(y, 2)) + pow(pow(L0, 2) + pow(tau, 2) - pow(x, 2) - pow(y, 2), 2) - pow(pow(L0, 2) + pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))/(lam1*pow(tau, 4)*(pow(x, 2) + pow(y, 2))*pow(4*pow(L0, 2)*(pow(x, 2) + pow(y, 2)) + pow(pow(L0, 2) + pow(tau, 2) - pow(x, 2) - pow(y, 2), 2), 2)) ;
 }
 
 
 inline float piyy(float x, float y){
+    // avoid the  NAN problem when x=0, y=0
+    if ( fabs(x) < 1.0E-6 ) x = 1.0E-6;
+    if ( fabs(y) < 1.0E-6 ) y = 1.0E-6;
     return  -pow((0.25)*(4*pow(L0, 2)*pow(tau, 2) + pow(pow(L0, 2) - pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))/(pow(L0, 2)*pow(tau, 2)), (-1.33333333333333*lam1 + 1)/lam1)*(4*pow(L0, 2)*pow(tau, 2) + pow(pow(L0, 2) - pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))*(pow(x, 2)*(4*pow(L0, 2)*(pow(x, 2) + pow(y, 2)) + pow(pow(L0, 2) + pow(tau, 2) - pow(x, 2) - pow(y, 2), 2)) + pow(y, 2)*pow(pow(L0, 2) + pow(tau, 2) + pow(x, 2) + pow(y, 2), 2))/(lam1*pow(tau, 4)*(pow(x, 2) + pow(y, 2))*pow(4*pow(L0, 2)*(pow(x, 2) + pow(y, 2)) + pow(pow(L0, 2) + pow(tau, 2) - pow(x, 2) - pow(y, 2), 2), 2)) ;
 }
 
@@ -84,9 +93,9 @@ __kernel void CreateIniCond( __global float4 * d_ev,
    d_pi[ 10*IND+ 8] = 0.0f;
    d_pi[ 10*IND+ 9] = pizz(x, y);
 
-   if ( i == NX/2 && j == NY/2 ) {
-       d_pi[ 10*IND+ 4] = pixx_;
-       d_pi[ 10*IND+ 5] = pixy_;
-       d_pi[ 10*IND+ 7] = piyy_;
-   }
+   //if ( i == NX/2 && j == NY/2 ) {
+   //    d_pi[ 10*IND+ 4] = pixx_;
+   //    d_pi[ 10*IND+ 5] = pixy_;
+   //    d_pi[ 10*IND+ 7] = piyy_;
+   //}
 }
