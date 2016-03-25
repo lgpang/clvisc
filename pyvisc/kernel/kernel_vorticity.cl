@@ -38,7 +38,7 @@ __kernel void omega(
     real4 unew = ubeta(d_ev2[address(I, J, K)], eos_table);
 
     real4 dudt = (unew - uold)/DT;
-    real4 dudx = 0.0f;
+    real4 dudx = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     if ( I != 0 && I != NX-1 ) {
         dudx = (ubeta(d_ev2[address(I+1, J, K)], eos_table)
               - ubeta(d_ev2[address(I-1, J, K)], eos_table)) / (2.0f*DX);
@@ -48,7 +48,7 @@ __kernel void omega(
         dudx = (unew - ubeta(d_ev2[address(I-1, J, K)], eos_table)) / DX;
     }
 
-    real4 dudy = 0.0f;
+    real4 dudy = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     if ( J != 0 && J != NY-1 ) {
         dudy = (ubeta(d_ev2[address(I, J+1, K)], eos_table)
               - ubeta(d_ev2[address(I, J-1, K)], eos_table)) / (2.0f*DY);
@@ -58,14 +58,15 @@ __kernel void omega(
         dudy = (unew - ubeta(d_ev2[address(I, J-1, K)], eos_table)) / DY;
     }
 
-    real4 dudz = 0.0f;
+    // initialize with Christoffel symbols
+    real4 dudz = (real4)(unew.s3, 0.0f, 0.0f, unew.s0)/tau;
     if ( K != 0 && K != NZ-1 ) {
-        dudz = (ubeta(d_ev2[address(I, J, K+1)], eos_table)
+        dudz += (ubeta(d_ev2[address(I, J, K+1)], eos_table)
               - ubeta(d_ev2[address(I, J, K-1)], eos_table)) / (2.0f*DZ*tau);
     } else if ( K == 0 ) { 
-        dudz = (ubeta(d_ev2[address(I, J, K+1)], eos_table) - unew) / (DZ*tau);
+        dudz += (ubeta(d_ev2[address(I, J, K+1)], eos_table) - unew) / (DZ*tau);
     } else if ( K == NZ-1 ) {
-        dudz = (unew - ubeta(d_ev2[address(I, J, K-1)], eos_table)) / (DZ*tau);
+        dudz += (unew - ubeta(d_ev2[address(I, J, K-1)], eos_table)) / (DZ*tau);
     }
 
     d_omega[6*address(I,J,K)+0] = dudy.s3 - dudz.s2;
