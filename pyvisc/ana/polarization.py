@@ -17,7 +17,7 @@ from pyopencl.array import Array
 import pyopencl.array as cl_array
 
 
-#os.environ['PYOPENCL_CTX']=':1'
+os.environ['PYOPENCL_CTX']=':1'
 
 class Polarization(object):
     '''The pyopencl version for lambda polarisation,
@@ -36,7 +36,7 @@ class Polarization(object):
         self.size_sf = len(sf[:,0])
 
         h_sf = sf.astype(np.float32)
-        h_omega = 0.5*omega.astype(np.float32)
+        h_omega = omega.astype(np.float32)
         print(h_omega)
 
         mf = cl.mem_flags

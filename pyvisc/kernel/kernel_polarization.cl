@@ -108,10 +108,10 @@ __kernel void polarization_on_sf(
     // save the final results to global memory
     if ( lid == 0 ) {
         d_density[gid] = density;
-        d_pol_lab[gid] = pol_lab;
+        d_pol_lab[gid] = pol_lab/(8.0f*mass);
 
         // polarization at (mt, Y, px, py) in lab frame
-        real4 Pi_lab = pol_lab/density;
+        real4 Pi_lab = pol_lab/(8.0f*mass*density);
 
         // calc the polarization in lrf
         real p0 = mt * cosh(rapidity);

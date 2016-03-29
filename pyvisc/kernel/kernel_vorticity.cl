@@ -11,10 +11,12 @@
 
 // Covariant derivatives?
 
-// calc beta*umu from (ed, vx, vy, tau^2*veta) float4 vector
+
+// calc beta*u_mu from (ed, vx, vy, tau^2*veta) float4 vector
 inline real4 ubeta(real4 ev, read_only image2d_t eos_table)
 {
-    return umu4(ev)/T(ev.s0, eos_table);
+    real4 gmn = (real4)(1.0f, -1.0f, -1.0f, -1.0f);
+    return gmn*umu4(ev)/T(ev.s0, eos_table);
 }
 
 // wrapper for address index
@@ -37,7 +39,9 @@ __kernel void omega(
     real4 uold = ubeta(d_ev1[address(I, J, K)], eos_table);
     real4 unew = ubeta(d_ev2[address(I, J, K)], eos_table);
 
+    //   nabla_{t} u_{mu}
     real4 dudt = (unew - uold)/DT;
+
     real4 dudx = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     if ( I != 0 && I != NX-1 ) {
         dudx = (ubeta(d_ev2[address(I+1, J, K)], eos_table)
@@ -58,8 +62,8 @@ __kernel void omega(
         dudy = (unew - ubeta(d_ev2[address(I, J-1, K)], eos_table)) / DY;
     }
 
-    // initialize with Christoffel symbols
-    real4 dudz = (real4)(unew.s3, 0.0f, 0.0f, unew.s0)/tau;
+    // initialize with Christoffel symbols, dudz = partial_eta u_{mu}
+    real4 dudz = (real4)(-unew.s3, 0.0f, 0.0f, -unew.s0)/tau;
     if ( K != 0 && K != NZ-1 ) {
         dudz += (ubeta(d_ev2[address(I, J, K+1)], eos_table)
               - ubeta(d_ev2[address(I, J, K-1)], eos_table)) / (2.0f*DZ*tau);
@@ -69,10 +73,11 @@ __kernel void omega(
         dudz += (unew - ubeta(d_ev2[address(I, J, K-1)], eos_table)) / (DZ*tau);
     }
 
-    d_omega[6*address(I,J,K)+0] = dudy.s3 - dudz.s2;
-    d_omega[6*address(I,J,K)+1] = -(dudx.s3 - dudz.s1);
-    d_omega[6*address(I,J,K)+2] = dudx.s2 - dudy.s1;
-    d_omega[6*address(I,J,K)+3] = dudt.s3 - dudz.s0;
-    d_omega[6*address(I,J,K)+4] = -(dudt.s2 - dudy.s0);
-    d_omega[6*address(I,J,K)+5] = dudt.s1 - dudx.s0;
+    // hbarc convers 1/(GeV*fm) to dimensionless
+    d_omega[6*address(I,J,K)+0] = hbarc*(dudy.s3 - dudz.s2);
+    d_omega[6*address(I,J,K)+1] = hbarc*(-(dudx.s3 - dudz.s1));
+    d_omega[6*address(I,J,K)+2] = hbarc*(dudx.s2 - dudy.s1);
+    d_omega[6*address(I,J,K)+3] = hbarc*(dudt.s3 - dudz.s0);
+    d_omega[6*address(I,J,K)+4] = hbarc*(-(dudt.s2 - dudy.s0));
+    d_omega[6*address(I,J,K)+5] = hbarc*(dudt.s1 - dudx.s0);
 }

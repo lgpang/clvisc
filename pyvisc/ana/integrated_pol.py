@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
-from gpu_polarization import Polarization
+from polarization import Polarization
 import four_momentum as mom
 from common_plotting import smash_style
 from numba import jit
@@ -22,38 +22,53 @@ def init_momentum(f_h5, rapidity):
 
 def integrated_polarization(f_h5, fpath, event_id, rapidity):
     '''calc the pt, phi integrated lambda polarization as a function of
-    rapidity.
-    The results is stored in hdf5 file'''
+    rapidity. The results is stored in hdf5 file'''
     sf = np.loadtxt('%s/hypersf.dat'%fpath, dtype=np.float32)
     omega = np.loadtxt('%s/omegamu_sf.dat'%fpath, dtype=np.float32)
     LambdaPolarization = Polarization(sf, omega)
 
     npt, nphi = mom.NPT, mom.NPHI
+
+
     vor = np.zeros((npt, nphi))
     rho = np.zeros((npt, nphi))
     vor_int, rho_int = [], []
 
-    for Y in rapidity:
+    nrap = len(rapidity)
+    momentum_list = np.zeros((nrap*npt*nphi, 4), dtype=np.float32)
+    mass = 1.115
+
+    for k, Y in enumerate(rapidity):
         for i, pt in enumerate(mom.PT):
             for j, phi in enumerate(mom.PHI):
                 px = pt * math.cos(phi)
                 py = pt * math.sin(phi)
-                pol_ij, omg_ij, rho_ij = LambdaPolarization.pol_vor_rho(Y, px, py)
-                vor[i, j] = pol_ij
-                rho[i, j] = rho_ij
-        name = 'event%s/rapidity%s/vor_vs_pt_phi'%(event_id, Y)
-        dset_vor = f_h5.create_dataset(name, data=vor)
-        name = 'event%s/rapidity%s/rho_vs_pt_phi'%(event_id, Y)
-        dset_rho = f_h5.create_dataset(name, data=rho)
+                mt = math.sqrt(mass*mass + px*px + py*py)
+                index = k*npt*nphi + i*nphi + j
 
-        vor_int.append( mom.pt_phi_integral(vor) )
-        rho_int.append( mom.pt_phi_integral(rho) )
+                momentum_list[index, 0] = mt
+                momentum_list[index, 1] = Y
+                momentum_list[index, 2] = px
+                momentum_list[index, 3] = py
+
+    pol, rho, pol_lrf = LambdaPolarization.get(momentum_list)
+
+    #name = 'event%s/rapidity%s/vor_vs_pt_phi'%(event_id, Y)
+    #dset_vor = f_h5.create_dataset(name, data=vor)
+    #name = 'event%s/rapidity%s/rho_vs_pt_phi'%(event_id, Y)
+    #dset_rho = f_h5.create_dataset(name, data=rho)
+
+    piy = pol_lrf[:, 2].reshape(nrap, npt, nphi)
+    for k, Y in enumerate(rapidity):
+        #vor_int.append( mom.pt_phi_integral(vor) )
+        #rho_int.append( mom.pt_phi_integral(rho) )
+        vor_int.append(mom.pt_phi_integral(piy[k, :, :]))
         print(Y, 'finished')
 
     name = 'event%s/integral_pt_phi/vor'%event_id
     dset_vorint = f_h5.create_dataset(name, data=vor_int)
-    name = 'event%s/integral_pt_phi/rho'%event_id
-    dset_rhoint = f_h5.create_dataset(name, data=rho_int)
+    #name = 'event%s/integral_pt_phi/rho'%event_id
+    #dset_rhoint = f_h5.create_dataset(name, data=rho_int)
     print('event', event_id, 'finished')
 
 
@@ -80,14 +95,10 @@ def update_h5(start_id, end_id, f_h5name, path, rapidity, create=False):
 
 
 def fin_grid_mid_rapidity():
-    #f_h5name = 'vor_int_visc0p12_auau62p4_cent45_50.hdf5'
-    #path = '/lustre/nyx/hyihp/lpang/auau62p4_results/cent45_50/etas0p12/'
-    #update_h5(62, 96, f_h5name, path, create=False)
-
-    rapidity = np.linspace(-0.9, 0.9, 10, endpoint=True)
-    f_h5name = 'vor_int_visc0p12_auau62p4_cent20_25_mid_rapidity.hdf5'
-    path = '/lustre/nyx/hyihp/lpang/auau62p4_results/cent20_25/etas0p12/'
-    update_h5(0, 93, f_h5name, path, rapidity, create=True)
+    rapidity = np.linspace(-5, 5, 40, endpoint=True)
+    f_h5name = 'vor_int_visc0p08_auau200_cent20_30.hdf5'
+    path = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/'
+    update_h5(0, 100, f_h5name, path, rapidity, create=True)
 
 
 fin_grid_mid_rapidity()
