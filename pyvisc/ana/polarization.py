@@ -82,7 +82,7 @@ class Polarization(object):
 if __name__ == '__main__':
     #sf = np.loadtxt('../for_polarization_test/hypersf.dat', dtype=np.float32)
     #omega = np.loadtxt('../for_polarization_test/omegamu_sf.dat', dtype=np.float32).flatten()
-    fpath = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event0/'
+    fpath = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event1/'
     sf = np.loadtxt(fpath+'/hypersf.dat', dtype=np.float32)
     omega = np.loadtxt(fpath+'/omegamu_sf.dat', dtype=np.float32).flatten()
     pol = Polarization(sf, omega)
