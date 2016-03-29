@@ -37,6 +37,7 @@ class Polarization(object):
 
         h_sf = sf.astype(np.float32)
         h_omega = 0.5*omega.astype(np.float32)
+        print(h_omega)
 
         mf = cl.mem_flags
         self.d_sf = cl.Buffer(self.ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_sf)
@@ -50,17 +51,17 @@ class Polarization(object):
         d_py = cl_array.to_device(self.queue, py.astype(np.float32))
 
         nY, npx, npy = len(Y), len(px), len(py)
-        compile_options = ['-D NRAPIDITY=%s'%nY, '-D NPX=%s'%npx, '-D NPY=%s'%npy,
-                ]
+        compile_options = ['-D NRAPIDITY=%s'%nY, '-D NPX=%s'%npx, '-D NPY=%s'%npy]
 
         cwd, cwf = os.path.split(__file__)
-        compile_options.append('-I '+os.path.join(cwd, 'kernel/')) 
+        compile_options.append('-I '+os.path.join(cwd, '../kernel/')) 
         compile_options.append( '-D USE_SINGLE_PRECISION' )
 
-        with open('kernel/kernel_polarization.cl', 'r') as f:
+        fpath = os.path.join(cwd, '../kernel/kernel_polarization.cl')
+
+        with open(fpath, 'r') as f:
             src = f.read()
-            self.prg = cl.Program(self.ctx, src).build(
-                                        options=compile_options)
+            self.prg = cl.Program(self.ctx, src).build(options=compile_options)
 
         size = nY * npx * npy
         h_pol = np.zeros((size, 4), np.float32)
@@ -69,8 +70,8 @@ class Polarization(object):
         self.d_rho = cl_array.to_device(self.queue, h_rho)
 
         self.prg.polarization_on_sf(self.queue, (256,), (256,),
-            self.d_pol.data, self.d_rho.data, self.d_sf, self.d_omega,
-            d_Y.data, d_Y.data, d_px.data, d_py.data,
+            self.d_pol.data, self.d_rho.data, self.d_sf, d_Y.data,
+            self.d_omega, d_Y.data, d_px.data, d_py.data,
             np.int32(self.size_sf)).wait()
 
         polarization = self.d_pol.get()
@@ -79,13 +80,18 @@ class Polarization(object):
 
 
 if __name__ == '__main__':
-    sf = np.loadtxt('for_polarization_test/hypersf.dat', dtype=np.float32)
-    omega = np.loadtxt('for_polarization_test/omegamu_sf.dat', dtype=np.float32).flatten()
+    #sf = np.loadtxt('../for_polarization_test/hypersf.dat', dtype=np.float32)
+    #omega = np.loadtxt('../for_polarization_test/omegamu_sf.dat', dtype=np.float32).flatten()
+    fpath = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event0/'
+    sf = np.loadtxt(fpath+'/hypersf.dat', dtype=np.float32)
+    omega = np.loadtxt(fpath+'/omegamu_sf.dat', dtype=np.float32).flatten()
     pol = Polarization(sf, omega)
 
     Y = np.linspace(-5, 5, 11, endpoint=True)
-    px = np.linspace(-3, 3, 11, endpoint=True)
-    py = np.linspace(-3, 3, 11, endpoint=True)
-    print(pol.pol_rho(Y, px, py))
+    px = np.linspace(-3, 3, 21, endpoint=True)
+    py = np.linspace(-3, 3, 21, endpoint=True)
+    polar, density = pol.pol_rho(Y, px, py)
+    np.savetxt('polar.dat', polar)
+    np.savetxt('density.dat', density)
 
 
