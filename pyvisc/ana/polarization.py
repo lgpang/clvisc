@@ -17,7 +17,7 @@ from pyopencl.array import Array
 import pyopencl.array as cl_array
 
 
-os.environ['PYOPENCL_CTX']=':1'
+#os.environ['PYOPENCL_CTX']=':1'
 
 class Polarization(object):
     '''The pyopencl version for lambda polarisation,
@@ -44,16 +44,26 @@ class Polarization(object):
         self.d_omega = cl.Buffer(self.ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=h_omega)
 
 
-    def pol_rho(self, Y, px, py):
-        '''return: polarization, density at given Y,px,py list'''
-        d_Y = cl_array.to_device(self.queue, Y.astype(np.float32))
-        d_px = cl_array.to_device(self.queue, px.astype(np.float32))
-        d_py = cl_array.to_device(self.queue, py.astype(np.float32))
+    def get(self, momentum_list, tilte=1):
+        '''return: polarization, density at given momentum
+        Params:
+            :param momentum: a numpy array with shape (size, 4)
+                where size= number of different four-momentum vector
+                in each vector, (mt, Y, px, py) are provided
+            :param tilte: num of calculations in each workgroup '''
+        d_momentum = cl_array.to_device(self.queue,
+                                        momentum_list.astype(np.float32))
 
-        nY, npx, npy = len(Y), len(px), len(py)
-        compile_options = ['-D NRAPIDITY=%s'%nY, '-D NPX=%s'%npx, '-D NPY=%s'%npy]
+        num_of_mom = len(momentum_list)
+
+        print('num_of_mom=', num_of_mom)
+
+        compile_options = ['-D num_of_mom=%s'%num_of_mom, '-D title=%s'%tilte]
 
         cwd, cwf = os.path.split(__file__)
+
+        block_size = 256
+        compile_options = ['-D BSZ=%s'%block_size]
         compile_options.append('-I '+os.path.join(cwd, '../kernel/')) 
         compile_options.append( '-D USE_SINGLE_PRECISION' )
 
@@ -63,35 +73,54 @@ class Polarization(object):
             src = f.read()
             self.prg = cl.Program(self.ctx, src).build(options=compile_options)
 
-        size = nY * npx * npy
+        size = num_of_mom
         h_pol = np.zeros((size, 4), np.float32)
         h_rho = np.zeros(size, np.float32)
+
+        # boost Pi^{mu} to the local rest frame of Lambda
+        h_pol_lrf = np.zeros((size, 4), np.float32)
+
         self.d_pol = cl_array.to_device(self.queue, h_pol)
         self.d_rho = cl_array.to_device(self.queue, h_rho)
 
-        self.prg.polarization_on_sf(self.queue, (256,), (256,),
-            self.d_pol.data, self.d_rho.data, self.d_sf, d_Y.data,
-            self.d_omega, d_Y.data, d_px.data, d_py.data,
+        self.d_pol_lrf = cl_array.to_device(self.queue, h_pol_lrf)
+
+        self.prg.polarization_on_sf(self.queue, (block_size*num_of_mom,),
+            (block_size,), self.d_pol.data, self.d_rho.data, self.d_pol_lrf.data,
+            self.d_sf, self.d_omega, self.d_omega, d_momentum.data,
             np.int32(self.size_sf)).wait()
 
         polarization = self.d_pol.get()
         density = self.d_rho.get()
-        return polarization, density
+        pol_lrf = self.d_pol_lrf.get()
+        return polarization, density, pol_lrf
 
 
 if __name__ == '__main__':
-    #sf = np.loadtxt('../for_polarization_test/hypersf.dat', dtype=np.float32)
-    #omega = np.loadtxt('../for_polarization_test/omegamu_sf.dat', dtype=np.float32).flatten()
     fpath = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event1/'
     sf = np.loadtxt(fpath+'/hypersf.dat', dtype=np.float32)
     omega = np.loadtxt(fpath+'/omegamu_sf.dat', dtype=np.float32).flatten()
     pol = Polarization(sf, omega)
 
     Y = np.linspace(-5, 5, 11, endpoint=True)
-    px = np.linspace(-3, 3, 21, endpoint=True)
-    py = np.linspace(-3, 3, 21, endpoint=True)
-    polar, density = pol.pol_rho(Y, px, py)
+    px = np.linspace(-3, 3, 61, endpoint=True)
+    py = np.linspace(-3, 3, 61, endpoint=True)
+
+
+    mom_list = np.zeros((11*61*61, 4), dtype=np.float32)
+
+    for i, Yi in enumerate(Y):
+        for j, pxi in enumerate(px):
+            for k, pyi in enumerate(py):
+                mass = 1.0
+                mt = math.sqrt(mass*mass + pxi*pxi + pyi*pyi)
+                idx = i*len(px)*len(py) + j*len(py) + k
+                mom_list[idx, 0] = mt
+                mom_list[idx, 1] = Yi
+                mom_list[idx, 2] = pxi
+                mom_list[idx, 3] = pyi
+
+    polar, density, pol_lrf = pol.get(mom_list)
     np.savetxt('polar.dat', polar)
     np.savetxt('density.dat', density)
-
-
+    np.savetxt('polar_lrf.dat', pol_lrf)
