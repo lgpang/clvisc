@@ -49,7 +49,7 @@ class Polarization(object):
         Params:
             :param momentum: a numpy array with shape (size, 4)
                 where size= number of different four-momentum vector
-                in each vector, (mt, Y, px, py) are provided
+                in each vector, p4=(mt, Y, px, py)
             :param tilte: num of calculations in each workgroup '''
         d_momentum = cl_array.to_device(self.queue,
                                         momentum_list.astype(np.float32))
@@ -97,7 +97,7 @@ class Polarization(object):
 
 
 if __name__ == '__main__':
-    fpath = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event1/'
+    fpath = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event0/'
     sf = np.loadtxt(fpath+'/hypersf.dat', dtype=np.float32)
     omega = np.loadtxt(fpath+'/omegamu_sf.dat', dtype=np.float32).flatten()
     pol = Polarization(sf, omega)

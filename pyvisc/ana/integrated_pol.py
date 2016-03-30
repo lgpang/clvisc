@@ -98,7 +98,7 @@ def fin_grid_mid_rapidity():
     rapidity = np.linspace(-5, 5, 40, endpoint=True)
     f_h5name = 'vor_int_visc0p08_auau200_cent20_30.hdf5'
     path = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/'
-    update_h5(0, 100, f_h5name, path, rapidity, create=True)
+    update_h5(0, 1, f_h5name, path, rapidity, create=True)
 
 
 fin_grid_mid_rapidity()

@@ -1,18 +1,19 @@
 #include<helper.h>
 
 // invariant vorticity vector 
-// omega^{mu nu} = epsilon^{mu nu a b} d_a u_b
-// omega^{tau x} = dyuz - dzuy
-// omega^{tau y} = -(dxuz - dzux)
-// omega^{tau z} = dxuy - dyux
-// omega^{x y} = dtuz - dzut
-// omega^{x z} = -(dtuy - dyut)
-// omega^{y z} = dtux - dxut
+// 2 * omega^{mu nu} = epsilon^{mu nu a b} d_a u_b
+// 2 * omega^{tau x} = dyuz - dzuy
+// 2 * omega^{tau y} = -(dxuz - dzux)
+// 2 * omega^{tau z} = dxuy - dyux
+// 2 * omega^{x y} = dtuz - dzut
+// 2 * omega^{x z} = -(dtuy - dyut)
+// 2 * omega^{y z} = dtux - dxut
 
 // Covariant derivatives?
 
 
 // calc beta*u_mu from (ed, vx, vy, tau^2*veta) float4 vector
+// (u_t, u_x, u_y, u_eta) where u_eta = - gamma*v_eta
 inline real4 ubeta(real4 ev, read_only image2d_t eos_table)
 {
     real4 gmn = (real4)(1.0f, -1.0f, -1.0f, -1.0f);
@@ -62,8 +63,13 @@ __kernel void omega(
         dudy = (unew - ubeta(d_ev2[address(I, J-1, K)], eos_table)) / DY;
     }
 
-    // initialize with Christoffel symbols, dudz = partial_eta u_{mu}
-    real4 dudz = (real4)(-unew.s3, 0.0f, 0.0f, -unew.s0)/tau;
+    // do not use Christoffel symbols, dudz = 1/tau * partial_eta u_{mu}
+    // u_{eta} = - gamma*v_eta, has no dimension here
+
+    // real4 dudz = (real4)(unew.s3, 0.0f, 0.0f, -unew.s0)/tau;
+    // nabla_{tau} u_{eta} - (1/tau)nabla_{eta}u_{tau} = partial_{tau}u_{eta} - (1/tau)partial_{eta}u_{tau}
+
+    real4 dudz = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
     if ( K != 0 && K != NZ-1 ) {
         dudz += (ubeta(d_ev2[address(I, J, K+1)], eos_table)
               - ubeta(d_ev2[address(I, J, K-1)], eos_table)) / (2.0f*DZ*tau);
@@ -74,10 +80,10 @@ __kernel void omega(
     }
 
     // hbarc convers 1/(GeV*fm) to dimensionless
-    d_omega[6*address(I,J,K)+0] = hbarc*(dudy.s3 - dudz.s2);
-    d_omega[6*address(I,J,K)+1] = hbarc*(-(dudx.s3 - dudz.s1));
-    d_omega[6*address(I,J,K)+2] = hbarc*(dudx.s2 - dudy.s1);
-    d_omega[6*address(I,J,K)+3] = hbarc*(dudt.s3 - dudz.s0);
-    d_omega[6*address(I,J,K)+4] = hbarc*(-(dudt.s2 - dudy.s0));
-    d_omega[6*address(I,J,K)+5] = hbarc*(dudt.s1 - dudx.s0);
+    d_omega[6*address(I,J,K)+0] = 0.5f * hbarc*(dudy.s3 - dudz.s2);
+    d_omega[6*address(I,J,K)+1] = 0.5f * hbarc*(dudz.s1 - dudx.s3);
+    d_omega[6*address(I,J,K)+2] = 0.5f * hbarc*(dudx.s2 - dudy.s1);
+    d_omega[6*address(I,J,K)+3] = 0.5f * hbarc*(dudt.s3 - dudz.s0);
+    d_omega[6*address(I,J,K)+4] = 0.5f * hbarc*(dudy.s0 - dudt.s2);
+    d_omega[6*address(I,J,K)+5] = 0.5f * hbarc*(dudt.s1 - dudx.s0);
 }
