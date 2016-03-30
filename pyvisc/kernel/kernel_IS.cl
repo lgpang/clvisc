@@ -107,7 +107,7 @@ __kernel void visc_src_christoffel(
 
 
 // output: d_Src kt src for pimn evolution;
-// output: d_dudx the velocity gradient along x
+// output: d_udx the velocity gradient along x
 // all the others are input
 __kernel void visc_src_alongx(
              __global real * d_Src,
@@ -420,24 +420,24 @@ __kernel void update_pimn(
     real4 e_v2 = d_ev2[I];
     real4 u_old = umu4(e_v1);
     real4 u_new = umu4(e_v2);
-    real4 dudt = (u_new - u_old)/DT;
+    real4 udt = (u_new - u_old)/DT;
 
     // correct with previous udiff=u_visc-u_ideal*
-    //if ( step == 1 ) dudt += d_udiff[I]/DT;
+    //if ( step == 1 ) udt += d_udiff[I]/DT;
     if ( step == 1 ) { 
-        dudt = d_udiff[I]/DT;
-        u_new = u_old + dudt;
+        udt = d_udiff[I]/DT;
+        u_new = u_old + udt;
     }
 
-    real4 dudx = d_udx[I];
-    real4 dudy = d_udy[I];
-    real4 dudz = d_udz[I];
+    real4 udx = d_udx[I];
+    real4 udy = d_udy[I];
+    real4 udz = d_udz[I];
 
     // dalpha_ux = (partial_t, partial_x, partial_y, partial_z)ux
-    real4 dalpha_u[4] = {(real4)(dudt.s0, dudx.s0, dudy.s0, dudz.s0),
-                         (real4)(dudt.s1, dudx.s1, dudy.s1, dudz.s1),
-                         (real4)(dudt.s2, dudx.s2, dudy.s2, dudz.s2),
-                         (real4)(dudt.s3, dudx.s3, dudy.s3, dudz.s3)};
+    real4 dalpha_u[4] = {(real4)(udt.s0, udx.s0, udy.s0, udz.s0),
+                         (real4)(udt.s1, udx.s1, udy.s1, udz.s1),
+                         (real4)(udt.s2, udx.s2, udy.s2, udz.s2),
+                         (real4)(udt.s3, udx.s3, udy.s3, udz.s3)};
 
     // Notice DU = u^{lambda} \partial_{lambda} u^{beta} 
     real DU[4];
@@ -464,7 +464,7 @@ __kernel void update_pimn(
     }
     
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
-    real theta = dudt.s0 + dudx.s1 + dudy.s2 + dudz.s3;
+    real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
     real etav = ETAOS * S(ed_step, eos_table) * hbarc;
 
@@ -506,15 +506,13 @@ __kernel void update_pimn(
 
             real piNS = etav*sigma;
 
-            // assume u[0] does not change with time in a very small time interval
-            // this is not ture at the edge of energy density cutoff 
-            real pi_old = d_pi1[10*I + mn] * (0.3f*u_old.s0 + 0.7f*u_new.s0);
-            //real pi_old = d_pi1[10*I + mn] * (0.5f*u_old.s0 + 0.5f*u_new.s0);
-            // regulate u0 at stiff edge by using its future values
+            //real pi_old = d_pi1[10*I + mn] * u_old.s0;
+            real pi_old = d_pi1[10*I + mn] * (0.3*u_old.s0 + 0.7*u_new.s0);
 
             // /** step==1: Q' = Q0 + Src*DT
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
             // */
+
             real src = - pi2[mn]*theta/3.0f - pi2[mn]*u[0]/tau;
             src -= (u[mu]*pi2[idx(nu,0)] + u[nu]*pi2[idx(mu,0)])*DU[0]*gmn[0][0];
             src -= (u[mu]*pi2[idx(nu,1)] + u[nu]*pi2[idx(mu,1)])*DU[1]*gmn[1][1];
@@ -523,8 +521,7 @@ __kernel void update_pimn(
 
 
 #ifdef GUBSER_VISC_TEST
-            src -= one_over_taupi*coef_pipi*
-                (PiPi(0, mu, nu, pi2, u) 
+            src -= one_over_taupi*coef_pipi*(PiPi(0, mu, nu, pi2, u) 
                 -PiPi(1, mu, nu, pi2, u)
                 -PiPi(2, mu, nu, pi2, u)
                 -PiPi(3, mu, nu, pi2, u));
@@ -533,10 +530,8 @@ __kernel void update_pimn(
             d_Src[idn(I, mn)] += src;
 
             // use implicit method for stiff term; 
-            real u0_avg = u_new.s0;
-
             pi_old = (pi_old + d_Src[idn(I, mn)]*DT/step +
-                      DT*one_over_taupi*piNS) / (u0_avg + DT*one_over_taupi);
+                      DT*one_over_taupi*piNS) / (u_new.s0 + DT*one_over_taupi);
 
             if ( fabs(pi_old) > max_pimn_abs ) max_pimn_abs = fabs(pi_old);
 
