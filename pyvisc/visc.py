@@ -56,7 +56,7 @@ class CLVisc(object):
                         cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes)]
 
         # get the vorticity on the freeze out hypersurface
-        self.d_omega_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1800000*self.cfg.sz_real)
+        self.d_omega_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=9000000*self.cfg.sz_real)
 
         # velocity difference between u_visc and u_ideal* for correction
         self.d_udiff = cl.Buffer(self.ctx, mf.READ_WRITE, size=self.ideal.h_ev1.nbytes)
