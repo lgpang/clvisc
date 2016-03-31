@@ -32,7 +32,7 @@ __kernel void kt_src_christoffel(
         real Ttx_tilde = (ed + pressure)*u0*u0*vx;
         real Tty_tilde = (ed + pressure)*u0*u0*vy;
 
-        d_SrcT[I] = d_SrcT[I] + (real4)(Tzz_tilde + Ttt_tilde,
+        d_Src[I] = d_Src[I] + (real4)(Tzz_tilde + Ttt_tilde,
                                         Ttx_tilde, Tty_tilde, 3.0f*Ttz_tilde);
 #endif
 
