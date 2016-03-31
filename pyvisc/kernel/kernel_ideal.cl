@@ -24,6 +24,18 @@ __kernel void kt_src_christoffel(
         real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
         real Ttz_tilde = (ed + pressure)*u0*u0*vz;
         d_Src[I] = d_Src[I] - (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
+
+#ifdef RIEMANN_TEST
+// the Christoffel terms are removed to compare with RIEMANN solution
+// in (t, x, y, z) coordinates
+        real Ttt_tilde = (ed + pressure)*u0*u0 - pressure;
+        real Ttx_tilde = (ed + pressure)*u0*u0*vx;
+        real Tty_tilde = (ed + pressure)*u0*u0*vy;
+
+        d_SrcT[I] = d_SrcT[I] + (real4)(Tzz_tilde + Ttt_tilde,
+                                        Ttx_tilde, Tty_tilde, 3.0f*Ttz_tilde);
+#endif
+
     }
 }
 

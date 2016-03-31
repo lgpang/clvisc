@@ -22,7 +22,7 @@ class CLVisc(object):
         self.cfg = configs
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
-        self.compile_options = self.ideal.gpu_defines
+        self.compile_options = self.ideal.compile_options
         self.__loadAndBuildCLPrg()
 
         self.eos_table = self.ideal.eos_table
@@ -31,10 +31,6 @@ class CLVisc(object):
         self.h_pi0  = np.zeros(10*self.size, self.cfg.real)
 
         mf = cl.mem_flags
-        #self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
-        #             cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes),
-        #             cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes) ]
-
         # initialize the d_pi^{mu nu} with 0
         self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
                      cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
@@ -90,6 +86,9 @@ class CLVisc(object):
         #load and build *.cl programs with compile options
         if self.cfg.gubser_visc_test:
             self.compile_options.append('-D GUBSER_VISC_TEST')
+
+        if self.cfg.riemann_test:
+            self.compile_options.append('-D RIEMANN_TEST')
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_IS.cl'), 'r') as f:
             src = f.read()
