@@ -48,7 +48,7 @@ class CLIdeal(object):
         self.size= self.cfg.NX*self.cfg.NY*self.cfg.NZ
         self.tau = self.cfg.real(self.cfg.TAU0)
 
-        self.gpu_defines = self.__compile_options()
+        self.compile_options = self.__compile_options()
 
         # store 1D and 2d bulk info at each time step
         if self.cfg.save_to_hdf5:
@@ -57,7 +57,7 @@ class CLIdeal(object):
             from bulkinfo import BulkInfo
 
         self.bulkinfo = BulkInfo(self.cfg, self.ctx, self.queue,
-                self.gpu_defines)
+                self.compile_options)
 
         # set eos, create eos table for interpolation
         # self.eos_table must be before __loadAndBuildCLPrg() to pass
@@ -66,13 +66,13 @@ class CLIdeal(object):
 
         if self.cfg.IEOS == 1:
             self.eos_table = self.eos.create_table(self.ctx,
-                    self.gpu_defines, nrow=100, ncol=1555)
+                    self.compile_options, nrow=100, ncol=1555)
         elif self.cfg.IEOS == 4:
             self.eos_table = self.eos.create_table(self.ctx,
-                    self.gpu_defines, nrow=4, ncol=1001)
+                    self.compile_options, nrow=4, ncol=1001)
         else:
             self.eos_table = self.eos.create_table(self.ctx,
-                    self.gpu_defines)
+                    self.compile_options)
 
         self.efrz = self.eos.f_ed(self.cfg.TFRZ)
 
@@ -128,6 +128,10 @@ class CLIdeal(object):
             gpu_defines.append( '-D USE_SINGLE_PRECISION' )
         #choose EOS by ifdef in *.cl file
 
+        if self.cfg.riemann_test:
+            gpu_defines.append('-D RIEMANN_TEST')
+
+
         if self.cfg.IEOS == 4:
             '''delta ed is not constant; delta T is constant;
             using binary search for energy density '''
@@ -140,19 +144,19 @@ class CLIdeal(object):
         return gpu_defines
       
     def __loadAndBuildCLPrg(self):
-        print(self.gpu_defines)
-        #load and build *.cl programs with compile self.gpu_defines
+        print(self.compile_options)
+        #load and build *.cl programs with compile self.compile_options
         with open(os.path.join(self.cwd, 'kernel', 'kernel_ideal.cl'), 'r') as f:
             prg_src = f.read()
             self.kernel_ideal = cl.Program(self.ctx, prg_src).build(
-                                             options=self.gpu_defines)
+                                             options=self.compile_options)
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_reduction.cl'), 'r') as f:
             src_maxEd = f.read()
             self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(
-                                                 options=self.gpu_defines)
+                                                 options=self.compile_options)
 
-        hypersf_defines = list(self.gpu_defines)
+        hypersf_defines = list(self.compile_options)
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
@@ -303,20 +307,20 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 4
-    cfg.NX = 201
-    cfg.NY = 201
+    cfg.IEOS = 1
+    cfg.NX = 301
+    cfg.NY = 301
     cfg.NZ = 101
-    cfg.dx = 0.15
-    cfg.dy = 0.15
+    cfg.dx = 0.08
+    cfg.dy = 0.08
     cfg.dz = 0.15
     cfg.ImpactParameter = 7.8
 
-    cfg.save_to_hdf5 = False
+    cfg.save_to_hdf5 = True
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber
-    ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
+    ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.compile_options,
                   ideal.d_ev[1])
 
     #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)

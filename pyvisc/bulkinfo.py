@@ -62,7 +62,7 @@ class BulkInfo(object):
 
 
     def __loadAndBuildCLPrg(self):
-        #load and build *.cl programs with compile self.gpu_defines
+        #load and build *.cl programs with compile self.compile_options
         edslice_src = '''#include"real_type.h"
             __kernel void get_ed(__global real4 * d_ev,
                                  __global real4 * d_ev_x0,

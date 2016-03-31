@@ -66,7 +66,7 @@ class TestGubser(unittest.TestCase):
     
         q = 0.25
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
-        compile_options = list(self.ideal.gpu_defines)
+        compile_options = list(self.ideal.compile_options)
         compile_options.append('-I %s'%os.path.join(cwd, '..', 'kernel'))
         compile_options.append('-D USE_SINGLE_PRECISION')
         prg = cl.Program(self.ctx, kernel_src).build(compile_options)

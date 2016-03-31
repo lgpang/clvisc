@@ -26,7 +26,7 @@ class Smearing(object):
         fname_partons, eos_table, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0):
         '''initialize d_ev1 with partons p4x4 given by fname_partons'''
         self.cwd, cwf = os.path.split(__file__)
-        self.gpu_defines = compile_options
+        self.compile_options = compile_options
         self.__loadAndBuildCLPrg(ctx, cfg, SIGR, SIGZ, KFACTOR)
         size = cfg.NX*cfg.NY*cfg.NZ
         h_p4x4 = np.zeros((size, 8), cfg.real)
@@ -46,8 +46,8 @@ class Smearing(object):
                 np.int32(size)).wait()
 
     def __loadAndBuildCLPrg(self, ctx, cfg, SIGR, SIGZ, KFACTOR):
-        #load and build *.cl programs with compile self.gpu_defines
-        glauber_defines = list(self.gpu_defines)
+        #load and build *.cl programs with compile self.compile_options
+        glauber_defines = list(self.compile_options)
         glauber_defines.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
         glauber_defines.append('-D {key}={value}f'.format(key='SIGR', value=SIGR))
         glauber_defines.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
@@ -66,7 +66,7 @@ class SmearingP4X4(object):
         p4x4, eos_table, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0, force_bjorken=False):
         '''initialize d_ev1 with partons p4x4, which is one size*8 np.array '''
         self.cwd, cwf = os.path.split(__file__)
-        self.gpu_defines = compile_options
+        self.compile_options = compile_options
 
         self.__loadAndBuildCLPrg(ctx, cfg, SIGR, SIGZ, KFACTOR)
         size = cfg.NX*cfg.NY*cfg.NZ
@@ -92,8 +92,8 @@ class SmearingP4X4(object):
 
 
     def __loadAndBuildCLPrg(self, ctx, cfg, SIGR, SIGZ, KFACTOR):
-        #load and build *.cl programs with compile self.gpu_defines
-        glauber_defines = list(self.gpu_defines)
+        #load and build *.cl programs with compile self.compile_options
+        glauber_defines = list(self.compile_options)
         glauber_defines.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
         glauber_defines.append('-D {key}={value}f'.format(key='SIGR', value=SIGR))
         glauber_defines.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
@@ -166,7 +166,7 @@ def ideal_main():
     #fname_partons = '/data01/hyihp/pang/GammaJet/AuAu200_0_80/P1.txt'
     fname_partons = '/u/lpang/P10.txt'
 
-    Smearing(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
+    Smearing(cfg, ideal.ctx, ideal.queue, ideal.compile_options,
             ideal.d_ev[1], fname_partons, ideal.eos_table)
 
     ideal.evolve(max_loops=2400)

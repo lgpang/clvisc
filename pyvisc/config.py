@@ -175,6 +175,9 @@ def read_config():
         parser.add_argument('--{key}'.format(key=key), nargs='?', const=1, 
                 type=type(value[0]), default=value[0], help=value[1] )
 
+    parser.add_argument('--riemann_test', nargs='?', const=1, type=bool, 
+            default=False, help='true to switch on riemann test for expansion to vacuum problem')
+
     parser.add_argument('--gubser_visc_test', nargs='?', const=1, type=bool, 
             default=False, help='true to switch to 2nd order gubser visc test')
 

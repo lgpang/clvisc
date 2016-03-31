@@ -48,8 +48,7 @@ def glueball(Tmax = 0.6, outdir = '../results/event0'):
 
     ideal = CLIdeal(cfg, gpu_id=2)
     from glauber import Glauber
-    Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
-                  ideal.d_ev[1])
+    Glauber(cfg, ideal.ctx, ideal.queue, ideal.compile_options, ideal.d_ev[1])
 
     ideal.evolve(max_loops=3000, save_hypersf=False, to_maxloop=True)
     t1 = time()
@@ -87,6 +86,8 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
         cfg.IEOS = 3
     elif eostype == 'QCD':
         cfg.IEOS = 4
+    elif eostype == 'EOSI':
+        cfg.IEOS = 0
 
     eos = Eos(cfg.IEOS)
     # update the configuration
@@ -97,12 +98,12 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
 
     # set IEOS = 2 for (2+1)-flavor QCD EOS
     # set IEOS = 3 for GlueBall EOS
-    cfg.NX = 501
-    cfg.NY = 501
+    cfg.NX = 301
+    cfg.NY = 301
     cfg.NZ = 1
-    cfg.DT = 0.004
-    cfg.DX = 0.032
-    cfg.DY = 0.032
+    cfg.DT = 0.01
+    cfg.DX = 0.08
+    cfg.DY = 0.08
     cfg.ntskip = 50
     cfg.A = 1
     cfg.Ra = 0.8
@@ -126,17 +127,13 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
     #plt.imshow(ed)
     #plt.show()
 
-    ideal = CLIdeal(cfg, gpu_id=0)
+    ideal = CLIdeal(cfg, gpu_id=1)
     edv = np.zeros((ideal.size, 4), ideal.cfg.real)
     print edv.shape
     edv[:, 0] = ed.T.flatten()
     ideal.load_ini(edv)
-    #from glauber import Glauber
-    #Glauber(cfg, ideal.ctx, ideal.queue, ideal.gpu_defines,
-    #              ideal.d_ev[1])
 
-
-    ideal.evolve(max_loops=2000, save_hypersf=False, to_maxloop=True)
+    ideal.evolve(max_loops=1000, save_hypersf=False, to_maxloop=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
@@ -148,6 +145,8 @@ if __name__=='__main__':
     #glueball(0.40, '../results/IdealGas_T0p4/')
     #glueball(0.30, '../results/IdealGas_T0p3/')
     #glueball(0.60, '../results/CompareWithHarri_SU3_T0p6/')
-    ppcollision(eostype='SU3', outdir='../results/PP_SU3')
-    ppcollision(eostype='QCD', outdir='../results/PP_QCD')
+    #ppcollision(eostype='SU3', outdir='../results/PP_SU3')
+    #ppcollision(eostype='QCD', outdir='../results/PP_QCD')
+    #ppcollision(eostype='EOSI', outdir='../results/PP_EOSI')
+    ppcollision(eostype='EOSI', outdir='../results/PP_EOSI_1')
 
