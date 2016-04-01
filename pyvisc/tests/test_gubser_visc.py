@@ -8,7 +8,6 @@ import sympy as sym
 import pyopencl as cl
 import os
 
-
 def gubser_ed(tau, r, L, lam1):
     ''' energy density for 2nd order viscous gubser solution '''
     return np.power(1 + 0.25*(-L*L + tau*tau - r*r)**2/(L*L*tau*tau), -1.33333333333333 + 1.0/lam1)/np.power(tau, 4)
@@ -26,32 +25,10 @@ def gubser_pixx(tau, x, L, lam1, y=0):
     x[np.abs(x)<1.0E-8] = 1.0E-8
     return -tau**2*((4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)/(4*L**2*tau**2))**(-(1.33333333333333*lam1 - 1)/lam1)*(4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)*(x**2*(L**2 + tau**2 + x**2 + y**2)**2 + y**2*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2))/(lam1*tau**6*(x**2 + y**2)*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2)**2)
 
-##### Calc the limit of pixx, pixy, piyy at (x->0, y->0 )
-def GetLimit(tau_input=1.0, L_input=10.0, lam1_input=10.0):
-    '''pixx, piyy, pixy is not numerically calculable at x->0 and y->0 due to 
-       sin(x)/x like structure. '''
-    tau, x, y, etas, L, lam1 = sym.symbols('tau x y etas L lam1' )
-    
-    eps, ut, ux, uy, pitt, pitx, pity, pixx, pixy, piyy, pizz = \
-            sym.symbols( 'eps ut ux uy pitt pitx pity pixx pixy piyy pizz' )
-    
-    pixx= -tau_input**2*((4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)/(4*L**2*tau**2))**(-(1.33333333333333*lam1 - 1)/lam1)*(4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)*(x**2*(L**2 + tau**2 + x**2 + y**2)**2 + y**2*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2))/(lam1*tau**6*(x**2 + y**2)*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2)**2)
-    pixy= tau_input**2*x*y*((4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)/(4*L**2*tau**2))**((-1.33333333333333*lam1 + 1)/lam1)*(4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2 - (L**2 + tau**2 + x**2 + y**2)**2)/(lam1*tau**6*(x**2 + y**2)*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2)**2)
-
-    piyy= -tau_input**2*((4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)/(4*L**2*tau**2))**(-(1.33333333333333*lam1 - 1)/lam1)*(4*L**2*tau**2 + (L**2 - tau**2 + x**2 + y**2)**2)*(x**2*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2) + y**2*(L**2 + tau**2 + x**2 + y**2)**2)/(lam1*tau**6*(x**2 + y**2)*(4*L**2*(x**2 + y**2) + (L**2 + tau**2 - x**2 - y**2)**2)**2)
-
-    pixx_limit = sym.limit( pixx.subs( tau, tau_input ).subs(y, 0).subs(L, L_input ).subs( lam1, lam1_input ), x, 0 )
-    pixy_limit = sym.limit( pixy.subs( tau, tau_input ).subs(y, 0).subs(L, L_input ).subs( lam1, lam1_input ), x, 0 )
-    piyy_limit = sym.limit( piyy.subs( tau, tau_input ).subs(y, 0).subs(L, L_input ).subs( lam1, lam1_input ), x, 0 )
-
-    return pixx_limit, pixy_limit, piyy_limit
-
-
 
 ##### Use GPU parallel to calculate the ini condition for Ed, u^{mu} and pi^{mu nu} 
 def CreateIni(ctx, queue, d_ev, d_pi, tau=1.0, L=10.0, lam1=10.0, NX=201, NY=201, NZ=6,
               DX=0.1, DY=0.1, DZ=0.3, fout='BoWenIni_Lam10_L10_gpu.dat'):
-    pixx, pixy, piyy = GetLimit(tau, L, lam1)
     cwd, cwf = os.path.split(__file__)
     prg_src = open(os.path.join(cwd, '../kernel/kernel_gubser_visc.cl'), 'r').read()
     options = ['-D NX=%s'%NX, '-D NY=%s'%NY, '-D NZ=%s'%NZ, '-D DX=%s'%DX, '-D DY=%s'%DY, '-D DZ=%s'%DZ, '-D tau=%s'%tau, '-D L0=%s'%L, '-D lam1=%s'%lam1]
@@ -59,6 +36,7 @@ def CreateIni(ctx, queue, d_ev, d_pi, tau=1.0, L=10.0, lam1=10.0, NX=201, NY=201
     
     prg = cl.Program(ctx, prg_src).build(options=options)
     
+    pixx = piyy = pixy = 0.0
     prg.CreateIniCond(queue, (NX,NY,NZ), None, d_ev, d_pi,
                       np.float32(pixx), np.float32(pixy), np.float32(piyy))
     
@@ -85,7 +63,7 @@ if __name__ == '__main__':
     cfg.gubser_visc_test = True
     cfg.save_to_hdf5 = False
 
-    visc = CLVisc(cfg, gpu_id=0)
+    visc = CLVisc(cfg, gpu_id=3)
     ctx = visc.ctx
     queue = visc.queue
     CreateIni(ctx, queue, visc.ideal.d_ev[1], visc.d_pi[1], tau=cfg.TAU0,  L=L, lam1=Lam,
@@ -97,11 +75,41 @@ if __name__ == '__main__':
 
     visc.update_udiff(visc.ideal.d_ev[1], visc.ideal.d_ev[2])
 
-    visc.evolve(max_loops=1100, force_run_to_maxloop=True, save_bulk=False,
+    visc.evolve(max_loops=2200, force_run_to_maxloop=True, save_bulk=False,
                 plot_bulk=True, save_hypersf=False, save_pi=True)
 
     bulk = visc.ideal.bulkinfo
     pimn = visc.pimn_info
+
+    xcent = cfg.NX//2
+
+    import h5py
+    h5 = h5py.File('gubser_visc_L1.h5', 'w')
+    h5.attrs['lam'] = Lam
+    h5.attrs['L'] = L
+    h5.attrs['eta_over_s'] = cfg.ETAOS
+    h5.attrs['DT'] = cfg.DT
+    h5.attrs['DX'] = cfg.DX
+    h5.attrs['DY'] = cfg.DY
+    h5.attrs['NX'] = cfg.NX
+    h5.create_dataset('x', data=bulk.x)
+
+    nstep = 10
+    tau_list = np.empty(nstep)
+    for i in range(nstep):
+        h5.create_dataset('clvisc/ex/%s'%i, data=bulk.ex[i])
+        h5.create_dataset('clvisc/vx/%s'%i, data=bulk.vx[i])
+        h5.create_dataset('clvisc/pizz/%s'%i, data=pimn.pizz_x[i])
+        h5.create_dataset('clvisc/pixx/%s'%i, data=pimn.pixx_x[i])
+        tau = 1.0 + i*cfg.ntskip*cfg.DT
+        tau_list[i] = tau
+        h5.create_dataset('gubser/ex/%s'%i,   data=gubser_ed(tau, bulk.x, L, Lam))
+        h5.create_dataset('gubser/pizz/%s'%i, data=tau*tau*gubser_pizz(tau,bulk.x,L, Lam))
+        h5.create_dataset('gubser/pixx/%s'%i, data=gubser_pixx(tau,bulk.x,L, Lam))
+        h5.create_dataset('gubser/vx/%s'%i, data=gubser_vr(tau, bulk.x, L))
+    h5.create_dataset('tau', data=tau_list)
+    h5.close()
+
 
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots(2, 2, figsize=(10, 10))
