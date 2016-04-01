@@ -92,9 +92,6 @@ inline real maxPropagationSpeed(real4 edv, real vk, real pr){
 
 
 /** solve energy density from T00 and K=sqrt(T01**2 + T02**2 + T03**2)
- * The rootfinding can not pass tests for many events
- * 74% fail if absolute error < 1.0E-6
- * 20% fail if absolute error < 1.0E-3
  * 0.001% fail if absolute error < 0.01
  * What happens to these testing events?
  * */
