@@ -170,10 +170,10 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real pr_ip1 = P(ev_ip1.s0, eos_table);
    real pr_ip2 = P(ev_ip2.s0, eos_table);
 
-   real4 T0m_im1 = tau*t0m(ev_im1, pr_im1);
-   real4 T0m_i = tau*t0m(ev_i, pr_i);
-   real4 T0m_ip1 = tau*t0m(ev_ip1, pr_ip1);
-   real4 T0m_ip2 = tau*t0m(ev_ip2, pr_ip2);
+   real4 T0m_im1 = t0m(ev_im1, pr_im1);
+   real4 T0m_i = t0m(ev_i, pr_i);
+   real4 T0m_ip1 = t0m(ev_ip1, pr_ip1);
+   real4 T0m_ip2 = t0m(ev_ip2, pr_ip2);
 
    real4 DA0, DA1;
    DA0 = minmod4(0.5f*(T0m_ip1-T0m_im1),
@@ -192,8 +192,8 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real pr_half = 0.5f*(pr_ip1 + pr_i);
    real vi_half = 0.5f*(vi[along] + vip1[along]);
    // Flux Jp = (T0m + pr*g^{tau mu})*v^x - pr*g^{x mu}
-   real4 Jp = (AR + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
-   real4 Jm = (AL + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
+   real4 Jp = (AR + pr_half*gm[0])*vi_half - pr_half*gm[along+1];
+   real4 Jm = (AL + pr_half*gm[0])*vi_half - pr_half*gm[along+1];
 
    real4 ev_half = 0.5f*(ev_i+ev_ip1);
    // maximum local propagation speed at i+1/2
@@ -203,7 +203,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
 
    real pr_im2 = P(ev_im2.s0, eos_table);
-   real4 T0m_im2 = tau*t0m(ev_im2, pr_im2);
+   real4 T0m_im2 = t0m(ev_im2, pr_im2);
    DA1 = DA0;  // reuse the previous calculate value
    DA0 = minmod4(0.5f*(T0m_i-T0m_im2),
            minmod4(THETA*(T0m_i-T0m_im1), THETA*(T0m_im1-T0m_im2)));
@@ -211,12 +211,12 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
    AL = T0m_im1 + 0.5f * DA0;
    AR = T0m_i - 0.5f * DA1;
 
-   // pr_half = tau*pr(i+1/2)
+   // pr_half = pr(i+1/2)
    pr_half = 0.5f*(pr_im1 + pr_i);
    vi_half = 0.5f*(vim1[along] + vi[along]);
    // Flux Jp = (T0m + pr*g^{tau mu})*v^x - pr*g^{x mu}
-   Jp = (AR + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
-   Jm = (AL + pr_half*tau*gm[0])*vi_half - pr_half*tau*gm[along+1];
+   Jp = (AR + pr_half*gm[0])*vi_half - pr_half*gm[along+1];
+   Jm = (AL + pr_half*gm[0])*vi_half - pr_half*gm[along+1];
 
    // maximum local propagation speed at i-1/2
    ev_half = 0.5f*(ev_i+ev_im1);

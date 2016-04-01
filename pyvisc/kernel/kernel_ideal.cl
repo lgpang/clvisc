@@ -23,19 +23,15 @@ __kernel void kt_src_christoffel(
         // Tzz_tilde = T^{eta eta} * tau^2; no 1/tau in vz
         real Tzz_tilde = (ed + pressure)*u0*u0*vz*vz + pressure;
         real Ttz_tilde = (ed + pressure)*u0*u0*vz;
-        d_Src[I] = d_Src[I] - (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
 
 #ifdef RIEMANN_TEST
 // the Christoffel terms are removed to compare with RIEMANN solution
-// in (t, x, y, z) coordinates
-        real Ttt_tilde = (ed + pressure)*u0*u0 - pressure;
-        real Ttx_tilde = (ed + pressure)*u0*u0*vx;
-        real Tty_tilde = (ed + pressure)*u0*u0*vy;
-
-        d_Src[I] = d_Src[I] + (real4)(Tzz_tilde + Ttt_tilde,
-                                        Ttx_tilde, Tty_tilde, 3.0f*Ttz_tilde);
+// in (t, x, y, z) coordinates,
+// later we use T^{mu nu} instead of \tilde{T}^{mu nu} in hydro evolution
+        d_Src[I] = d_Src[I];
+#else
+        d_Src[I] = d_Src[I] - (real4)(Tzz_tilde, 0.0f, 0.0f, Ttz_tilde);
 #endif
-
     }
 }
 
@@ -70,8 +66,13 @@ __kernel void kt_src_alongx(
     for ( int I = get_global_id(0); I < NX; I = I + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         int i = I + 2;
+#ifdef RIEMANN_TEST
         d_Src[IND] = d_Src[IND] - kt1d(ev[i-2], ev[i-1],
                      ev[i], ev[i+1], ev[i+2], tau, ALONG_X, eos_table)/DX;
+#else
+        d_Src[IND] = d_Src[IND] - tau * kt1d(ev[i-2], ev[i-1],
+                     ev[i], ev[i+1], ev[i+2], tau, ALONG_X, eos_table)/DX;
+#endif
     }
 }
 
@@ -107,8 +108,13 @@ __kernel void kt_src_alongy(
     for ( int J = get_global_id(1); J < NY; J = J + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         int j = J + 2;
+#ifdef RIEMANN_TEST
         d_Src[IND] = d_Src[IND] - kt1d(ev[j-2], ev[j-1],
                      ev[j], ev[j+1], ev[j+2], tau, ALONG_Y, eos_table)/DY;
+#else
+        d_Src[IND] = d_Src[IND] - tau * kt1d(ev[j-2], ev[j-1],
+                     ev[j], ev[j+1], ev[j+2], tau, ALONG_Y, eos_table)/DY;
+#endif
     }
 }
 
@@ -143,8 +149,13 @@ __kernel void kt_src_alongz(
     for ( int K = get_global_id(2); K < NZ; K = K + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         int k = K + 2;
+#ifdef RIEMANN_TEST
         d_Src[IND] = d_Src[IND] - kt1d(ev[k-2], ev[k-1],
+                     ev[k], ev[k+1], ev[k+2], tau, ALONG_Z, eos_table)/DZ;
+#else 
+        d_Src[IND] = d_Src[IND] - tau * kt1d(ev[k-2], ev[k-1],
                      ev[k], ev[k+1], ev[k+2], tau, ALONG_Z, eos_table)/(tau*DZ);
+#endif
     }
 }
 
@@ -172,18 +183,29 @@ __kernel void update_ev(
 
     // when step=2, tau=(n+1)*DT, while T0m need tau=n*DT
     real old_time = tau - (step-1)*DT;
-    real4 T0m = ((ed + pressure)*u0*umu - pressure*gm[0])
-                * old_time;
 
+#ifdef RIEMANN_TEST
+    real4 T0m = ((ed + pressure)*u0*umu - pressure*gm[0]);
+#else 
+    real4 T0m = ((ed + pressure)*u0*umu - pressure*gm[0]) * old_time;
+#endif
     /** step==1: Q' = Q0 + Src*DT
         step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
     */
     T0m = T0m + d_Src[I]*DT/step;
 
+#ifdef RIEMANN_TEST
+    real T00 = max(acu, T0m.s0);
+    real T01 = (fabs(T0m.s1) < acu) ? 0.0f : T0m.s1;
+    real T02 = (fabs(T0m.s2) < acu) ? 0.0f : T0m.s2;
+    real T03 = (fabs(T0m.s3) < acu) ? 0.0f : T0m.s3;
+#else
     real T00 = max(acu, T0m.s0)/tau;
     real T01 = (fabs(T0m.s1) < acu) ? 0.0f : T0m.s1/tau;
     real T02 = (fabs(T0m.s2) < acu) ? 0.0f : T0m.s2/tau;
     real T03 = (fabs(T0m.s3) < acu) ? 0.0f : T0m.s3/tau;
+#endif
+
 
     real M = sqrt(T01*T01 + T02*T02 + T03*T03);
     real SCALE_COEF = 0.999f;
