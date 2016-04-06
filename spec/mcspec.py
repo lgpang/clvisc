@@ -55,9 +55,8 @@ class mcspec(object):
         # poi stands for particle of interest
         particle_of_interest = None
 
-        reference_flow_particles = None
-
         def multi_and(*args):
+            '''select elements of one numpy array that satisfing multiple situations'''
             selected = np.ones_like(args[0], dtype=np.bool)
             for array_i in args:
                 selected = np.logical_and(selected, array_i)
@@ -126,15 +125,15 @@ class mcspec(object):
         avg2 = cn2
 
         for i, pt in enumerate(pts):
-            mp, pn = self.qn(n, pid, pt-0.1, pt+0.1, rapidity_range[0], rapidity_range[1])
+            mp, pn = self.qn(n, pid, pt-0.2, pt+0.2, rapidity_range[0], rapidity_range[1])
             mq, qn = mp, pn
-            mq2, q2n = self.qn(2*n, pid, pt-0.1, pt+0.1, rapidity_range[0], rapidity_range[1])
+            mq2, q2n = self.qn(2*n, pid, pt-0.2, pt+0.2, rapidity_range[0], rapidity_range[1])
             avg2_prime = (pn * Qn.conjugate() - mq)/(mp * M - mq)
             avg4_prime = (pn * Qn * Qn.conjugate()**2 - q2n * Qn.conjugate()**2 - pn * Qn * Q2n.conjugate()
                     - 2 * M * pn * Qn.conjugate() - 2 * mq * Qn * Qn.conjugate() +
                     7 * qn * Qn.conjugate() - Qn * qn.conjugate() + q2n * Q2n.conjugate() 
                     + 2 * pn * Qn.conjugate() + 2 * mq * M - 6 * mq ) / (
-                            (mp * M - 3 * mq) * (M - 1) * (M - 2))
+                            (mp * M - 3 * mq) * (M - 1) * (M - 2) * (M-3))
 
             dn2 = avg2_prime
             dn4 = avg4_prime - 2 * avg2 * avg2_prime
@@ -143,14 +142,6 @@ class mcspec(object):
             vn_4[i] = - dn4.real / math.pow(-cn4, 0.75)
 
         return pts, vn_2, vn_4
-
-
-
-
-
-
-
-
 
 
 
