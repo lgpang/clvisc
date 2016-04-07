@@ -99,7 +99,7 @@ class SmearingP4X4(object):
         glauber_defines.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
         glauber_defines.append('-D {key}={value}f'.format(key='KFACTOR', value=KFACTOR))
         print(glauber_defines)
-        with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing.cl'), 'r') as f:
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing_new.cl'), 'r') as f:
             prg_src = f.read()
             self.prg = cl.Program(ctx, prg_src).build(
                                              options=glauber_defines)
