@@ -1,0 +1,130 @@
+#/usr/bin/env python
+#author: lgpang
+#email: lgpang@qq.com
+#createTime: Fr 08 Apr 2016 12:10:21 CEST
+
+import numpy as np
+from math import floor
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+'''This module is used to calculate the effective chemical potential
+   for all the resonances at freeze out temperature, from the eos table
+   s95p-PCE-v1. This EOS assumes chemical freeze out happens at T=150 MeV,
+   from chemical freeze out to kinetic freeze out, the number of stable
+   particles is unchanged if all the resonance decay.
+   For this purpose, the temperature is changed and effective chemical
+   potential is introduced to fix the particle ratio. '''
+
+
+class ChemicalPotential(object):
+    def __init__(self, efrz):
+        self.efrz = efrz
+
+        mu_for_stable = self.get_chemical_potential_for_stable(efrz)
+
+        pids = self.get_pid_for_stable()
+
+        logging.debug("len of chem = %s"%len(mu_for_stable))
+        logging.debug("len of pids = %s"%len(pids))
+
+    def get_pid_for_stable(self):
+        """Get the stable particles pid from particles.dat, Gamma is exculded,
+        return the array of stable particles pid"""
+        particles = open("eos_table/s95p-PCE-v1/particles.dat","r").readlines()
+        stables = []
+        for particle in particles:
+            info = particle.split()
+            if info[-1] == "Stable" or info[-1] == '********':
+                if info[1] != "Gamma":
+                    stables.append(info[1])
+        return stables
+
+
+    def get_chemical_potential_for_stable(self, efrz):
+        ''' interpolate to get the chemical potential for stable particles
+            at freeze out energy density '''
+        fname = "eos_table/s95p-PCE-v1/s95p-PCE-v1_pichem1.dat"
+        mu_for_stable = None
+        with open(fname, 'r') as fchemical:
+            e0 = float(fchemical.readline())
+            de,ne = fchemical.readline().split()
+            de,ne = float(de), int(ne)
+            nstable = int(fchemical.readline())
+
+            logging.debug('e0,de,ne,nstable=%s, %s, %s, %s'%(e0, de, ne, nstable))
+
+            chemical_potential = np.loadtxt(fname, skiprows=3)[::-1]
+            energy_density = np.array([e0 + i * de for i in range(ne)])
+
+            idx = floor((efrz - e0) / de)
+            ed0, ed1 = energy_density[idx], energy_density[idx+1]
+            mu0, mu1 = chemical_potential[idx], chemical_potential[idx+1]
+
+            # linear interpolation
+            w0 = (efrz - ed0) / de
+            w1 = (ed1 - efrz) / de
+            mu_for_stable = w0 * mu1 + w1 * mu0
+        return mu_for_stable
+
+    def get_chemical_potential_for_resonance(self):
+        """Calc Resonances chemical potential from stable particles 
+        chemical potential and the decay chain listed in pdg05.dat """
+        pid_for_stable = self.get_pid_for_stable()
+        mu_for_stable  = self.get_chemical_potential_for_stable(self.efrz)
+        mu_for_all = {}
+
+        for i in range(len(pid_for_stable)):
+            mu_for_all[pid_for_stable[i]] = mu_for_stable[i]
+        mu_for_all['22'] = 0.0
+
+        pids = []
+        with open("eos_table/s95p-PCE-v1/pdg05.dat","r") as f_pdg:
+            lines = f_pdg.readlines()
+            i = 0
+            while i < len(lines):
+                line = lines[i]
+                particle = line.split()
+                pid = particle[0]
+                ndecays = int(particle[-1])
+                mu_reso = 0.0
+                for j in range(ndecays):
+                    decay = lines[i+j+1].split()
+                    ndaughter = int(decay[1])
+                    branch_ratio = float(decay[2])
+
+                    # mu_i = sum_j mu_j * n_ij
+                    for k in range(ndaughter):
+                        daughter_pid = decay[3 + k]
+                        mu_reso += branch_ratio * mu_for_all[daughter_pid]
+
+                mu_for_all[pid] = mu_reso
+                i = i + ndecays + 1
+                pids.append(pid)
+    
+        with open("ChemForReso.dat","w") as fout:
+            for pid in pids:
+                print >> fout, pid, mu_for_all[pid]
+    
+ 
+
+def main(Tfrz = 0.137):
+    import os
+    import sys
+    from eos import Eos
+    from subprocess import call
+
+    eos = Eos(1)
+    efrz = eos.f_ed(Tfrz)
+    chem = ChemicalPotential(efrz)
+    chem.get_chemical_potential_for_resonance()
+
+    cwd, cwf = os.path.split(__file__)
+
+    path_spec = os.path.join(cwd, '../../CLSmoothSpec/Resource/')
+    path_sample = os.path.join(cwd, '../../sampler/build/')
+    call(['cp', 'ChemForReso.dat', path_spec])
+    call(['cp', 'ChemForReso.dat', path_sample])
+
+main(Tfrz=0.137)
