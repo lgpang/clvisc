@@ -123,7 +123,7 @@ def main(Tfrz = 0.137):
     cwd, cwf = os.path.split(__file__)
 
     path_spec = os.path.join(cwd, '../../CLSmoothSpec/Resource/')
-    path_sample = os.path.join(cwd, '../../sampler/build/')
+    path_sample = os.path.join(cwd, '../../sampler/', 'chemical_potential.dat')
     call(['cp', 'ChemForReso.dat', path_spec])
     call(['cp', 'ChemForReso.dat', path_sample])
 
