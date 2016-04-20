@@ -6,6 +6,7 @@
 import numpy as np
 from math import floor
 import logging
+import os
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -19,12 +20,19 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class ChemicalPotential(object):
-    def __init__(self, efrz):
+    def __init__(self, efrz, version='PCE165'):
         self.efrz = efrz
+
+        self.version = version
+        self.path = os.path.abspath('eos_table/s95p-PCE165-v0/')
+
+        if version == 'PCE150':
+            self.path = os.path.abspath('eos_table/s95p-PCE-v1/')
 
         mu_for_stable = self.get_chemical_potential_for_stable(efrz)
 
         pids = self.get_pid_for_stable()
+
 
         logging.debug("len of chem = %s"%len(mu_for_stable))
         logging.debug("len of pids = %s"%len(pids))
@@ -32,7 +40,8 @@ class ChemicalPotential(object):
     def get_pid_for_stable(self):
         """Get the stable particles pid from particles.dat, Gamma is exculded,
         return the array of stable particles pid"""
-        particles = open("eos_table/s95p-PCE-v1/particles.dat","r").readlines()
+        fname = os.path.join(self.path,  'particles.dat')
+        particles = open(fname, "r").readlines()
         stables = []
         for particle in particles:
             info = particle.split()
@@ -45,7 +54,11 @@ class ChemicalPotential(object):
     def get_chemical_potential_for_stable(self, efrz):
         ''' interpolate to get the chemical potential for stable particles
             at freeze out energy density '''
-        fname = "eos_table/s95p-PCE-v1/s95p-PCE-v1_pichem1.dat"
+        #fname = "eos_table/s95p-PCE-v1/s95p-PCE-v1_pichem1.dat"
+        fname = os.path.join(self.path, "s95p-PCE165-v0_pichem1.dat")
+        if self.version == 'PCE150':
+            fname = os.path.join(self.path, "s95p-PCE-v1_pichem1.dat")
+
         mu_for_stable = None
         with open(fname, 'r') as fchemical:
             e0 = float(fchemical.readline())
@@ -80,7 +93,9 @@ class ChemicalPotential(object):
         mu_for_all['22'] = 0.0
 
         pids = []
-        with open("eos_table/s95p-PCE-v1/pdg05.dat","r") as f_pdg:
+
+        fname = os.path.join(self.path, 'pdg05.dat')
+        with open(fname, "r") as f_pdg:
             lines = f_pdg.readlines()
             i = 0
             while i < len(lines):
@@ -117,7 +132,7 @@ def main(Tfrz = 0.137):
 
     eos = Eos(1)
     efrz = eos.f_ed(Tfrz)
-    chem = ChemicalPotential(efrz)
+    chem = ChemicalPotential(efrz, version='PCE165')
     chem.get_chemical_potential_for_resonance()
 
     cwd, cwf = os.path.split(__file__)
