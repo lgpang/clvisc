@@ -114,6 +114,31 @@ class CLVisc(object):
                 self.d_pi[1], self.d_goodcell, self.d_udiff, self.ideal.d_ev[1],
                 self.ideal.tau, self.eos_table).wait()
 
+    def optical_glauber_ini(self, system='Au+Au', cent_min=None, cent_max=None, save_binary_collisions=False):
+        '''initialize with optical glauber model for Au+Au and Pb+Pb collisions
+        Params:
+            :param system: type string, Au+Au for Au+Au 200 GeV, Pb+Pb for Pb+Pb 2.76 TeV and 5.02 TeV
+            :param cent_min: type int or float,  lower limit for the centrality range
+            :param cent_max: type int or float,  upper limit for the centrality range
+                   if cent_min and cent_max are None, ImpactParameter is read from self.cfg
+                   otherwise, weighted ImpactParameter is given by weight_mean_b()
+            :param save_binary_collisions: type bool, true to save num_of_binary_collisions for jet
+                 energy loss study (used to sample jet creation position '''
+        from glauber import Glauber, weight_mean_b
+
+        if cent_min is not None and cent_max is not None:
+            mean_impact_parameter = weight_mean_b(cent_min, cent_max, system)
+            # notice the config is changed here, write_to_config() must be called after this
+            # to save the correct ImpactParameter
+            self.cfg.ImpactParameter = mean_impact_parameter
+
+        glauber = Glauber(self.cfg, self.ctx, self.queue, self.compile_options,
+                        self.ideal.d_ev[1])
+        if save_binary_collisions:
+            glauber.save_nbinary(self.ctx, self.queue, self.cfg)
+
+
+
 
     def create_ini_from_partons(self, fname, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0):
         '''generate initial condition from a list of partons in fname,
@@ -419,35 +444,43 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg, write_config
-    cfg.NX = 201
-    cfg.NY = 201
-    cfg.NZ = 3
+    cfg.NX = 361
+    cfg.NY = 361
+    cfg.NZ = 101
 
     cfg.DT = 0.01
     cfg.DX = 0.08
     cfg.DY = 0.08
-    cfg.ImpactParameter = 7.0
-    cfg.IEOS = 0
-    cfg.ntskip = 20
-    cfg.nxskip = 2
-    cfg.nyskip = 2
-    cfg.nzskip = 1
-    cfg.TFRZ = 0.13
+    cfg.DZ = 0.15
+    cfg.ImpactParameter = 3.54
 
-    cfg.Hwn = 1.0
+    cfg.A = 208
+    cfg.Ra = 6.62
+    cfg.Edmax = 98
+    cfg.Eta = 0.546
+    cfg.Si0 = 6.4
+
+
+    cfg.IEOS = 1
+    cfg.ntskip = 30
+    cfg.nxskip = 4
+    cfg.nyskip = 4
+    cfg.nzskip = 2
+    cfg.TFRZ = 0.137
+
+    cfg.Hwn = 0.95
 
     cfg.ETAOS = 0.08
-    cfg.fPathOut = '../results/event_visc_cmp_song_b7/'
-    cfg.save_to_hdf5 = False
+    cfg.fPathOut = '../results/pbpb_cent0_5_pce165/'
+    cfg.save_to_hdf5 = True
 
     write_config(cfg)
 
-    visc = CLVisc(cfg, gpu_id=0)
-    from glauber import Glauber
-    Glauber(cfg, visc.ctx, visc.queue, visc.compile_options,
-            visc.ideal.d_ev[1])
+    visc = CLVisc(cfg, gpu_id=1)
 
-    visc.evolve(max_loops=1600, save_bulk=True, force_run_to_maxloop=False, save_vorticity=True)
+    visc.optical_glauber_ini()
+    visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
+                save_vorticity=False)
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
 
