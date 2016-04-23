@@ -1,5 +1,5 @@
 #include<real_type.h>
-
+//#pragma OPENCL EXTENSION cl_amd_printf : enable
 #define CALC_VORTICITY_ON_SF
 
 #ifdef CALC_VORTICITY_ON_SF
@@ -257,6 +257,7 @@ real4 calc_area(__private real4 *ints, real4 energy_flow,
             if ( is_on_convex_hull(sf, &mass_center, ints, size_of_ints)
                  && dot(sf.norm, energy_flow) > 0.0f  ) {
                  area += sf.norm;
+
                  // printf("used (i,j,k,l=%d,%d,%d,%d", i, j, k, l);
             }
         }
@@ -482,6 +483,9 @@ __kernel void get_hypersf(__global real8  * d_sf,
                                   -dtd*dxd*dyd*d_Sigma.s3,
                                    ev.s1, ev.s2, ev.s3, eta);
                                    
+            //if ( isnan(result.s0) ) {
+            //        printf("non: used (i,j,k,=%d,%d,%d", i, j, k);
+            //}
             d_sf[atomic_inc(num_of_sf)] = result;
         } // end surface calculation
     } // end boundary check
