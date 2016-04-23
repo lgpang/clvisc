@@ -7,6 +7,9 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
+import pyopencl.array as cl_array
+from pyopencl.array import Array
+
 import os
 import sys
 from time import time
@@ -22,10 +25,11 @@ class BulkInfo(object):
     '''The bulk information like:
        ed(x), ed(y), ed(eta), T(x), T(y), T(eta)
        vx, vy, veta, ecc_x, ecc_p'''
-    def __init__(self, cfg, ctx, queue, compile_options):
+    def __init__(self, cfg, ctx, queue, eos_table, compile_options):
         self.cfg = cfg
         self.ctx = ctx
         self.queue = queue
+        self.eos_table = eos_table
         self.compile_options = list(compile_options)
 
         NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ
@@ -35,12 +39,17 @@ class BulkInfo(object):
         self.z = np.linspace(-floor(NZ/2)*cfg.DZ, floor(NZ/2)*cfg.DZ, NZ, endpoint=True)
 
         self.h_ev = np.zeros((NX*NY*NZ, 4), cfg.real)
+
+        self.a_ed = cl_array.empty(self.queue, NX*NY*NZ, cfg.real)
+        self.a_entropy = cl_array.empty(self.queue, NX*NY*NZ, cfg.real)
         
         # store the data in hdf5 file
         h5_path = os.path.join(cfg.fPathOut, 'bulkinfo.h5')
         self.f_hdf5 = h5py.File(h5_path, 'w')
 
         self.eos = Eos(cfg.IEOS)
+
+        self.__load_and_build_cl_prg()
 
         # time evolution for , edmax and ed, T at (x=0,y=0,etas=0)
         self.time = []
@@ -49,10 +58,18 @@ class BulkInfo(object):
         self.Tcent = []
 
         # time evolution for total_entropy, eccp, eccx and <vr>
+        self.energy = []
         self.entropy = []
         self.eccp_vs_tau = []
         self.eccx = []
         self.vr= []
+
+
+    def __load_and_build_cl_prg(self):
+        with open(os.path.join(cwd, 'kernel', 'kernel_bulkinfo.cl')) as f:
+                prg_src = f.read()
+                self.kernel_bulk = cl.Program(self.ctx, prg_src).build(
+                    options = self.compile_options)
 
     def get(self, tau, d_ev, edmax, d_pi=None):
         ''' store the bulkinfo to hdf5 file '''
@@ -74,7 +91,13 @@ class BulkInfo(object):
 
         self.eccp_vs_tau.append(self.eccp(exy, vx, vy)[1])
         self.vr.append(self.mean_vr(exy, vx, vy))
-        self.entropy.append(self.total_entropy(tau, exy, vx, vy))
+
+
+        self.get_total_energy_and_entropy_on_gpu(tau, d_ev)
+        #E_total = self.total_energy(tau, bulk)
+        #print('Etotal=', E_total)
+        #self.energy.append(E_total)
+        #self.entropy.append(self.total_entropy(tau, exy, vx, vy))
 
         ed_cent = exy[i0, j0]
 
@@ -115,8 +138,6 @@ class BulkInfo(object):
         self.f_hdf5.create_dataset('bulk2d/vz_xz_tau%s'%time_stamp, data = bulk[:, j0, :, 3])
         #self.f_hdf5.create_dataset('bulk2d/vz_yz_tau%s'%time_stamp, data = bulk[i0, :, :, 3])
 
-
-
     def eccp(self, ed, vx, vy, vz=0.0):
         ''' eccx = <y*y-x*x>/<y*y+x*x> where <> are averaged 
             eccp = <Txx-Tyy>/<Txx+Tyy> '''
@@ -145,12 +166,64 @@ class BulkInfo(object):
         return vr
 
     def total_entropy(self, tau, ed, vx, vy, vz=0.0):
-        '''get the total entropy as a function of time'''
+        '''get the total entropy (at mid rapidity ) as a function of time'''
         ed[ed<1.0E-10] = 1.0E-10
         vr2 = vx*vx + vy*vy + vz*vz
         vr2[vr2>1.0] = 0.999999
         u0 = 1.0/np.sqrt(1.0 - vr2)
         return (u0*self.eos.f_S(ed)).sum() * tau * self.cfg.DX * self.cfg.DY
+
+    def get_total_energy_and_entropy_on_gpu(self, tau, d_ev):
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        self.kernel_bulk.total_energy(self.queue, (NX, NY, NZ), None,
+                self.a_ed.data, self.a_entropy.data, d_ev,
+                self.eos_table, np.float32(tau)).wait()
+
+        #ed_in_lab_frame = self.a_ed.get()
+        #s_in_lab_frame = self.a_entropy.get()
+
+        volum = tau * self.cfg.DX * self.cfg.DY * self.cfg.DZ
+
+        #e_total = ed_in_lab_frame.sum() * volum
+        #s_total = s_in_lab_frame.sum() * volum
+        e_total = cl_array.sum(self.a_ed).get() * volum
+        s_total = cl_array.sum(self.a_entropy).get() * volum
+
+        self.energy.append(e_total)
+        self.entropy.append(s_total)
+        
+
+    def total_energy(self, tau, bulk):
+        '''get the total energy as a function of time'''
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+
+        ed = bulk[:, :, :, 0]
+        vx = bulk[:, :, :, 1]
+        vy = bulk[:, :, :, 2]
+        vz = bulk[:, :, :, 3]
+        ed[ed<1.0E-10] = 1.0E-10
+        vr2 = vx*vx + vy*vy + vz*vz
+        vr2[vr2>1.0] = 0.999999
+        u0 = 1.0/np.sqrt(1.0 - vr2)
+        pr = self.eos.f_P(ed)
+        cosh_eta = np.cosh(self.z)
+        sinh_eta = np.sinh(self.z)
+        def times_cosh_eta(arr):
+            return arr * cosh_eta
+
+        def times_sinh_eta(arr):
+            return arr * sinh_eta
+
+        eta_direction = 2
+        ed_trans = (ed + pr) * u0 * (
+                          np.apply_along_axis(times_cosh_eta, eta_direction, u0)
+                          + vz * np.apply_along_axis(times_sinh_eta, eta_direction, u0)
+                          ) - np.apply_along_axis(times_cosh_eta, eta_direction, pr)
+
+        volum = tau * self.cfg.DX * self.cfg.DY * self.cfg.DZ
+
+        return ed_trans.sum() * volum
+
 
 
     def ecc_vs_rapidity(self, bulk):
@@ -172,8 +245,9 @@ class BulkInfo(object):
         path_out = os.path.abspath(self.cfg.fPathOut)
 
         np.savetxt(path_out + '/avg.dat',
-                   np.array(zip(self.time, self.eccp_vs_tau, self.edcent, self.entropy, self.vr)),
-                   header='tau, eccp, ed(0,0,0), stotal, <vr>')
+                   np.array(zip(self.time, self.eccp_vs_tau, self.edcent,
+                            self.entropy, self.energy, self.vr)),
+                   header='tau, eccp, ed(0,0,0), stotal, Etotal, <vr>')
 
         self.f_hdf5.create_dataset('coord/tau', data = self.time)
         self.f_hdf5.create_dataset('coord/x', data = self.x)
@@ -184,6 +258,7 @@ class BulkInfo(object):
         self.f_hdf5.create_dataset('avg/edcent', data = np.array(self.edcent))
         self.f_hdf5.create_dataset('avg/Tcent', data = self.eos.f_T(np.array(self.edcent)))
         self.f_hdf5.create_dataset('avg/entropy', data = np.array(self.entropy))
+        self.f_hdf5.create_dataset('avg/energy', data = np.array(self.energy))
         self.f_hdf5.create_dataset('avg/vr', data = np.array(self.vr))
 
         self.f_hdf5.close()

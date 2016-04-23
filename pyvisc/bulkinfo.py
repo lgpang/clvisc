@@ -26,10 +26,11 @@ class BulkInfo(object):
     '''The bulk information like:
        ed(x), ed(y), ed(eta), T(x), T(y), T(eta)
        vx, vy, veta, ecc_x, ecc_p'''
-    def __init__(self, cfg, ctx, queue, compile_options):
+    def __init__(self, cfg, ctx, queue, eos_table, compile_options):
         self.cfg = cfg
         self.ctx = ctx
         self.queue = queue
+        self.eos_table = eos_table
         self.compile_options = list(compile_options)
 
         NX, NY, NZ = cfg.NX, cfg.NY, cfg.NZ

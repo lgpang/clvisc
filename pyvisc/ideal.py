@@ -50,15 +50,6 @@ class CLIdeal(object):
 
         self.compile_options = self.__compile_options()
 
-        # store 1D and 2d bulk info at each time step
-        if self.cfg.save_to_hdf5:
-            from bulkinfo_h5 import BulkInfo
-        else:
-            from bulkinfo import BulkInfo
-
-        self.bulkinfo = BulkInfo(self.cfg, self.ctx, self.queue,
-                self.compile_options)
-
         # set eos, create eos table for interpolation
         # self.eos_table must be before __loadAndBuildCLPrg() to pass
         # table information to definitions
@@ -75,6 +66,16 @@ class CLIdeal(object):
                     self.compile_options)
 
         self.efrz = self.eos.f_ed(self.cfg.TFRZ)
+
+        # store 1D and 2d bulk info at each time step
+        if self.cfg.save_to_hdf5:
+            from bulkinfo_h5 import BulkInfo
+        else:
+            from bulkinfo import BulkInfo
+
+        self.bulkinfo = BulkInfo(self.cfg, self.ctx, self.queue,
+                self.eos_table, self.compile_options)
+
 
         self.__loadAndBuildCLPrg()
         #define buffer on device side, d_ev1 stores ed, vx, vy, vz
@@ -303,20 +304,32 @@ def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
     #os.environ['PYOPENCL_COMPILER_OUTPUT']='1'
-    from config import cfg
+    from config import cfg, write_config
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 1
+    cfg.IEOS = 4
     cfg.NX = 301
     cfg.NY = 301
     cfg.NZ = 101
-    cfg.dx = 0.08
-    cfg.dy = 0.08
-    cfg.dz = 0.15
-    cfg.ImpactParameter = 7.8
+    cfg.DX = 0.08
+    cfg.DY = 0.08
+    cfg.DZ = 0.15
+    cfg.DT = 0.01
+    cfg.ntskip = 24
+    cfg.nxskip = 3
+    cfg.nyskip = 3
+    cfg.nzskip = 2
+    cfg.Eta_gw = 0.4
+    cfg.ImpactParameter = 0.0
+    cfg.ETAOS = 0.0
+    cfg.TFRZ = 0.137
+
+    cfg.fPathOut = '../results/ideal_for_christian/'
 
     cfg.save_to_hdf5 = True
+
+    write_config(cfg)
 
     ideal = CLIdeal(cfg)
     from glauber import Glauber
@@ -324,9 +337,13 @@ def main():
                   ideal.d_ev[1])
 
     #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    ideal.evolve(max_loops=2000, save_bulk=True)
+    ideal.evolve(max_loops=200, save_bulk=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
+
+    from subprocess import call
+    call(['python', './spec.py', cfg.fPathOut])
+
 
 if __name__ == '__main__':
     main()
