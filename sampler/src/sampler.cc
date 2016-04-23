@@ -394,8 +394,8 @@ namespace {
         densities_.resize(0);
         particle_dist_.resize(0);
         for ( const auto & particle_type : list_hadrons_ ) {
-            //double baryon_chemical_potential = particle_type.mu_B;
-            double baryon_chemical_potential = 0.0;
+            double baryon_chemical_potential = particle_type.mu_B;
+            //double baryon_chemical_potential = 0.0;
             // determine fermi-dirac or bose-einstein distribution
             double baryon_meson_factor = -1.0;
             if ( particle_type.baryon != 0 ) baryon_meson_factor = 1.0;
@@ -497,13 +497,12 @@ namespace {
 
                 double mass = list_hadrons_.at(nid).mass;
 
-                pmag = particle_dist_.at(nid).get_one_sample();
+                //pmag = particle_dist_.at(nid).get_one_sample();
+                pmag = sample_momenta1(freezeout_temperature_, mass);
 
                 int while_loop_num = 0;
 
                 while ( true ) {
-
-
                     direction.distribute_isotropically();
 
                     /// momentum in local rest frame
@@ -530,6 +529,12 @@ namespace {
                         double f0;   // equilibrium distribution
                         double baryon_chemical_potential = list_hadrons_.at(nid).mu_B;
                         double fermion_boson_factor;
+
+                        // alpha is the regulation factor from ShenChun
+                        double alpha = 1.9;
+                        //double regulation = std::pow(pmag/freezeout_temperature_, alpha - 2.0);
+                        double regulation = 1.0;
+
                         if ( list_hadrons_.at(nid).baryon ) {
                             fermion_boson_factor = 1.0;
                             f0 = juttner_distribution_func(pmag, mass, \
@@ -540,8 +545,8 @@ namespace {
                                 std::cout << "(F) After f0=" << f0 << "  > 1.0" << std::endl;
                             }
 
-                            weight_visc *= (1.0 + (1.0 - f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
-                            weight_visc /= (1.0+p0_star*p0_star*ele.pimn_max*one_over_2TsqrEplusP_);
+                            weight_visc *= (1.0 + regulation * (1.0 - f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
+                            weight_visc /= (1.0+regulation * p0_star*p0_star*ele.pimn_max*one_over_2TsqrEplusP_);
 
                         } else {
                             fermion_boson_factor = -1.0;
@@ -552,8 +557,8 @@ namespace {
                             if ( f0 > 1.1 ) {
                                 std::cout << "(B) f0=" << f0 << "  > 1.0" << std::endl;
                             }
-                            weight_visc *= (1.0 + (1.0 + f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
-                            weight_visc /= (1.0+2.1*p0_star*p0_star*
+                            weight_visc *= (1.0 + regulation * (1.0 + f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
+                            weight_visc /= (1.0+ regulation *2.1*p0_star*p0_star*
                                     ele.pimn_max*one_over_2TsqrEplusP_);
                         }
                     }
@@ -578,6 +583,7 @@ namespace {
                             ParticleData particle; 
                             particle.pdgcode = list_hadrons_.at(nid).pdgcode;
                             particle.position = position;
+
                             momentum = momentum_in_lrf.LorentzBoost(-ele.velocity);
 
                             double mt = std::sqrt(momentum[0]*momentum[0]-
@@ -597,6 +603,8 @@ namespace {
                             } else {
                                 if ( force_decay_ ) {
                                     force_decay(particle);
+                                } else {
+                                    particles_.push_back(particle);
                                 }
                             }
 
@@ -671,9 +679,9 @@ namespace {
         // notice: add this in the code drive some 3-body decay channels
         // violate the total energy conservation a little bit
         while ( ma + mb > mR ) {
-                mR += 0.01 * resonance->width;
-                ma -= 0.02  * outgoing_a->width;
-                mb -= 0.02  * outgoing_b->width;
+                mR += 0.25 * resonance->width;
+                ma -= 0.5  * outgoing_a->width;
+                mb -= 0.5  * outgoing_b->width;
         }
 
         // pstar = |p0*| = |p1*| in local rest frame

@@ -80,7 +80,7 @@ int main(int argc, char ** argv) {
 
     std::cout << "initialize finished!" << std::endl;
 
-    constexpr int number_of_events = 1000;
+    constexpr int number_of_events = 2000;
 
     for ( int nevent=0; nevent < number_of_events; nevent++ ) {
         sampler.sample_particles_from_hypersf();
@@ -99,14 +99,16 @@ int main(int argc, char ** argv) {
              sampler.list_hadrons_.at(nid).charge ) {
         FourVector momentum = par.momentum;
         double pmag = std::sqrt(momentum.sqr3());
-        double pseudo_rapidity = 0.5*std::log((pmag+momentum.x3())/
-                    (pmag-momentum.x3())); 
+        double pseudo_rapidity = 0.5*(std::log(pmag+momentum.x3())-
+                    std::log(pmag-momentum.x3())); 
+
+        double rapidity = 0.5*(std::log(momentum.x0()+momentum.x3())
+                  - std::log(momentum.x0()-momentum.x3()));
 
         fpmag << momentum.x0() << ' ' << momentum.x1() << ' '
             << momentum.x2() << ' ' << momentum.x3() << ' '
-            << 0.5*std::log((momentum.x0()+momentum.x3())/
-                    (momentum.x0()-momentum.x3())) << ' '
-            << par.pdgcode << ' ' << pseudo_rapidity << std::endl;
+            << rapidity << ' ' << par.pdgcode << ' '
+            << pseudo_rapidity << std::endl;
         }
         if ( nid == 1 ) num_of_pion_plus ++;
     }
@@ -140,7 +142,7 @@ int main(int argc, char ** argv) {
     std::cout << "ntot for pion+ from udotsigma=" << 
         ntotal_pion_plus_from_nudotsigma << std::endl;
 
-    std::cout << "ntot for pion+ from hirano=" << 
+    std::cout << "ntot for pion+ from hirano (no chemical potential)=" << 
         ntotal_pion_plus_from_hirano << std::endl;
 
 }
