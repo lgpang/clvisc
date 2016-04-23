@@ -54,7 +54,8 @@ def corr(pix, piy, piz):
 
     delta_phi = np.linspace(0.0, np.pi, 40, endpoint=True)
 
-    polar_corr = np.zeros_like(delta_phi)
+    polar_corr_xy = np.zeros_like(delta_phi)
+    polar_corr_z = np.zeros_like(delta_phi)
 
     phi_list = np.linspace(0.0, np.pi*2.0, 79, endpoint=True)
 
@@ -66,18 +67,19 @@ def corr(pix, piy, piz):
         pix_dot = (pix_list * (np.roll(pix_list, i) + np.roll(pix_list, -i))).mean()
         piy_dot = (piy_list * (np.roll(piy_list, i) + np.roll(piy_list, -i))).mean()
         piz_dot = (piz_list * (np.roll(piz_list, i) + np.roll(piz_list, -i))).mean()
-        polar_corr[i] = pix_dot + piy_dot + piz_dot
+        polar_corr_xy[i] = pix_dot + piy_dot 
+        polar_corr_z[i] = piz_dot
 
-    polar_avg2 = (pix_list**2 + piy_list**2 + piz_list**2).mean()
+    #polar_avg2 = (pix_list**2 + piy_list**2 + piz_list**2).mean()
 
-    return polar_corr, polar_avg2
+    return polar_corr_xy, polar_corr_z
 
 
 def rapidity_integral(pi3d, Y0, Y1, rapidity):
     '''Params:
     :param pi3d: Pi^{mu} as a function of rapidity, pt, phi
     '''
-    Yi = np.linspace(Y0, Y1, 10, endpoint=True)
+    Yi = np.linspace(Y0, Y1, 5, endpoint=True)
 
     def integY(pimu):
         '''integrate over one rapidity slice'''
@@ -145,62 +147,74 @@ def azimuthal_correlation(withz=True, etaos='0p08', system='auau62p4', n=80, Y0=
         count = 0
 
         delta_phi = np.linspace(0.1, np.pi, 40, endpoint=True)
-        pol_corr = np.zeros_like(delta_phi)
-        pol_avg2 = np.zeros_like(delta_phi)
+        pol_corr_xy = np.zeros_like(delta_phi)
+        pol_corr_z = np.zeros_like(delta_phi)
 
-        for event_id in range(0, n):
-            #try:
-            pix, piy, piz, rho = get_polar_in_rapidity(h5, event_id, Y0, Y1)
+        start_id = 0
+        end_id = 200
+        if system == 'auau200':
+            start_id = 300
+            end_id = 650
 
-            if not withz:
-                piz = np.zeros_like(piy)
+        for event_id in range(start_id, end_id):
+            try:
+                pix, piy, piz, rho = get_polar_in_rapidity(h5, event_id, Y0, Y1)
 
-            rho_int = pt_int(rho)
-            pix_int = pt_int(pix) / rho_int
-            piy_int = pt_int(piy) / rho_int
-            piz_int = pt_int(piz) / rho_int
+                if not withz:
+                    piz = np.zeros_like(piy)
 
-            if not np.isnan(piy[0, 0]):
-                corri, avg2 = corr(pix_int, piy_int, piz_int)
-                pol_corr += corri
-                pol_avg2 += avg2
-                count += 1
+                rho_int = pt_int(rho)
+                pix_int = pt_int(pix) / rho_int
+                piy_int = pt_int(piy) / rho_int
+                piz_int = pt_int(piz) / rho_int
 
-            print event_id, ' finished!'
-            #except:
-            #    print event_id, ' does not exist!'
+                if not np.isnan(piy[0, 0]):
+                    corri, corrj = corr(pix_int, piy_int, piz_int)
+                    pol_corr_xy += corri
+                    pol_corr_z += corrj
+                    count += 1
 
-        #pol_corr /= pol_avg2
-        pol_corr /= count
+                print event_id, ' finished!'
+            except:
+                print event_id, ' does not exist!'
+
+        pol_corr_xy /= count
+        pol_corr_z /= count
 
         print('num of good events is:', count)
-
-
-        maxi = pol_corr.max()
-        mini = pol_corr.min()
+        maxi = pol_corr_xy.max()
+        mini = pol_corr_xy.min()
         maxf = max(abs(maxi), abs(mini))*1.2
 
-        return maxf, delta_phi, pol_corr
+        if withz:
+            maxi = pol_corr_z.max()
+            mini = pol_corr_z.min()
+            maxf = max(abs(maxi), abs(mini))*1.2
+
+        return maxf, delta_phi, pol_corr_xy, pol_corr_z
 
 
 
 def plot_range(Y0, Y1, withz, system, etaos, color='grey'):
-    max0, delta_phi, pol_corr1 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, n=650, Y0= -Y1, Y1= -Y0)
-    max0, delta_phi, pol_corr2 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, n=650, Y0= Y0, Y1=Y1)
-    plt.plot(delta_phi, 0.5*(pol_corr1 + pol_corr2), color=color, label=r'$|Y|=[%s, %s]$'%(Y0, Y1))
-    plt.fill_between(delta_phi, pol_corr1, pol_corr2, facecolor=color, alpha=0.5)
+    max0, delta_phi, pol_corr1, pol_corr_z1 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, n=650, Y0= -Y1, Y1= -Y0)
+    max0, delta_phi, pol_corr2, pol_corr_z2 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, n=650, Y0= Y0, Y1=Y1)
+    if not withz:
+        plt.plot(delta_phi, 0.5*(pol_corr1 + pol_corr2), color=color, label=r'$|Y|=[%s, %s]$'%(Y0, Y1))
+        plt.fill_between(delta_phi, pol_corr1, pol_corr2, facecolor=color, alpha=0.5)
+    else:
+        plt.plot(delta_phi, 0.5*(pol_corr_z1 + pol_corr_z2), color=color, label=r'$|Y|=[%s, %s]$'%(Y0, Y1))
+        plt.fill_between(delta_phi, pol_corr_z1, pol_corr_z2, facecolor=color, alpha=0.5)
     return max0
 
 def plot_pol_corr(withz=True, system='auau200', etaos='0p08'):
     max0 = plot_range(0, 1, withz, system, etaos, color='red')
-    max1 = plot_range(1, 2, withz, system, etaos, color='yellow')
+    max1 = plot_range(1, 2, withz, system, etaos, color='blue')
     max2 = plot_range(2, 3, withz, system, etaos, color='green')
 
     max3 = max0
     if system == 'pbpb2p76':
-        max3 = plot_range(4, 5, withz, system, etaos, color='blue')
+        max3 = plot_range(4, 5, withz, system, etaos, color='grey')
 
-    plt.ylabel(r'$<\Pi(\phi_1) \cdot \Pi(\phi_2)>$')
     plt.gca().yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
     plt.xlabel(r'$|\phi_1 - \phi_2|$')
     maxf = max(max0, max1, max2, max3)
@@ -209,38 +223,50 @@ def plot_pol_corr(withz=True, system='auau200', etaos='0p08'):
     plt.legend(loc='best')
     plt.subplots_adjust(left=0.2)
 
+    system_title = '$Au+Au\ 200\ GeV$,'
+    if system == 'pbpb2p76':
+        system_title = '$Pb+Pb\ 2.76\ TeV$,'
+    if system == 'auau62p4':
+        system_title = '$Au+Au\ 62.4\ GeV$,'
+
     fname = ''
     if withz:
-        #fname = 'Pi_corr_vs_deltaphi_withz_normalized_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
-        fname = 'figs/Pi_corr_vs_deltaphi_withz_unnormalized_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
+        plt.ylabel(r'$<\Pi_{\eta}(\phi_1) \cdot \Pi_{\eta}(\phi_2)>$')
 
-        plt.title('{system} 20-30%, $\eta/s$={etaos}, 3-vector'.format(
-            system=system, etaos=etaos.replace('p', '.') ))
+        fname = 'figs/Piz_corr_vs_deltaphi_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
+        plt.title('{system_title} 20-30%, $\eta/s$={etaos}'.format(
+            system_title=system_title, etaos=etaos.replace('p', '.') ))
     else:
-        #fname = 'Pi_corr_vs_deltaphi_normalized_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
-        fname = 'figs/Pi_corr_vs_deltaphi_unnormalized_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
+        plt.ylabel(r'$<\Pi_{\perp}(\phi_1) \cdot \Pi_{\perp}(\phi_2)>$')
 
-        plt.title('{system} 20-30%, $\eta/s$={etaos}, 2-vector'.format(
-            system=system, etaos=etaos.replace('p', '.') ))
+        fname = 'figs/Pixy_corr_vs_deltaphi_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
+        plt.title('{system_title} 20-30%, $\eta/s$={etaos}'.format(
+            system_title=system_title, etaos=etaos.replace('p', '.') ))
     plt.savefig(fname)
     plt.close()
 
 
-plot_pol_corr(withz=False, system='auau200', etaos='0p0')
-##plot_pol_corr(withz=False, system='auau200', etaos='0p08')
-##plot_pol_corr(withz=True, system='auau200', etaos='0p0')
-##plot_pol_corr(withz=True, system='auau200', etaos='0p08')
-###plot_pol_corr(withz=False, system='auau62p4', etaos='0p08')
+#plot_pol_corr(withz=False, system='auau200', etaos='0p0')
+#plot_pol_corr(withz=False, system='auau200', etaos='0p08')
+#plot_pol_corr(withz=True, system='auau200', etaos='0p0')
+#plot_pol_corr(withz=True, system='auau200', etaos='0p08')
+
+plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p0')
+plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p02')
+plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p04')
+plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p08')
+plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p12')
+plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p16')
+
+plot_pol_corr(withz=False, system='auau62p4', etaos='0p08')
+plot_pol_corr(withz=True, system='auau62p4', etaos='0p08')
+
 ##
-##plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p0')
-##plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p08')
-##plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p12')
-##plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p16')
-##
-####
-####plot_pol_corr(withz=True, system='auau200', etaos='0p12')
-####plot_pol_corr(withz=True, system='auau62p4', etaos='0p08')
-##plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p0')
-##plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p08')
-##plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p12')
-##plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p16')
+##plot_pol_corr(withz=True, system='auau200', etaos='0p12')
+##plot_pol_corr(withz=True, system='auau62p4', etaos='0p08')
+plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p0')
+plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p02')
+plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p04')
+plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p08')
+plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p12')
+plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p16')

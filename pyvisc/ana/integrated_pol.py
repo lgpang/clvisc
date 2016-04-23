@@ -5,6 +5,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import pandas as pd
 
 from polarization import Polarization
 import four_momentum as mom
@@ -25,6 +26,9 @@ def integrated_polarization(f_h5, fpath, event_id, rapidity):
     rapidity. The results is stored in hdf5 file'''
     sf = np.loadtxt('%s/hypersf.dat'%fpath, dtype=np.float32)
     omega = np.loadtxt('%s/omegamu_sf.dat'%fpath, dtype=np.float32)
+
+    #sf = pd.read_csv('%s/hypersf.dat'%fpath, dtype=np.float32, sep=' ', skiprows=1, header=None).values
+    #omega = pd.read_csv('%s/omegamu_sf.dat'%fpath, dtype=np.float32, sep=' ', skiprows=1, header=None).values
     LambdaPolarization = Polarization(sf, omega)
 
     npt, nphi = mom.NPT, mom.NPHI
@@ -53,19 +57,19 @@ def integrated_polarization(f_h5, fpath, event_id, rapidity):
 
     pol, rho, pol_lrf = LambdaPolarization.get(momentum_list)
 
-    #name = 'event%s/rapidity%s/vor_vs_pt_phi'%(event_id, Y)
-    #dset_vor = f_h5.create_dataset(name, data=vor)
-    #name = 'event%s/rapidity%s/rho_vs_pt_phi'%(event_id, Y)
-    #dset_rho = f_h5.create_dataset(name, data=rho)
+    name = 'event%s/rapidity%s/pol_vs_pt_phi'%(event_id, Y)
+    dset_vor = f_h5.create_dataset(name, data=pol)
+    name = 'event%s/rapidity%s/rho_vs_pt_phi'%(event_id, Y)
+    dset_rho = f_h5.create_dataset(name, data=rho)
 
-    piy = pol_lrf[:, 2].reshape(nrap, npt, nphi)
+    piy = pol[:, 2].reshape(nrap, npt, nphi)
+    rho = rho.reshape(nrap, npt, nphi)
     for k, Y in enumerate(rapidity):
-        #vor_int.append( mom.pt_phi_integral(vor) )
-        #rho_int.append( mom.pt_phi_integral(rho) )
-        vor_int.append(mom.pt_phi_integral(piy[k, :, :]))
+        piy_avg = mom.pt_phi_integral(piy[k, :, :])/mom.pt_phi_integral(rho[k,:,:])
+        vor_int.append(piy_avg)
         print(Y, 'finished')
 
-    name = 'event%s/integral_pt_phi/vor'%event_id
+    name = 'event%s/integral_pt_phi/pol_avg'%event_id
     dset_vorint = f_h5.create_dataset(name, data=vor_int)
     #name = 'event%s/integral_pt_phi/rho'%event_id
     #dset_rhoint = f_h5.create_dataset(name, data=rho_int)
@@ -88,17 +92,35 @@ def update_h5(start_id, end_id, f_h5name, path, rapidity, create=False):
 
     for event_id in range(start_id, end_id):
         fpath = '%s/event%s'%(path, event_id)
-        integrated_polarization(f_h5, fpath, event_id, rapidity)
+        try:
+            integrated_polarization(f_h5, fpath, event_id, rapidity)
+        except:
+            print('event does not exist')
         print('event', event_id, 'finished')
     f_h5.close()
 
 
 
-def fin_grid_mid_rapidity():
-    rapidity = np.linspace(-5, 5, 40, endpoint=True)
-    f_h5name = 'vor_int_visc0p08_auau200_cent20_30.hdf5'
-    path = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/'
-    update_h5(0, 1, f_h5name, path, rapidity, create=True)
+def fin_grid_mid_rapidity(etaos='0p08', system='auau200', cent='20_30'):
+    rapidity = np.linspace(-5, 5, 41, endpoint=True)
+    f_h5name = 'vor_int_visc{etaos}_{system}_cent{cent}.hdf5'.format(etaos=etaos, system=system, cent=cent)
+
+    path = ''
+    if system == 'auau200':
+        path = '/lustre/nyx/hyihp/lpang/{system}_results_check/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
+    else:
+        path = '/lustre/nyx/hyihp/lpang/{system}_results/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
+
+    update_h5(0, 650, f_h5name, path, rapidity, create=True)
 
 
-fin_grid_mid_rapidity()
+fin_grid_mid_rapidity(system='auau200', etaos='0p0')
+fin_grid_mid_rapidity(system='auau200', etaos='0p08')
+
+fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p02')
+fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p04')
+
+#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0')
+#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08')
+#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p12')
+#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p16')
