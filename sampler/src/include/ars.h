@@ -88,7 +88,7 @@ class AdaptiveRejectionSampler {
   int max_refine_loops_ = 40;
 
   /* Num of points to initialize the upper bound*/
-  int init_npoint_ = 10;
+  int init_npoint_ = 30;
 
   /* points on distribution function curve with (x,logf(x),f(x))*/
   std::vector<Point> points_;
