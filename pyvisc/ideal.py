@@ -82,11 +82,6 @@ class CLIdeal(object):
         mf = cl.mem_flags
         self.h_ev1 = np.zeros((self.size, 4), self.cfg.real)
 
-        # d_ev[0/1/2]: old/current/new value at time step n-1/n/n+1
-        #self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
-        #             cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes),
-        #             cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_ev1.nbytes)]
-
         self.d_ev = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1),
                      cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1),
                      cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_ev1)]
@@ -321,7 +316,7 @@ def main():
     cfg.nyskip = 3
     cfg.nzskip = 2
     cfg.Eta_gw = 0.4
-    cfg.ImpactParameter = 0.0
+    cfg.ImpactParameter = 7.0
     cfg.ETAOS = 0.0
     cfg.TFRZ = 0.137
 

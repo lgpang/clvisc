@@ -42,6 +42,10 @@ class BulkInfo(object):
 
         self.a_ed = cl_array.empty(self.queue, NX*NY*NZ, cfg.real)
         self.a_entropy = cl_array.empty(self.queue, NX*NY*NZ, cfg.real)
+
+        # the momentum eccentricity as a function of rapidity
+        self.a_eccp1 = cl_array.empty(self.queue, NZ, cfg.real)
+        self.a_eccp2 = cl_array.empty(self.queue, NZ, cfg.real)
         
         # store the data in hdf5 file
         h5_path = os.path.join(cfg.fPathOut, 'bulkinfo.h5')
@@ -71,6 +75,7 @@ class BulkInfo(object):
                 self.kernel_bulk = cl.Program(self.ctx, prg_src).build(
                     options = self.compile_options)
 
+    #@profile
     def get(self, tau, d_ev, edmax, d_pi=None):
         ''' store the bulkinfo to hdf5 file '''
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
@@ -92,19 +97,15 @@ class BulkInfo(object):
         self.eccp_vs_tau.append(self.eccp(exy, vx, vy)[1])
         self.vr.append(self.mean_vr(exy, vx, vy))
 
-
         self.get_total_energy_and_entropy_on_gpu(tau, d_ev)
-        #E_total = self.total_energy(tau, bulk)
-        #print('Etotal=', E_total)
-        #self.energy.append(E_total)
-        #self.entropy.append(self.total_entropy(tau, exy, vx, vy))
 
         ed_cent = exy[i0, j0]
 
         self.edcent.append(ed_cent)
         self.Tcent.append(self.eos.f_T(ed_cent))
 
-        ecc1, ecc2 = self.ecc_vs_rapidity(bulk)
+        #ecc1, ecc2 = self.ecc_vs_rapidity(bulk)
+        ecc1, ecc2 = self.ecc_vs_rapidity_on_gpu(tau, d_ev)
         self.f_hdf5.create_dataset('bulk1d/eccp1_tau%s'%time_stamp, data = ecc1)
         self.f_hdf5.create_dataset('bulk1d/eccp2_tau%s'%time_stamp, data = ecc2)
 
@@ -175,56 +176,18 @@ class BulkInfo(object):
 
     def get_total_energy_and_entropy_on_gpu(self, tau, d_ev):
         NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
-        self.kernel_bulk.total_energy(self.queue, (NX, NY, NZ), None,
+        self.kernel_bulk.total_energy_and_entropy(self.queue, (NX, NY, NZ), None,
                 self.a_ed.data, self.a_entropy.data, d_ev,
                 self.eos_table, np.float32(tau)).wait()
 
-        #ed_in_lab_frame = self.a_ed.get()
-        #s_in_lab_frame = self.a_entropy.get()
-
         volum = tau * self.cfg.DX * self.cfg.DY * self.cfg.DZ
 
-        #e_total = ed_in_lab_frame.sum() * volum
-        #s_total = s_in_lab_frame.sum() * volum
         e_total = cl_array.sum(self.a_ed).get() * volum
         s_total = cl_array.sum(self.a_entropy).get() * volum
 
         self.energy.append(e_total)
         self.entropy.append(s_total)
         
-
-    def total_energy(self, tau, bulk):
-        '''get the total energy as a function of time'''
-        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
-
-        ed = bulk[:, :, :, 0]
-        vx = bulk[:, :, :, 1]
-        vy = bulk[:, :, :, 2]
-        vz = bulk[:, :, :, 3]
-        ed[ed<1.0E-10] = 1.0E-10
-        vr2 = vx*vx + vy*vy + vz*vz
-        vr2[vr2>1.0] = 0.999999
-        u0 = 1.0/np.sqrt(1.0 - vr2)
-        pr = self.eos.f_P(ed)
-        cosh_eta = np.cosh(self.z)
-        sinh_eta = np.sinh(self.z)
-        def times_cosh_eta(arr):
-            return arr * cosh_eta
-
-        def times_sinh_eta(arr):
-            return arr * sinh_eta
-
-        eta_direction = 2
-        ed_trans = (ed + pr) * u0 * (
-                          np.apply_along_axis(times_cosh_eta, eta_direction, u0)
-                          + vz * np.apply_along_axis(times_sinh_eta, eta_direction, u0)
-                          ) - np.apply_along_axis(times_cosh_eta, eta_direction, pr)
-
-        volum = tau * self.cfg.DX * self.cfg.DY * self.cfg.DZ
-
-        return ed_trans.sum() * volum
-
-
 
     def ecc_vs_rapidity(self, bulk):
         ''' bulk = self.h_ev.reshape(NX, NY, NZ, 4)'''
@@ -239,6 +202,13 @@ class BulkInfo(object):
             ecc1[k], ecc2[k] = self.eccp(ed, vx, vy, vz)
         return ecc1, ecc2
 
+    def ecc_vs_rapidity_on_gpu(self, tau, d_ev):
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        self.kernel_bulk.eccp_vs_rapidity(self.queue, (NZ*256,), (256,),
+                self.a_eccp1.data, self.a_eccp2.data, d_ev,
+                self.eos_table, np.float32(tau)).wait()
+
+        return self.a_eccp1.get(), self.a_eccp2.get()
         
     def save(self, viscous_on=False):
         # use absolute path incase call bulkinfo.save() from other directory
