@@ -496,7 +496,7 @@ __kernel void get_hypersf(__global real8  * d_sf,
 //and another one for pimn terms
 __kernel void visc_hypersf(__global real8  * d_sf,
                            __global real   * d_pi,
-                          __global int * num_of_sf,
+                           volatile __global int * num_of_sf,
                           __global real4 * d_ev_old,
                           __global real4 * d_ev_new,
                           __global real * d_pi_old,
@@ -585,29 +585,33 @@ __kernel void visc_hypersf(__global real8  * d_sf,
                                   -dtd*dxd*dyd*d_Sigma.s3,
                                    ev.s1, ev.s2, ev.s3, eta);
 
-            int id_ = atomic_inc(num_of_sf);
-                                   
-            d_sf[id_] = result;
-            d_pi[10*id_ + 0] = centroid_intp(d_pi_old, d_pi_new, mass_center, 0, i, j, k, 10);
-            d_pi[10*id_ + 1] = centroid_intp(d_pi_old, d_pi_new, mass_center, 1, i, j, k, 10);
-            d_pi[10*id_ + 2] = centroid_intp(d_pi_old, d_pi_new, mass_center, 2, i, j, k, 10);
-            d_pi[10*id_ + 3] = centroid_intp(d_pi_old, d_pi_new, mass_center, 3, i, j, k, 10);
-            d_pi[10*id_ + 4] = centroid_intp(d_pi_old, d_pi_new, mass_center, 4, i, j, k, 10);
-            d_pi[10*id_ + 5] = centroid_intp(d_pi_old, d_pi_new, mass_center, 5, i, j, k, 10);
-            d_pi[10*id_ + 6] = centroid_intp(d_pi_old, d_pi_new, mass_center, 6, i, j, k, 10);
-            d_pi[10*id_ + 7] = centroid_intp(d_pi_old, d_pi_new, mass_center, 7, i, j, k, 10);
-            d_pi[10*id_ + 8] = centroid_intp(d_pi_old, d_pi_new, mass_center, 8, i, j, k, 10);
-            d_pi[10*id_ + 9] = centroid_intp(d_pi_old, d_pi_new, mass_center, 9, i, j, k, 10);
+            // In e-b-e simulations, sometimes one hyper-surface element have mass_center.s0=nan
+            // Check this to remove this piece of freeze out hyper-surface 
+            if ( ! isnan(mass_center.s0) ) {
+                int id_ = atomic_inc(num_of_sf);
+                                       
+                d_sf[id_] = result;
+                d_pi[10*id_ + 0] = centroid_intp(d_pi_old, d_pi_new, mass_center, 0, i, j, k, 10);
+                d_pi[10*id_ + 1] = centroid_intp(d_pi_old, d_pi_new, mass_center, 1, i, j, k, 10);
+                d_pi[10*id_ + 2] = centroid_intp(d_pi_old, d_pi_new, mass_center, 2, i, j, k, 10);
+                d_pi[10*id_ + 3] = centroid_intp(d_pi_old, d_pi_new, mass_center, 3, i, j, k, 10);
+                d_pi[10*id_ + 4] = centroid_intp(d_pi_old, d_pi_new, mass_center, 4, i, j, k, 10);
+                d_pi[10*id_ + 5] = centroid_intp(d_pi_old, d_pi_new, mass_center, 5, i, j, k, 10);
+                d_pi[10*id_ + 6] = centroid_intp(d_pi_old, d_pi_new, mass_center, 6, i, j, k, 10);
+                d_pi[10*id_ + 7] = centroid_intp(d_pi_old, d_pi_new, mass_center, 7, i, j, k, 10);
+                d_pi[10*id_ + 8] = centroid_intp(d_pi_old, d_pi_new, mass_center, 8, i, j, k, 10);
+                d_pi[10*id_ + 9] = centroid_intp(d_pi_old, d_pi_new, mass_center, 9, i, j, k, 10);
 
 #ifdef CALC_VORTICITY_ON_SF
-            // the theraml vorticity on the freeze out hypersf
-            d_omega_sf[6*id_ + 0] = centroid_intp(d_omega_old, d_omega_new, mass_center, 0, i, j, k, 6);
-            d_omega_sf[6*id_ + 1] = centroid_intp(d_omega_old, d_omega_new, mass_center, 1, i, j, k, 6);
-            d_omega_sf[6*id_ + 2] = centroid_intp(d_omega_old, d_omega_new, mass_center, 2, i, j, k, 6);
-            d_omega_sf[6*id_ + 3] = centroid_intp(d_omega_old, d_omega_new, mass_center, 3, i, j, k, 6);
-            d_omega_sf[6*id_ + 4] = centroid_intp(d_omega_old, d_omega_new, mass_center, 4, i, j, k, 6);
-            d_omega_sf[6*id_ + 5] = centroid_intp(d_omega_old, d_omega_new, mass_center, 5, i, j, k, 6);
+                // the theraml vorticity on the freeze out hypersf
+                d_omega_sf[6*id_ + 0] = centroid_intp(d_omega_old, d_omega_new, mass_center, 0, i, j, k, 6);
+                d_omega_sf[6*id_ + 1] = centroid_intp(d_omega_old, d_omega_new, mass_center, 1, i, j, k, 6);
+                d_omega_sf[6*id_ + 2] = centroid_intp(d_omega_old, d_omega_new, mass_center, 2, i, j, k, 6);
+                d_omega_sf[6*id_ + 3] = centroid_intp(d_omega_old, d_omega_new, mass_center, 3, i, j, k, 6);
+                d_omega_sf[6*id_ + 4] = centroid_intp(d_omega_old, d_omega_new, mass_center, 4, i, j, k, 6);
+                d_omega_sf[6*id_ + 5] = centroid_intp(d_omega_old, d_omega_new, mass_center, 5, i, j, k, 6);
 #endif
+           }
         } // end surface calculation
     } // end boundary check
 }
