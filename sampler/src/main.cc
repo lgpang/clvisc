@@ -53,12 +53,12 @@ namespace hirano_method {
 
 int main(int argc, char ** argv) {
     if ( argc != 4 ) {
-        std::cout << "usage:" << std::endl;
-        std::cout << "./main hypersf_directory viscous_on_" << std::endl;
-        std::cout << "hypersf_directory: directory that has";
-        std::cout << "hypersf.dat and pimnsf.dat" << std::endl;
-        std::cout << "viscous_on: true to use viscous corrections" << std::endl;
-        std::cout << "force_decay: true to force decay" << std::endl;
+        std::cerr << "usage:" << std::endl;
+        std::cerr << "./main hypersf_directory viscous_on_" << std::endl;
+        std::cerr << "hypersf_directory: directory that has";
+        std::cerr << "hypersf.dat and pimnsf.dat" << std::endl;
+        std::cerr << "viscous_on: true to use viscous corrections" << std::endl;
+        std::cerr << "force_decay: true to force decay" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -78,21 +78,22 @@ int main(int argc, char ** argv) {
 
     Sampler sampler(path, viscous_on, force_decay);
 
-    std::cout << "initialize finished!" << std::endl;
+    std::clog << "initialize finished!" << std::endl;
 
     constexpr int number_of_events = 2000;
 
     for ( int nevent=0; nevent < number_of_events; nevent++ ) {
         sampler.sample_particles_from_hypersf();
-        std::cout << "event " << nevent << " finished\n";
+        std::clog << "event " << nevent << " finished\n";
     }
 
     int num_of_pion_plus = 0;
     std::stringstream fname_particle_list;
     fname_particle_list << path << "/mc_particle_list.dat";
-    std::ofstream fpmag(fname_particle_list.str());
 
-    fpmag << "#E px py pz Y pid eta\n";
+    //std::ofstream fpmag(fname_particle_list.str());
+
+    //std::cout << "#E px py pz Y pid eta\n";
     for ( const auto & par : sampler.particles_ ) {
         int nid = sampler.newpid[par.pdgcode];
         if ( sampler.list_hadrons_.at(nid).stable &&
@@ -105,16 +106,16 @@ int main(int argc, char ** argv) {
         double rapidity = 0.5*(std::log(momentum.x0()+momentum.x3())
                   - std::log(momentum.x0()-momentum.x3()));
 
-        fpmag << momentum.x0() << ' ' << momentum.x1() << ' '
+        std::cout << momentum.x0() << ' ' << momentum.x1() << ' '
             << momentum.x2() << ' ' << momentum.x3() << ' '
             << rapidity << ' ' << par.pdgcode << ' '
             << pseudo_rapidity << std::endl;
         }
         if ( nid == 1 ) num_of_pion_plus ++;
     }
-    fpmag.close();
+    //fpmag.close();
 
-    std::cout << "ntot for pion+ from sample=" << num_of_pion_plus/ \
+    std::clog << "ntot for pion+ from sample=" << num_of_pion_plus/ \
         static_cast<float>(number_of_events)  << std::endl;
 
     double pion_mass = 0.13957;
@@ -139,10 +140,10 @@ int main(int argc, char ** argv) {
                 fermion_boson_factor);
     }
 
-    std::cout << "ntot for pion+ from udotsigma=" << 
+    std::clog << "ntot for pion+ from udotsigma=" << 
         ntotal_pion_plus_from_nudotsigma << std::endl;
 
-    std::cout << "ntot for pion+ from hirano (no chemical potential)=" << 
+    std::clog << "ntot for pion+ from hirano (no chemical potential)=" << 
         ntotal_pion_plus_from_hirano << std::endl;
 
 }

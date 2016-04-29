@@ -88,7 +88,7 @@ Sampler::Sampler(const std::string & fpath,
     // density and decay chain in pdg05.dat
     double ratio = pion_ratio_after_reso_vs_before();
 
-    std::cout << "pion after reso over before ratio=" << ratio
+    std::clog << "pion after reso over before ratio=" << ratio
               << std::endl;
 }
 
@@ -103,7 +103,7 @@ void Sampler::read_hypersurface(const std::string & fpath) {
     std::string comments(buf);
     freezeout_temperature_ = std::stof(comments.substr(7));
 
-    std::cout << "Tfrz=" << freezeout_temperature_ << std::endl;
+    std::clog << "Tfrz=" << freezeout_temperature_ << std::endl;
 
     std::string hyper_surface = read_all(std::move(fin));
 
@@ -138,7 +138,7 @@ void Sampler::read_hypersurface(const std::string & fpath) {
         }
     }
 
-    std::cout << "num of sf = " << elements_.size() << std::endl;
+    std::clog << "num of sf = " << elements_.size() << std::endl;
 }
 
 // read pimn on the freeze out hyper surface
@@ -151,7 +151,7 @@ void Sampler::read_pimn_on_sf(const std::string & fpath) {
     std::string comments(buf);
     one_over_2TsqrEplusP_ = std::stof(comments.substr(20));
 
-    std::cout << "one_over_2TsqrEplusP_=" << one_over_2TsqrEplusP_
+    std::clog << "one_over_2TsqrEplusP_=" << one_over_2TsqrEplusP_
               << std::endl;
     std::string pimn_on_sf = read_all(std::move(fin));
 
@@ -307,7 +307,7 @@ void Sampler::read_pdg_table() {
                 for ( int j = 0; j < channel.num_of_daughters; j++ ) {
                     int nid = newpid[channel.daughters[j]];
                     ParticleType *daughter = &list_hadrons_[nid];
-                    //std::cout << "daughter->charge=" << daughter->charge << std::endl;
+                    //std::clog << "daughter->charge=" << daughter->charge << std::endl;
                     if ( daughter->charge != 0 ) {
                         anti_baryon_decay.daughters[j] = -daughter->pdgcode;
                     } else {
@@ -333,9 +333,9 @@ void Sampler::read_pdg_table() {
         newpid[ list_hadrons_[i].pdgcode ] =  i;
     }
 
-    std::cout<<"newpid of pion = "<<newpid[ 211 ]<<std::endl;
-    std::cout<<"newpid of proton = "<<newpid[ 2212 ]<<std::endl;
-    std::cout<<"newpid of -13334 = "<<newpid[ -13334 ]<<std::endl;
+    std::clog<<"newpid of pion = "<<newpid[ 211 ]<<std::endl;
+    std::clog<<"newpid of proton = "<<newpid[ 2212 ]<<std::endl;
+    std::clog<<"newpid of -13334 = "<<newpid[ -13334 ]<<std::endl;
 
 }
 
@@ -348,7 +348,7 @@ void Sampler::read_chemical_potential() {
             fin>>pid>>chemicalpotential;
             if( fin.eof() )break;  // eof() repeat the last line
             muB_[ pid ] = chemicalpotential;
-            std::cout<<"pid="<<pid<<" muB="<<muB_[pid]<<std::endl;
+            std::clog<<"pid="<<pid<<" muB="<<muB_[pid]<<std::endl;
         }
         fin.close();
     } else {
@@ -542,7 +542,7 @@ namespace {
                                         fermion_boson_factor);
 
                             if ( f0 > 1.0 ) {
-                                std::cout << "(F) After f0=" << f0 << "  > 1.0" << std::endl;
+                                std::clog << "(F) After f0=" << f0 << "  > 1.0" << std::endl;
                             }
 
                             weight_visc *= (1.0 + regulation * (1.0 - f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
@@ -555,7 +555,7 @@ namespace {
                                         fermion_boson_factor);
 
                             if ( f0 > 1.1 ) {
-                                std::cout << "(B) f0=" << f0 << "  > 1.0" << std::endl;
+                                std::clog << "(B) f0=" << f0 << "  > 1.0" << std::endl;
                             }
                             weight_visc *= (1.0 + regulation * (1.0 + f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
                             weight_visc /= (1.0+ regulation *2.1*p0_star*p0_star*
@@ -565,15 +565,15 @@ namespace {
 
                     while_loop_num ++;
                     if ( while_loop_num > 10000 &&  weight_visc <= 0.0 ) {
-                      std::cout << "more than 10000 loops for this cell, skip it ..." << std::endl;
-                      std::cout << "smaller than 0 weight_visc=" << weight_visc << std::endl;
-                      std::cout << "pdotsigma=" << pdotsigma << std::endl;
-                      std::cout << "p0_star=" << p0_star << std::endl;
-                      std::cout << "sigmamax=" << sigmamax << std::endl;
-                      std::cout << "momentum_lrf=" << momentum_in_lrf << std::endl;
-                      std::cout << "sigma_lrf=" << sigma_lrf << std::endl;
-                      std::cout << "mass = " << mass << std::endl;
-                      std::cout << std::endl;
+                      std::clog << "more than 10000 loops for this cell, skip it ..." << std::endl;
+                      std::clog << "smaller than 0 weight_visc=" << weight_visc << std::endl;
+                      std::clog << "pdotsigma=" << pdotsigma << std::endl;
+                      std::clog << "p0_star=" << p0_star << std::endl;
+                      std::clog << "sigmamax=" << sigmamax << std::endl;
+                      std::clog << "momentum_lrf=" << momentum_in_lrf << std::endl;
+                      std::clog << "sigma_lrf=" << sigma_lrf << std::endl;
+                      std::clog << "mass = " << mass << std::endl;
+                      std::clog << std::endl;
                       break;
                     }
 
@@ -637,7 +637,7 @@ namespace {
 
             DecayChannel channel = reso_type.decay_channels.at(channel_id);
 
-            // std::cout << (channel.pidR == reso_type.pdgcode) << std::endl;
+            // std::clog << (channel.pidR == reso_type.pdgcode) << std::endl;
             int n = channel.num_of_daughters;
             if ( n == 2 ) {
                 two_body_decay(reso_data, channel, unstable_daughters);
@@ -670,10 +670,10 @@ namespace {
         double mb = outgoing_b->mass;
 
         //if ( ma + mb > mR ) {
-        //    std::cout << "pidR" << channel.pidR << std::endl;
-        //    std::cout << "pid_a=" << channel.daughters[0] << std::endl;
-        //    std::cout << "pid_b=" << channel.daughters[1] << std::endl;
-        //    std::cout << ma << "+" << mb << ">" << mR << std::endl;
+        //    std::clog << "pidR" << channel.pidR << std::endl;
+        //    std::clog << "pid_a=" << channel.daughters[0] << std::endl;
+        //    std::clog << "pid_b=" << channel.daughters[1] << std::endl;
+        //    std::clog << ma << "+" << mb << ">" << mR << std::endl;
         //}
         
         // notice: add this in the code drive some 3-body decay channels
@@ -823,9 +823,9 @@ namespace {
         //                   c_data.momentum;
         
         // if (std::abs(ptot.x0() - total_energy) > really_small) {
-        //     std::cout << "1->3 energy not conserved! Before: ";
-        //     std::cout << total_energy << " After: " << ptot.x0();
-        //     std::cout << std::endl;
+        //     std::clog << "1->3 energy not conserved! Before: ";
+        //     std::clog << total_energy << " After: " << ptot.x0();
+        //     std::clog << std::endl;
         // }
 
         a_data.pdgcode = outgoing_a->pdgcode;
@@ -906,7 +906,7 @@ namespace {
                 }
             } while (!resos.empty());
 
-            std::cout << "density[" << particle_type.pdgcode
+            std::clog << "density[" << particle_type.pdgcode
                       << "]=" << densities_[i] << std::endl;
 
             i++;
