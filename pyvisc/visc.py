@@ -6,6 +6,7 @@
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
+import pyopencl.array as cl_array
 import os
 import sys
 from time import time
@@ -50,6 +51,9 @@ class CLVisc(object):
         self.h_omega = np.zeros(6*self.size, self.cfg.real)
         self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes),
                         cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes)]
+
+        # in case one wants to save omega^{mu} vector
+        self.a_omega_mu = cl_array.empty(self.queue, 4*self.size, self.cfg.real)
 
         # get the vorticity on the freeze out hypersurface
         self.d_omega_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=9000000*self.cfg.sz_real)
@@ -249,18 +253,30 @@ class CLVisc(object):
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
 
-    def get_vorticity(self, loop, save_data=False):
-        '''calc vorticity vector omega^{mu} and store them '''
+    def get_vorticity(self, save_data=False):
+        '''calc vorticity tensor Omega^{mu nu} = da (Tu_b) - db (Tu_a)
+        Params:
+            :param save_data: default False, set to True to save omega^{mu} vector
+        '''
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
         self.kernel_vorticity.omega(self.queue, (NX, NY, NZ), None,
-                self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_omega[1],
+                self.ideal.d_ev[0], self.ideal.d_ev[1], self.d_omega[1],
                 self.eos_table, self.ideal.tau).wait()
 
         if save_data:
-            cl.enqueue_copy(self.queue, self.h_omega, self.d_omega[1]).wait()
+            self.kernel_vorticity.omega_mu(self.queue, (NX*NY*NZ, ), None,
+                self.a_omega_mu.data, self.ideal.d_ev[1], self.d_omega[1],
+                self.cfg.real(self.ideal.efrz), self.ideal.tau).wait()
+
             path_out = os.path.abspath(self.cfg.fPathOut)
-            np.savetxt(path_out + '/omega_munu_%d.dat'%loop, h_omega.reshape(NX*NY*NZ, 6),
-                header='omega^{01, 02, 03, 12, 13, 23}')
+
+            fname = ('omega_mu_tau%s'%self.ideal.tau).replace('.', 'p') + '.dat'
+
+            omega_mu = self.a_omega_mu.get()
+
+            np.savetxt(os.path.join(path_out, fname),
+                       omega_mu.reshape(NX*NY*NZ, 4),
+                       header='omega^{t, x, y, z} = Omega^{mu nu} u_{nu}')
 
     def update_udiff(self, d_ev0, d_ev1):
         '''get d_udiff = u_{visc}^{n} - u_{visc}^{n-1}, it is possible to 
@@ -429,7 +445,7 @@ class CLVisc(object):
 
             # add the thermal vorticity calculation here
             if loop % self.cfg.ntskip == 0 and save_vorticity:
-                self.get_vorticity(loop, save_data=False)
+                self.get_vorticity(save_data=True)
 
             loop = loop + 1
 
