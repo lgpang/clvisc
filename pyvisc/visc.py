@@ -299,7 +299,7 @@ class CLVisc(object):
             cl.enqueue_copy(self.queue, self.d_pi_old, self.d_pi[1]).wait()
 
             # initialize the vorticity vector omega_mu at tau=0 with 0s
-            zeros = np.zeros((self.size, 4), self.cfg.real)
+            zeros = np.zeros((self.size, 6), self.cfg.real)
             cl.enqueue_copy(self.queue, self.d_omega[0], zeros).wait()
 
             self.tau_old = self.cfg.TAU0
