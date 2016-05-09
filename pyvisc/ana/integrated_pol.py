@@ -107,18 +107,24 @@ def fin_grid_mid_rapidity(etaos='0p08', system='auau200', cent='20_30'):
 
     path = ''
     if system == 'auau200':
-        path = '/lustre/nyx/hyihp/lpang/{system}_results_check/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
+        #path = '/lustre/nyx/hyihp/lpang/{system}_results_check/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
+        path = '/lustre/nyx/hyihp/lpang/new_polarization/{system}_results/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
     else:
-        path = '/lustre/nyx/hyihp/lpang/{system}_results/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
+        #path = '/lustre/nyx/hyihp/lpang/new_polarization/{system}_results/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
+        path = '/lustre/nyx/hyihp/lpang/new_polarization/{system}_results/cent{cent}/etas{etaos}'.format(etaos=etaos, system=system, cent=cent)
 
     update_h5(0, 650, f_h5name, path, rapidity, create=True)
 
+fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0', cent='20_30')
+fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08', cent='0_5')
+fin_grid_mid_rapidity(system='auau200', etaos='0p08', cent='0_5')
+fin_grid_mid_rapidity(system='auau62p4', etaos='0p08', cent='0_5')
+fin_grid_mid_rapidity(system='auau39', etaos='0p08', cent='0_5')
 
-fin_grid_mid_rapidity(system='auau200', etaos='0p0')
-fin_grid_mid_rapidity(system='auau200', etaos='0p08')
-
-fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p02')
-fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p04')
+fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08', cent='20_30')
+fin_grid_mid_rapidity(system='auau200', etaos='0p08', cent='20_30') 
+fin_grid_mid_rapidity(system='auau62p4', etaos='0p08', cent='20_30')
+fin_grid_mid_rapidity(system='auau39', etaos='0p08', cent='20_30')
 
 #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0')
 #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08')
