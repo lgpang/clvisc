@@ -35,7 +35,7 @@ class CLVisc(object):
         # initialize the d_pi^{mu nu} with 0
         self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
                      cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
-                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0) ]
+                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0)]
 
         self.d_IS_src = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
@@ -49,8 +49,8 @@ class CLVisc(object):
         # d_omega thermal vorticity vector omega^{mu nu} = epsilon^{mu nu a b} d_a (beta u_b)
         # anti-symmetric 6 independent components
         self.h_omega = np.zeros(6*self.size, self.cfg.real)
-        self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes),
-                        cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes)]
+        self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_omega),
+                        cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_omega)]
 
         # in case one wants to save omega^{mu} vector
         self.a_omega_mu = cl_array.empty(self.queue, 4*self.size, self.cfg.real)
@@ -265,7 +265,8 @@ class CLVisc(object):
 
         if save_data:
             self.kernel_vorticity.omega_mu(self.queue, (NX*NY*NZ, ), None,
-                self.a_omega_mu.data, self.ideal.d_ev[1], self.d_omega[1],
+                self.a_omega_mu.data, self.ideal.d_ev[1],
+                self.d_omega[1], self.eos_table,
                 self.cfg.real(self.ideal.efrz), self.ideal.tau).wait()
 
             path_out = os.path.abspath(self.cfg.fPathOut)
@@ -297,10 +298,6 @@ class CLVisc(object):
             cl.enqueue_copy(self.queue, self.ideal.d_ev_old,
                             self.ideal.d_ev[1]).wait()
             cl.enqueue_copy(self.queue, self.d_pi_old, self.d_pi[1]).wait()
-
-            # initialize the vorticity vector omega_mu at tau=0 with 0s
-            zeros = np.zeros((self.size, 6), self.cfg.real)
-            cl.enqueue_copy(self.queue, self.d_omega[0], zeros).wait()
 
             self.tau_old = self.cfg.TAU0
         elif (n % ntskip == 0) or is_finished:
@@ -462,12 +459,12 @@ def main():
     from config import cfg, write_config
     cfg.NX = 361
     cfg.NY = 361
-    cfg.NZ = 101
+    cfg.NZ = 181
 
-    cfg.DT = 0.01
+    cfg.DT = 0.005
     cfg.DX = 0.08
     cfg.DY = 0.08
-    cfg.DZ = 0.15
+    cfg.DZ = 0.08
     cfg.ImpactParameter = 3.54
 
     cfg.A = 208

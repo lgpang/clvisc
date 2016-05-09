@@ -96,6 +96,7 @@ __kernel void omega_mu(
 	__global real4 * d_omega_mu,
     __global real4 * d_ev,
 	__global real  * d_omega,
+    read_only image2d_t eos_table,
     const real efrz,
 	const real tau)
 {
@@ -116,15 +117,18 @@ __kernel void omega_mu(
     // omega^x = u_t * Omega^{x t} + u_x * Omega^{x x} + u_y * Omega^{x y} + u_z * Omega^{x z}
     // omega^y = u_t * Omega^{y t} + u_x * Omega^{y x} + u_y * Omega^{y y} + u_z * Omega^{y z}
     // omega^z = u_t * Omega^{z t} + u_x * Omega^{z x} + u_y * Omega^{z y} + u_z * Omega^{z z}
-    real4 omega_mu = (real4)(umu.s0*0.0f - umu.s1*omega_tx - umu.s2 * omega_ty - umu.s3*omega_tz,
+
+    //real4 omega_mu = (real4)(umu.s0*0.0f - umu.s1*omega_tx - umu.s2 * omega_ty - umu.s3*omega_tz,
+    real4 omega_mu = (real4)(T(ev.s0, eos_table),
                            - umu.s0*omega_tx - umu.s1*0.0f - umu.s2 * omega_xy - umu.s3*omega_xz,
                            - umu.s0*omega_ty + umu.s1*omega_xy - umu.s2 * 0.0f - umu.s3*omega_yz,
                            - umu.s0*omega_tz + umu.s1*omega_xz + umu.s2 * omega_yz - umu.s3*0.0f);
 
-    if ( ev.s0 < 0.001 * efrz ) {
+    if ( ev.s0 < 0.1 * efrz ) {
         omega_mu = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
     }
 
+    // store the energy density to the first element
     d_omega_mu[I] = omega_mu;
 
 }
