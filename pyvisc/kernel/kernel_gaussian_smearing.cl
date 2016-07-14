@@ -120,8 +120,9 @@ __kernel void smearing(
 }
 
 
-__kernel void force_bjorken(
+__kernel void change_longitudinal_profile(
     __global real4  * d_EdV, \
+    __global real  * d_longitudinal_profile, \
     const int size )
 {
   int i = get_global_id(0);
@@ -130,6 +131,9 @@ __kernel void force_bjorken(
   int idx = i*NY*NZ + j*NZ + k;
   int mid_rapidity = i*NY*NZ + j*NZ + NZ/2;
   if ( idx < size ) {
-      d_EdV[idx] = d_EdV[mid_rapidity];
+      real4 edv = d_EdV[mid_rapidity];
+
+      // is there problem when read write to the same NZ/2 cell?
+      d_EdV[idx] = (real4)(d_longitudinal_profile[k] * edv.s0, edv.s123);
   }
 }

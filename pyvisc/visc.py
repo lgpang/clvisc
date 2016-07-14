@@ -153,7 +153,8 @@ class CLVisc(object):
         Smearing(self.cfg, self.ctx, self.queue, self.compile_options,
             self.ideal.d_ev[1], fname, self.eos_table, SIGR, SIGZ, KFACTOR)
 
-    def smear_from_p4x4(self, p4x4, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0, force_bjorken=False):
+    def smear_from_p4x4(self, p4x4, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0,
+            force_bjorken=False, longitudinal_profile=None):
         '''generate initial condition from a list of partons given by p4x4,
         SIGR: the gaussian smearing width in transverse direction
         SIGZ: the gaussian smearing width along longitudinal direction
@@ -161,7 +162,8 @@ class CLVisc(object):
         force_bjorken: True to switch off longitudinal fluctuation (use mid-rapidity only)'''
         from smearing import SmearingP4X4
         SmearingP4X4(self.cfg, self.ctx, self.queue, self.compile_options,
-            self.ideal.d_ev[1], p4x4, self.eos_table, SIGR, SIGZ, KFACTOR, force_bjorken)
+            self.ideal.d_ev[1], p4x4, self.eos_table, SIGR, SIGZ, KFACTOR,
+            force_bjorken, longitudinal_profile)
 
 
 
@@ -442,7 +444,7 @@ class CLVisc(object):
 
             # add the thermal vorticity calculation here
             if loop % self.cfg.ntskip == 0 and save_vorticity:
-                self.get_vorticity(save_data=True)
+                self.get_vorticity(save_data=False)
 
             loop = loop + 1
 
@@ -457,11 +459,11 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg, write_config
-    cfg.NX = 361
-    cfg.NY = 361
-    cfg.NZ = 181
+    cfg.NX = 256
+    cfg.NY = 256
+    cfg.NZ = 256
 
-    cfg.DT = 0.005
+    cfg.DT = 0.01
     cfg.DX = 0.08
     cfg.DY = 0.08
     cfg.DZ = 0.08
@@ -469,31 +471,38 @@ def main():
 
     cfg.A = 208
     cfg.Ra = 6.62
-    cfg.Edmax = 98
+    cfg.Edmax = 30
     cfg.Eta = 0.546
     cfg.Si0 = 6.4
 
 
+    cfg.Eta_flat = 3.0
+    cfg.Eta_gw = 0.6
+
+
     cfg.IEOS = 1
-    cfg.ntskip = 30
+    cfg.ntskip = 60
     cfg.nxskip = 4
     cfg.nyskip = 4
-    cfg.nzskip = 2
+    cfg.nzskip = 4
     cfg.TFRZ = 0.137
 
     cfg.Hwn = 0.95
 
     cfg.ETAOS = 0.08
-    cfg.fPathOut = '../results/pbpb_cent0_5_pce165/'
+    cfg.fPathOut = '../results/pbpb_cent0_5_vs_heinz/'
     cfg.save_to_hdf5 = True
 
     write_config(cfg)
 
-    visc = CLVisc(cfg, gpu_id=1)
+    visc = CLVisc(cfg, gpu_id=2)
 
     visc.optical_glauber_ini()
-    visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
-                save_vorticity=False)
+    #visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
+    #            save_vorticity=False)
+    visc.evolve(max_loops=2000, save_hypersf=False, save_bulk=False,
+            force_run_to_maxloop=False, save_vorticity=False)
+
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
 
