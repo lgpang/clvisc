@@ -5,6 +5,9 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
+# the InterpolatedUnivariateSpline works for both interpolation and extrapolation
+from scipy.interpolate import InterpolatedUnivariateSpline
+
 class Eos(object):
     '''create eos table for hydrodynamic simulation;
     the (ed, pr, T, s) is stored in image2d buffer
@@ -22,6 +25,8 @@ class Eos(object):
         elif IEOS == 4:
             '''use equal temperature interval dT'''
             self.lattice_ce_mod()
+        elif IEOS == 5:
+            self.eosq()
 
 
 
@@ -42,13 +47,48 @@ class Eos(object):
         self.ed_step = 0.01
         self.num_of_ed = 200000
 
+    def eosq(self):
+        '''first order phase transition '''
+        import os
+        cwd, cwf = os.path.split(__file__)
+        # data in eos_table/eosq are all MeV
+        eosq = np.loadtxt(os.path.join(cwd, 'eos_table/eosq/eos_final_extended.dat'
+                                      ), delimiter=',')
+        size = 20000
+        self.ed = eosq[:size, 1] * 0.001
+        self.pr = eosq[:size, 2] * 0.001
+        self.T =  eosq[:size, 3] * 0.001
+        self.s =  (self.ed + self.pr) / self.T
 
-    def eos_func_from_interp1d(self):
+        self.ed_start = 0.0
+        self.ed_step = 0.025
+        self.num_of_ed = 20001
+        self.eos_func_from_interp1d()
+
+        HRG_UPPER_BOUNDER = 21
+        QGP_LOWER_BOUNDER = 77
+        f_ed_hrg = interp1d(self.T[:HRG_UPPER_BOUNDER], self.ed[:HRG_UPPER_BOUNDER])
+
+        interp_order = 1
+
+        f_ed_qgp = InterpolatedUnivariateSpline(self.ed[QGP_LOWER_BOUNDER:],
+                self.ed[QGP_LOWER_BOUNDER:], k=interp_order)
+
+        def mixed_phase(T):
+            if T <= self.T[HRG_UPPER_BOUNDER]:
+                return f_ed_hrg(T)
+            elif T >= self.T[QGP_LOWER_BOUNDER]:
+                return f_ed_qgp(T)
+            else:
+                return self.T[HRG_UPPER_BOUNDER + 1]
+        self.f_ed = mixed_phase
+
+    def eos_func_from_interp1d(self, order=1):
         # construct interpolation functions
-        self.f_ed = interp1d(self.T, self.ed)
-        self.f_T = interp1d(self.ed, self.T)
-        self.f_P = interp1d(self.ed, self.pr)
-        self.f_S = interp1d(self.ed, self.s)
+        self.f_ed = InterpolatedUnivariateSpline(self.T, self.ed, k=order)
+        self.f_T = InterpolatedUnivariateSpline(self.ed, self.T, k=order)
+        self.f_P = InterpolatedUnivariateSpline(self.ed, self.pr, k=order)
+        self.f_S = InterpolatedUnivariateSpline(self.ed, self.s, k=order)
 
     def lattice_pce(self):
         import os
@@ -169,5 +209,13 @@ class Eos(object):
      
 
 if __name__ == '__main__':
-    eos = Eos(0)
-    print eos.f_ed(0.63)
+    eos = Eos(5)
+    #print eos.f_ed(0.63)
+    #print eos.f_ed(0.137)
+    import matplotlib.pyplot as plt
+    ed = np.linspace(0, 3, 1000)
+
+    print(eos.f_ed(0.137))
+    plt.plot(ed, eos.f_S(ed))
+    plt.show()
+    
