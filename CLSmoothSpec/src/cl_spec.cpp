@@ -154,7 +154,7 @@ void Spec::ReadMuB( const std::string & dataFile )
     cl_int pid;
     cl_real chemicalpotential;
     std::ifstream fin( dataFile );
-    if( fin.is_open() ){
+    if(fin.is_open()){
         while( fin.good() ){
             fin>>pid>>chemicalpotential;
             if( fin.eof() )break;  // eof() repeat the last line
@@ -182,11 +182,17 @@ void Spec::ReadHyperSF( const std::string & dataFile )
         while( fin.good() ){
             fin>>dA0>>dA1>>dA2>>dA3>>vx>>vy>>vh>>etas;
             if( fin.eof() )break;  // eof() repeat the last line
+            if ( isnan(dA0) || isnan(dA1) || isnan(dA2) || isnan(dA3) ) {
+                dA0 = 0.0; dA1 = 0.0; dA2 = 0.0; dA3=0.0;
+                vx = 0.0; vy = 0.0; vh = 0.0; etas = 0.0;
+                std::cout << "nan in hypersf data file!" << std::endl;
+            }
             h_SF.push_back( (cl_real8){ dA0, dA1, dA2, dA3, vx, vy, vh, etas } );
         }
         fin.close();
         SizeSF = h_SF.size();
         std::cout<<"#hypersf size="<<SizeSF<<std::endl;
+        std::cout<<"#Tfrz = "<< Tfrz << std::endl;
     }
     else{
         std::cerr<<"#Can't open hyper-surface data file!\n";
@@ -209,6 +215,7 @@ void Spec::ReadPimnSF(const std::string & piFile)
             }
             if( fin2.eof() )break;  // eof() repeat the last line
             for ( int i=0; i < 10; i++ ) {
+                if ( isnan(pimn[i]) ) pimn[i] = 0.0;
                 h_pi.push_back(pimn[i]); 
             }
         }
@@ -266,7 +273,11 @@ void Spec::ReadParticles(char * particle_data_table)
         exit(0);
     }
 
-    ReadMuB("../Resource/ChemForReso.dat");
+
+    //char chemical_datafile[256];
+    //sprintf(chemical_datafile, "%s/ChemForReso.dat", DataPath.c_str());
+    //std::cout << chemical_datafile << std::endl;
+    //ReadMuB(chemical_datafile);
 
 
     CParticle antiB;//anti-baryon

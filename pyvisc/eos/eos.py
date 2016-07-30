@@ -48,47 +48,26 @@ class Eos(object):
         self.num_of_ed = 200000
 
     def eosq(self):
-        '''first order phase transition '''
-        import os
-        cwd, cwf = os.path.split(__file__)
-        # data in eos_table/eosq are all MeV
-        eosq = np.loadtxt(os.path.join(cwd, 'eos_table/eosq/eos_final_extended.dat'
-                                      ), delimiter=',')
-        size = 20000
-        self.ed = eosq[:size, 1] * 0.001
-        self.pr = eosq[:size, 2] * 0.001
-        self.T =  eosq[:size, 3] * 0.001
-        self.s =  (self.ed + self.pr) / self.T
+        import eosq as eosq
+        self.ed = eosq.ed
+        self.pr = eosq.pr
+        self.T = eosq.T
+        self.s = eosq.s
+        self.ed_start = eosq.ed_start
+        self.ed_step = eosq.ed_step
+        self.num_of_ed = eosq.num_ed
+        self.f_P = eosq.f_P
+        self.f_T = eosq.f_T
+        self.f_S = eosq.f_S
+        self.f_ed = eosq.f_ed
 
-        self.ed_start = 0.0
-        self.ed_step = 0.025
-        self.num_of_ed = 20001
-        self.eos_func_from_interp1d()
-
-        HRG_UPPER_BOUNDER = 21
-        QGP_LOWER_BOUNDER = 77
-        f_ed_hrg = interp1d(self.T[:HRG_UPPER_BOUNDER], self.ed[:HRG_UPPER_BOUNDER])
-
-        interp_order = 1
-
-        f_ed_qgp = InterpolatedUnivariateSpline(self.ed[QGP_LOWER_BOUNDER:],
-                self.ed[QGP_LOWER_BOUNDER:], k=interp_order)
-
-        def mixed_phase(T):
-            if T <= self.T[HRG_UPPER_BOUNDER]:
-                return f_ed_hrg(T)
-            elif T >= self.T[QGP_LOWER_BOUNDER]:
-                return f_ed_qgp(T)
-            else:
-                return self.T[HRG_UPPER_BOUNDER + 1]
-        self.f_ed = mixed_phase
 
     def eos_func_from_interp1d(self, order=1):
         # construct interpolation functions
-        self.f_ed = InterpolatedUnivariateSpline(self.T, self.ed, k=order)
-        self.f_T = InterpolatedUnivariateSpline(self.ed, self.T, k=order)
-        self.f_P = InterpolatedUnivariateSpline(self.ed, self.pr, k=order)
-        self.f_S = InterpolatedUnivariateSpline(self.ed, self.s, k=order)
+        self.f_ed = InterpolatedUnivariateSpline(self.T, self.ed, k=order, ext=0)
+        self.f_T = InterpolatedUnivariateSpline(self.ed, self.T, k=order, ext=0)
+        self.f_P = InterpolatedUnivariateSpline(self.ed, self.pr, k=order, ext=0)
+        self.f_S = InterpolatedUnivariateSpline(self.ed, self.s, k=order, ext=0)
 
     def lattice_pce(self):
         import os
@@ -213,9 +192,9 @@ if __name__ == '__main__':
     #print eos.f_ed(0.63)
     #print eos.f_ed(0.137)
     import matplotlib.pyplot as plt
-    ed = np.linspace(0, 3, 1000)
+    ed = np.linspace(400, 600, 1000)
 
     print(eos.f_ed(0.137))
-    plt.plot(ed, eos.f_S(ed))
+    plt.plot(ed, eos.f_P(ed))
     plt.show()
     
