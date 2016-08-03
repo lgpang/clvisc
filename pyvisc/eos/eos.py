@@ -5,6 +5,9 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
+# the InterpolatedUnivariateSpline works for both interpolation and extrapolation
+from scipy.interpolate import InterpolatedUnivariateSpline
+
 class Eos(object):
     '''create eos table for hydrodynamic simulation;
     the (ed, pr, T, s) is stored in image2d buffer
@@ -22,6 +25,8 @@ class Eos(object):
         elif IEOS == 4:
             '''use equal temperature interval dT'''
             self.lattice_ce_mod()
+        elif IEOS == 5:
+            self.eosq()
 
 
 
@@ -42,13 +47,27 @@ class Eos(object):
         self.ed_step = 0.01
         self.num_of_ed = 200000
 
+    def eosq(self):
+        import eosq as eosq
+        self.ed = eosq.ed
+        self.pr = eosq.pr
+        self.T = eosq.T
+        self.s = eosq.s
+        self.ed_start = eosq.ed_start
+        self.ed_step = eosq.ed_step
+        self.num_of_ed = eosq.num_ed
+        self.f_P = eosq.f_P
+        self.f_T = eosq.f_T
+        self.f_S = eosq.f_S
+        self.f_ed = eosq.f_ed
 
-    def eos_func_from_interp1d(self):
+
+    def eos_func_from_interp1d(self, order=1):
         # construct interpolation functions
-        self.f_ed = interp1d(self.T, self.ed)
-        self.f_T = interp1d(self.ed, self.T)
-        self.f_P = interp1d(self.ed, self.pr)
-        self.f_S = interp1d(self.ed, self.s)
+        self.f_ed = InterpolatedUnivariateSpline(self.T, self.ed, k=order, ext=0)
+        self.f_T = InterpolatedUnivariateSpline(self.ed, self.T, k=order, ext=0)
+        self.f_P = InterpolatedUnivariateSpline(self.ed, self.pr, k=order, ext=0)
+        self.f_S = InterpolatedUnivariateSpline(self.ed, self.s, k=order, ext=0)
 
     def lattice_pce(self):
         import os
@@ -169,5 +188,13 @@ class Eos(object):
      
 
 if __name__ == '__main__':
-    eos = Eos(0)
-    print eos.f_ed(0.63)
+    eos = Eos(5)
+    #print eos.f_ed(0.63)
+    #print eos.f_ed(0.137)
+    import matplotlib.pyplot as plt
+    ed = np.linspace(400, 600, 1000)
+
+    print(eos.f_ed(0.137))
+    plt.plot(ed, eos.f_P(ed))
+    plt.show()
+    

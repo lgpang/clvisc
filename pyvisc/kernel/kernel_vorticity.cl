@@ -9,8 +9,7 @@
 // 2 * omega^{x z} = -(dtuy - dyut)
 // 2 * omega^{y z} = dtux - dxut
 
-// Covariant derivatives?
-
+// Covariant derivatives == normal derivatives for omega^{mu nu}
 
 // calc beta*u_mu from (ed, vx, vy, tau^2*veta) float4 vector
 // (u_t, u_x, u_y, u_eta) where u_eta = - gamma*v_eta
@@ -18,6 +17,9 @@ inline real4 ubeta(real4 ev, read_only image2d_t eos_table)
 {
     real4 gmn = (real4)(1.0f, -1.0f, -1.0f, -1.0f);
     return gmn*umu4(ev)/T(ev.s0, eos_table);
+
+    // for kinetic vorticity, use the following
+    //return gmn*umu4(ev);
 }
 
 // wrapper for address index
@@ -86,4 +88,47 @@ __kernel void omega(
     d_omega[6*address(I,J,K)+3] = 0.5f * hbarc*(dudt.s3 - dudz.s0);
     d_omega[6*address(I,J,K)+4] = 0.5f * hbarc*(dudy.s0 - dudt.s2);
     d_omega[6*address(I,J,K)+5] = 0.5f * hbarc*(dudt.s1 - dudx.s0);
+}
+
+
+// output: d_omega_mu = (omega^tau, omega^x, omega^y, omega^eta)
+__kernel void omega_mu(
+	__global real4 * d_omega_mu,
+    __global real4 * d_ev,
+	__global real  * d_omega,
+    read_only image2d_t eos_table,
+    const real efrz,
+	const real tau)
+{
+    int I = get_global_id(0);
+
+    real4 ev = d_ev[I];
+    real4 umu = umu4(ev);
+
+    real omega_tx = d_omega[6*I + 0];
+    real omega_ty = d_omega[6*I + 1];
+    real omega_tz = d_omega[6*I + 2];
+    real omega_xy = d_omega[6*I + 3];
+    real omega_xz = d_omega[6*I + 4];
+    real omega_yz = d_omega[6*I + 5];
+
+    // omega4 = \omega^{\mu} = \Omega^{mu nu} u_{nu} 
+    // omega^t = u_t * Omega^{t t} + u_x * Omega^{t x} + u_y * Omega^{t y} + u_z * Omega^{t z}
+    // omega^x = u_t * Omega^{x t} + u_x * Omega^{x x} + u_y * Omega^{x y} + u_z * Omega^{x z}
+    // omega^y = u_t * Omega^{y t} + u_x * Omega^{y x} + u_y * Omega^{y y} + u_z * Omega^{y z}
+    // omega^z = u_t * Omega^{z t} + u_x * Omega^{z x} + u_y * Omega^{z y} + u_z * Omega^{z z}
+
+    //real4 omega_mu = (real4)(umu.s0*0.0f - umu.s1*omega_tx - umu.s2 * omega_ty - umu.s3*omega_tz,
+    real4 omega_mu = (real4)(T(ev.s0, eos_table),
+                           - umu.s0*omega_tx - umu.s1*0.0f - umu.s2 * omega_xy - umu.s3*omega_xz,
+                           - umu.s0*omega_ty + umu.s1*omega_xy - umu.s2 * 0.0f - umu.s3*omega_yz,
+                           - umu.s0*omega_tz + umu.s1*omega_xz + umu.s2 * omega_yz - umu.s3*0.0f);
+
+    if ( ev.s0 < 0.1 * efrz ) {
+        omega_mu = (real4) (0.0f, 0.0f, 0.0f, 0.0f);
+    }
+
+    // store the energy density to the first element
+    d_omega_mu[I] = omega_mu;
+
 }

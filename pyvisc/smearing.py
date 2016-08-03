@@ -47,23 +47,24 @@ class Smearing(object):
 
     def __loadAndBuildCLPrg(self, ctx, cfg, SIGR, SIGZ, KFACTOR):
         #load and build *.cl programs with compile self.compile_options
-        glauber_defines = list(self.compile_options)
-        glauber_defines.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
-        glauber_defines.append('-D {key}={value}f'.format(key='SIGR', value=SIGR))
-        glauber_defines.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
-        glauber_defines.append('-D {key}={value}f'.format(key='KFACTOR', value=KFACTOR))
-        print(glauber_defines)
+        smearing_options = list(self.compile_options)
+        smearing_options.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
+        smearing_options.append('-D {key}={value}f'.format(key='SIGR', value=SIGR))
+        smearing_options.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
+        smearing_options.append('-D {key}={value}f'.format(key='KFACTOR', value=KFACTOR))
+        print(smearing_options)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing.cl'), 'r') as f:
             prg_src = f.read()
             self.prg = cl.Program(ctx, prg_src).build(
-                                             options=glauber_defines)
+                                             options=smearing_options)
 
 
 
 class SmearingP4X4(object):
     '''The pyopencl version for gaussian smearing ini condition'''
     def __init__(self, cfg, ctx, queue, compile_options, d_ev1,
-        p4x4, eos_table, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0, force_bjorken=False):
+        p4x4, eos_table, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0,
+        force_bjorken=False, longitudinal_profile=None):
         '''initialize d_ev1 with partons p4x4, which is one size*8 np.array '''
         self.cwd, cwf = os.path.split(__file__)
         self.compile_options = compile_options
@@ -84,25 +85,38 @@ class SmearingP4X4(object):
         NY5 = roundUp(cfg.NY, 5)
         NZ5 = roundUp(cfg.NZ, 5)
         self.prg.smearing(queue, (NX5, NY5, NZ5), (5,5,5),
-                d_ev1, d_p4x4, eos_table, np.int32(npartons), np.int32(size)).wait()
+                d_ev1, d_p4x4, eos_table, np.int32(npartons),
+                np.int32(size)).wait()
 
+        
+        # change longitudinal_profile to Bjorken like distribution
         if force_bjorken:
-            self.prg.force_bjorken(queue, (cfg.NX, cfg.NY, cfg.NZ), None,
-                d_ev1, np.int32(size)).wait()
+            h_longitudinal_profile = np.ones(cfg.NZ, cfg.real)
+            d_longitudinal_profile = cl.Buffer(ctx, cl.mem_flags.READ_ONLY |
+                    cl.mem_flags.COPY_HOST_PTR, hostbuf=h_longitudinal_profile)
+
+            self.prg.change_longitudinal_profile(queue, (cfg.NX, cfg.NY, cfg.NZ),
+                    None, d_ev1, d_longitudinal_profile, np.int32(size)).wait()
+        # use user provided longitudinal_profile for test
+        elif longitudinal_profile is not None:
+            d_longitudinal_profile = cl.Buffer(ctx, cl.mem_flags.READ_ONLY |
+            cl.mem_flags.COPY_HOST_PTR, hostbuf=longitudinal_profile.astype(cfg.real))
+
+            self.prg.change_longitudinal_profile(queue, (cfg.NX, cfg.NY, cfg.NZ),
+                None, d_ev1, d_longitudinal_profile, np.int32(size)).wait()
 
 
     def __loadAndBuildCLPrg(self, ctx, cfg, SIGR, SIGZ, KFACTOR):
         #load and build *.cl programs with compile self.compile_options
-        glauber_defines = list(self.compile_options)
-        glauber_defines.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
-        glauber_defines.append('-D {key}={value}f'.format(key='SIGR', value=SIGR))
-        glauber_defines.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
-        glauber_defines.append('-D {key}={value}f'.format(key='KFACTOR', value=KFACTOR))
-        print(glauber_defines)
+        smearing_options = list(self.compile_options)
+        smearing_options.append('-D {key}={value}f'.format(key='SQRTS', value=cfg.SQRTS))
+        smearing_options.append('-D {key}={value}f'.format(key='SIGR', value=SIGR))
+        smearing_options.append('-D {key}={value}f'.format(key='SIGZ', value=SIGZ))
+        smearing_options.append('-D {key}={value}f'.format(key='KFACTOR', value=KFACTOR))
+        print(smearing_options)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing_new.cl'), 'r') as f:
             prg_src = f.read()
-            self.prg = cl.Program(ctx, prg_src).build(
-                                             options=glauber_defines)
+            self.prg = cl.Program(ctx, prg_src).build(options=smearing_options)
 
 
 

@@ -21,18 +21,21 @@ logging.basicConfig(level=logging.DEBUG)
 
 class ChemicalPotential(object):
     def __init__(self, efrz, version='PCE165'):
+        '''generate chemical potential file for freeze out usage'''
         self.efrz = efrz
 
         self.version = version
-        self.path = os.path.abspath('eos_table/s95p-PCE165-v0/')
+
+        cwd, cwf = os.path.split(__file__)
+
+        self.path = os.path.join(cwd, 'eos_table/s95p-PCE165-v0/')
 
         if version == 'PCE150':
-            self.path = os.path.abspath('eos_table/s95p-PCE-v1/')
+            self.path = os.path.join(cwd, 'eos_table/s95p-PCE-v1/')
 
         mu_for_stable = self.get_chemical_potential_for_stable(efrz)
 
         pids = self.get_pid_for_stable()
-
 
         logging.debug("len of chem = %s"%len(mu_for_stable))
         logging.debug("len of pids = %s"%len(pids))
@@ -81,12 +84,16 @@ class ChemicalPotential(object):
             mu_for_stable = w0 * mu1 + w1 * mu0
         return mu_for_stable
 
-    def get_chemical_potential_for_resonance(self):
+    def get_chemical_potential_for_resonance(self, save_path):
         """Calc Resonances chemical potential from stable particles 
         chemical potential and the decay chain listed in pdg05.dat """
         pid_for_stable = self.get_pid_for_stable()
         mu_for_stable  = self.get_chemical_potential_for_stable(self.efrz)
         mu_for_all = {}
+
+        set_to_zero = True
+        if self.version == 'PCE165' or self.version == 'PCE150':
+            set_to_zero = False
 
         for i in range(len(pid_for_stable)):
             mu_for_all[pid_for_stable[i]] = mu_for_stable[i]
@@ -118,28 +125,39 @@ class ChemicalPotential(object):
                 i = i + ndecays + 1
                 pids.append(pid)
     
-        with open("ChemForReso.dat","w") as fout:
+        save_fname = os.path.join(save_path, "ChemForReso.dat")
+        with open(save_fname, "w") as fout:
             for pid in pids:
-                print >> fout, pid, mu_for_all[pid]
+                if not set_to_zero:
+                    print >> fout, pid, mu_for_all[pid]
+                else:
+                    print >> fout, pid, 0.0
     
  
 
-def main(Tfrz = 0.137):
-    import os
+def create_table(Tfrz = 0.137, output_path='.', eos_type='PCE165'):
+    '''save the chemical potential for different EOS
+    eos_type='PCE165', and 'PCE150', save
+    eos_type='EOSQ', 'EOSI', save 0.0 for all the resonance'''
     import sys
     from eos import Eos
     from subprocess import call
 
     eos = Eos(1)
     efrz = eos.f_ed(Tfrz)
-    chem = ChemicalPotential(efrz, version='PCE165')
-    chem.get_chemical_potential_for_resonance()
+    chem = ChemicalPotential(efrz, version=eos_type)
+
+    chem.get_chemical_potential_for_resonance(output_path)
+
+    save_fname = os.path.join(output_path, "ChemForReso.dat")
 
     cwd, cwf = os.path.split(__file__)
 
     path_spec = os.path.join(cwd, '../../CLSmoothSpec/Resource/')
     path_sample = os.path.join(cwd, '../../sampler/', 'chemical_potential.dat')
-    call(['cp', 'ChemForReso.dat', path_spec])
-    call(['cp', 'ChemForReso.dat', path_sample])
+    call(['cp', save_fname, path_spec])
+    call(['cp', save_fname, path_sample])
 
-main(Tfrz=0.137)
+
+if __name__ == '__main__':
+    create_table(Tfrz=0.137, output_path='.', eos_type='EOSQ')

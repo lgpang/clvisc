@@ -133,7 +133,7 @@ inline Point AdaptiveRejectionSampler::create_inter(Line l0, Line l2) {
        //throw std::runtime_error(
        //"Error: unable to get intersection of 2 lines "
        //"that are parallel to each other.");
-      std::cout << "two parallel scants dont interact" << std::endl;
+      std::cerr << "two parallel scants dont interact" << std::endl;
   }
 
   float x, y, expy;
@@ -147,9 +147,9 @@ inline Point AdaptiveRejectionSampler::create_inter(Line l0, Line l2) {
   p.expy = expy;
 
   if ( isnan(x) ) {
-    std::cout << "calc intersection:\n";
-    std::cout << "l0=" << l0;
-    std::cout << "l2=" << l2;
+    std::cerr << "calc intersection:\n";
+    std::cerr << "l0=" << l0;
+    std::cerr << "l2=" << l2;
     throw std::runtime_error(
         "Error: the x coordinates of intersection is nan.");
   }
@@ -267,13 +267,13 @@ void AdaptiveRejectionSampler::adaptive_update(
   l[0] = create_line(*p0, *p1);
 
   if ( isinf(l[0].m) ) {
-    std::cout << "l0, j=" << j;
-    std::cout << "\n p0=" << *p0;
-    std::cout << "\n p1=" << *p1;
+    std::cerr << "l0, j=" << j;
+    std::cerr << "\n p0=" << *p0;
+    std::cerr << "\n p1=" << *p1;
   }
 
   if ( isinf(l[1].m) ) {
-    std::cout << "l1, j=" << j;
+    std::cerr << "l1, j=" << j;
   }
 
   l[1] = create_line(*p1, *p2);
@@ -336,7 +336,7 @@ void AdaptiveRejectionSampler::adaptive_update(
     create_rightend();
   }  else {
     // log.fatal() << "The rejection point is not in the range\n";
-      std::cout << "The rejection point is not in the range\n";
+      std::cerr << "The rejection point is not in the range\n";
   }
   update_area();
 }
@@ -365,9 +365,9 @@ inline float AdaptiveRejectionSampler::sample_x(int j) {
   }
 
   if ( isnan(x) ) {
-    std::cout << "m=" << m << "r=" << r << std::endl;
-    std::cout << "upper_bounds_.at(j).right_point.x = " << upper_bounds_.at(j).right_point.x << std::endl;
-    std::cout << "upper_bounds_.at(j).left_point.x  = " << upper_bounds_.at(j).left_point.x << std::endl;
+    std::cerr << "m=" << m << "r=" << r << std::endl;
+    std::cerr << "upper_bounds_.at(j).right_point.x = " << upper_bounds_.at(j).right_point.x << std::endl;
+    std::cerr << "upper_bounds_.at(j).left_point.x  = " << upper_bounds_.at(j).left_point.x << std::endl;
   }
 
   return x;

@@ -32,6 +32,10 @@ int main(int argc, char** argv)
     // dS^{0} dS^{1} dS^{2} dS^{3} vx vy veta eta_s for all other rows
     spec.ReadHyperSF(hypsfDataFile.str());
 
+    std::stringstream chemical_potential_datafile;
+    chemical_potential_datafile<<pathin<<"/ChemForReso.dat";
+    spec.ReadMuB(chemical_potential_datafile.str());
+
 #ifdef VISCOUS_ON
     // pisfDataFile stores comments in the first row, 1.0/(2.0*T^2(e+P)) in the second row
     // pi^{00} 01 02 03 11 12 13 22 23 33 on the freeze out hyper surface for other rows
@@ -43,7 +47,7 @@ int main(int argc, char** argv)
     spec.SetPathOut( pathout.str() );
 
     //////////// Sample particles from SF //////////////////////////
-    spec.SetTfrz( Tfrz );
+    //spec.SetTfrz( Tfrz );
 
     bool switch_off_decay = SWITCH_OFF_DECAY;
 

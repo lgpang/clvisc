@@ -6,6 +6,7 @@
 import numpy as np
 import pyopencl as cl
 from pyopencl import array
+import pyopencl.array as cl_array
 import os
 import sys
 from time import time
@@ -34,7 +35,7 @@ class CLVisc(object):
         # initialize the d_pi^{mu nu} with 0
         self.d_pi = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
                      cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0),
-                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0) ]
+                     cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_pi0)]
 
         self.d_IS_src = cl.Buffer(self.ctx, mf.READ_WRITE, self.h_pi0.nbytes)
         # d_udx, d_udy, d_udz, d_udt are velocity gradients for viscous hydro
@@ -48,8 +49,11 @@ class CLVisc(object):
         # d_omega thermal vorticity vector omega^{mu nu} = epsilon^{mu nu a b} d_a (beta u_b)
         # anti-symmetric 6 independent components
         self.h_omega = np.zeros(6*self.size, self.cfg.real)
-        self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes),
-                        cl.Buffer(self.ctx, mf.READ_WRITE, size=self.h_omega.nbytes)]
+        self.d_omega = [cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_omega),
+                        cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=self.h_omega)]
+
+        # in case one wants to save omega^{mu} vector
+        self.a_omega_mu = cl_array.empty(self.queue, 4*self.size, self.cfg.real)
 
         # get the vorticity on the freeze out hypersurface
         self.d_omega_sf = cl.Buffer(self.ctx, mf.READ_WRITE, size=9000000*self.cfg.sz_real)
@@ -149,7 +153,8 @@ class CLVisc(object):
         Smearing(self.cfg, self.ctx, self.queue, self.compile_options,
             self.ideal.d_ev[1], fname, self.eos_table, SIGR, SIGZ, KFACTOR)
 
-    def smear_from_p4x4(self, p4x4, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0, force_bjorken=False):
+    def smear_from_p4x4(self, p4x4, SIGR=0.6, SIGZ=0.6, KFACTOR=1.0,
+            force_bjorken=False, longitudinal_profile=None):
         '''generate initial condition from a list of partons given by p4x4,
         SIGR: the gaussian smearing width in transverse direction
         SIGZ: the gaussian smearing width along longitudinal direction
@@ -157,7 +162,8 @@ class CLVisc(object):
         force_bjorken: True to switch off longitudinal fluctuation (use mid-rapidity only)'''
         from smearing import SmearingP4X4
         SmearingP4X4(self.cfg, self.ctx, self.queue, self.compile_options,
-            self.ideal.d_ev[1], p4x4, self.eos_table, SIGR, SIGZ, KFACTOR, force_bjorken)
+            self.ideal.d_ev[1], p4x4, self.eos_table, SIGR, SIGZ, KFACTOR,
+            force_bjorken, longitudinal_profile)
 
 
 
@@ -249,18 +255,31 @@ class CLVisc(object):
                 self.eos_table, self.ideal.tau, np.int32(step)
                 ).wait()
 
-    def get_vorticity(self, loop, save_data=False):
-        '''calc vorticity vector omega^{mu} and store them '''
+    def get_vorticity(self, save_data=False):
+        '''calc vorticity tensor Omega^{mu nu} = da (Tu_b) - db (Tu_a)
+        Params:
+            :param save_data: default False, set to True to save omega^{mu} vector
+        '''
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
         self.kernel_vorticity.omega(self.queue, (NX, NY, NZ), None,
-                self.ideal.d_ev[1], self.ideal.d_ev[2], self.d_omega[1],
+                self.ideal.d_ev[0], self.ideal.d_ev[1], self.d_omega[1],
                 self.eos_table, self.ideal.tau).wait()
 
         if save_data:
-            cl.enqueue_copy(self.queue, self.h_omega, self.d_omega[1]).wait()
+            self.kernel_vorticity.omega_mu(self.queue, (NX*NY*NZ, ), None,
+                self.a_omega_mu.data, self.ideal.d_ev[1],
+                self.d_omega[1], self.eos_table,
+                self.cfg.real(self.ideal.efrz), self.ideal.tau).wait()
+
             path_out = os.path.abspath(self.cfg.fPathOut)
-            np.savetxt(path_out + '/omega_munu_%d.dat'%loop, h_omega.reshape(NX*NY*NZ, 6),
-                header='omega^{01, 02, 03, 12, 13, 23}')
+
+            fname = ('omega_mu_tau%s'%self.ideal.tau).replace('.', 'p') + '.dat'
+
+            omega_mu = self.a_omega_mu.get()
+
+            np.savetxt(os.path.join(path_out, fname),
+                       omega_mu.reshape(NX*NY*NZ, 4),
+                       header='omega^{t, x, y, z} = Omega^{mu nu} u_{nu}')
 
     def update_udiff(self, d_ev0, d_ev1):
         '''get d_udiff = u_{visc}^{n} - u_{visc}^{n-1}, it is possible to 
@@ -281,10 +300,6 @@ class CLVisc(object):
             cl.enqueue_copy(self.queue, self.ideal.d_ev_old,
                             self.ideal.d_ev[1]).wait()
             cl.enqueue_copy(self.queue, self.d_pi_old, self.d_pi[1]).wait()
-
-            # initialize the vorticity vector omega_mu at tau=0 with 0s
-            zeros = np.zeros((self.size, 4), self.cfg.real)
-            cl.enqueue_copy(self.queue, self.d_omega[0], zeros).wait()
 
             self.tau_old = self.cfg.TAU0
         elif (n % ntskip == 0) or is_finished:
@@ -429,7 +444,7 @@ class CLVisc(object):
 
             # add the thermal vorticity calculation here
             if loop % self.cfg.ntskip == 0 and save_vorticity:
-                self.get_vorticity(loop, save_data=False)
+                self.get_vorticity(save_data=False)
 
             loop = loop + 1
 
@@ -444,43 +459,50 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg, write_config
-    cfg.NX = 361
-    cfg.NY = 361
-    cfg.NZ = 101
+    cfg.NX = 256
+    cfg.NY = 256
+    cfg.NZ = 256
 
     cfg.DT = 0.01
     cfg.DX = 0.08
     cfg.DY = 0.08
-    cfg.DZ = 0.15
+    cfg.DZ = 0.08
     cfg.ImpactParameter = 3.54
 
     cfg.A = 208
     cfg.Ra = 6.62
-    cfg.Edmax = 98
+    cfg.Edmax = 30
     cfg.Eta = 0.546
     cfg.Si0 = 6.4
 
 
+    cfg.Eta_flat = 3.0
+    cfg.Eta_gw = 0.6
+
+
     cfg.IEOS = 1
-    cfg.ntskip = 30
+    cfg.ntskip = 60
     cfg.nxskip = 4
     cfg.nyskip = 4
-    cfg.nzskip = 2
+    cfg.nzskip = 4
     cfg.TFRZ = 0.137
 
     cfg.Hwn = 0.95
 
     cfg.ETAOS = 0.08
-    cfg.fPathOut = '../results/pbpb_cent0_5_pce165/'
+    cfg.fPathOut = '../results/pbpb_cent0_5_vs_heinz/'
     cfg.save_to_hdf5 = True
 
     write_config(cfg)
 
-    visc = CLVisc(cfg, gpu_id=1)
+    visc = CLVisc(cfg, gpu_id=2)
 
     visc.optical_glauber_ini()
-    visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
-                save_vorticity=False)
+    #visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
+    #            save_vorticity=False)
+    visc.evolve(max_loops=2000, save_hypersf=False, save_bulk=False,
+            force_run_to_maxloop=False, save_vorticity=False)
+
     t1 = time()
     print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
 

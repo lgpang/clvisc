@@ -129,12 +129,12 @@ def get_polar_in_rapidity(h5, event_id, Y0, Y1):
 
 
 #@profile
-def azimuthal_correlation(withz=True, etaos='0p08', system='auau62p4', n=80, Y0=-0.5, Y1=0.5):
+def azimuthal_correlation(withz=True, etaos='0p08', system='auau62p4', cent='20_30', n=80, Y0=-0.5, Y1=0.5):
     count = 0
-    with h5py.File('vor_int_visc%s_%s_cent20_30.hdf5'%(etaos, system), 'r') as h5:
-        rapidity = h5['mom/Y'][...]
-        pt = h5['mom/PT'][...]
-        phi = h5['mom/PHI'][...]
+    with h5py.File('vor_int_visc%s_%s_cent%s.hdf5'%(etaos, system, cent), 'r') as h5_vor:
+        rapidity = h5_vor['mom/Y'][...]
+        pt = h5_vor['mom/PT'][...]
+        phi = h5_vor['mom/PHI'][...]
 
         NY, NPT, NPHI = len(rapidity), len(pt), len(phi)
 
@@ -153,15 +153,12 @@ def azimuthal_correlation(withz=True, etaos='0p08', system='auau62p4', n=80, Y0=
         start_id = 0
         end_id = 200
         if system == 'auau200':
-            start_id = 300
+            start_id = 0
             end_id = 650
 
         for event_id in range(start_id, end_id):
             try:
-                pix, piy, piz, rho = get_polar_in_rapidity(h5, event_id, Y0, Y1)
-
-                if not withz:
-                    piz = np.zeros_like(piy)
+                pix, piy, piz, rho = get_polar_in_rapidity(h5_vor, event_id, Y0, Y1)
 
                 rho_int = pt_int(rho)
                 pix_int = pt_int(pix) / rho_int
@@ -195,27 +192,39 @@ def azimuthal_correlation(withz=True, etaos='0p08', system='auau62p4', n=80, Y0=
 
 
 
-def plot_range(Y0, Y1, withz, system, etaos, color='grey'):
-    max0, delta_phi, pol_corr1, pol_corr_z1 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, n=650, Y0= -Y1, Y1= -Y0)
-    max0, delta_phi, pol_corr2, pol_corr_z2 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, n=650, Y0= Y0, Y1=Y1)
+def plot_range(h5, Y0, Y1, withz, system, cent, etaos, color='grey'):
+    max0, delta_phi, pol_corr1, pol_corr_z1 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, cent=cent, n=650, Y0= -Y1, Y1= -Y0)
+    max0, delta_phi, pol_corr2, pol_corr_z2 = azimuthal_correlation(withz=withz, etaos=etaos, system=system, cent=cent, n=650, Y0= Y0, Y1=Y1)
     if not withz:
         plt.plot(delta_phi, 0.5*(pol_corr1 + pol_corr2), color=color, label=r'$|Y|=[%s, %s]$'%(Y0, Y1))
         plt.fill_between(delta_phi, pol_corr1, pol_corr2, facecolor=color, alpha=0.5)
     else:
         plt.plot(delta_phi, 0.5*(pol_corr_z1 + pol_corr_z2), color=color, label=r'$|Y|=[%s, %s]$'%(Y0, Y1))
         plt.fill_between(delta_phi, pol_corr_z1, pol_corr_z2, facecolor=color, alpha=0.5)
+
+    data_name = '{system}/{cent}/{etaos}/{Y0}_{Y1}/'.format(system=system, cent=cent, etaos=etaos, Y0=Y0, Y1=Y1)
+    try:
+        del h5[data_name]
+    except:
+        print('create new!')
+    h5.create_dataset(data_name + 'delta_phi', data=delta_phi)
+    h5.create_dataset(data_name + 'corr_xy_1', data=pol_corr1)
+    h5.create_dataset(data_name + 'corr_xy_2', data=pol_corr2)
+    h5.create_dataset(data_name + 'corr_z_1', data=pol_corr_z1)
+    h5.create_dataset(data_name + 'corr_z_2', data=pol_corr_z2)
     return max0
 
-def plot_pol_corr(withz=True, system='auau200', etaos='0p08'):
-    max0 = plot_range(0, 1, withz, system, etaos, color='red')
-    max1 = plot_range(1, 2, withz, system, etaos, color='blue')
-    max2 = plot_range(2, 3, withz, system, etaos, color='green')
+def plot_pol_corr(h5, withz=True, system='auau200', cent='20_30', etaos='0p08'):
+    max0 = plot_range(h5, 0, 1, withz, system, cent, etaos, color='red')
+    max1 = plot_range(h5, 1, 2, withz, system, cent, etaos, color='blue')
+    max2 = plot_range(h5, 2, 3, withz, system, cent, etaos, color='green')
 
     max3 = max0
     if system == 'pbpb2p76':
-        max3 = plot_range(4, 5, withz, system, etaos, color='grey')
+        max3 = plot_range(h5, 4, 5, withz, system, cent, etaos, color='grey')
 
     plt.gca().yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
+
     plt.xlabel(r'$|\phi_1 - \phi_2|$')
     maxf = max(max0, max1, max2, max3)
     plt.ylim(-maxf, maxf)
@@ -233,40 +242,58 @@ def plot_pol_corr(withz=True, system='auau200', etaos='0p08'):
     if withz:
         plt.ylabel(r'$<\Pi_{\eta}(\phi_1) \cdot \Pi_{\eta}(\phi_2)>$')
 
-        fname = 'figs/Piz_corr_vs_deltaphi_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
-        plt.title('{system_title} 20-30%, $\eta/s$={etaos}'.format(
-            system_title=system_title, etaos=etaos.replace('p', '.') ))
+        fname = 'figs/Piz_corr_vs_deltaphi_{system}_{cent}_{etaos}.pdf'.format(
+                system=system, etaos=etaos, cent=cent.replace('_', '-'))
+
     else:
         plt.ylabel(r'$<\Pi_{\perp}(\phi_1) \cdot \Pi_{\perp}(\phi_2)>$')
 
-        fname = 'figs/Pixy_corr_vs_deltaphi_{system}_{etaos}.pdf'.format(system=system, etaos=etaos)
-        plt.title('{system_title} 20-30%, $\eta/s$={etaos}'.format(
-            system_title=system_title, etaos=etaos.replace('p', '.') ))
+        fname = 'figs/Pixy_corr_vs_deltaphi_{system}_{cent}_{etaos}.pdf'.format(
+                system=system, etaos=etaos, cent=cent.replace('_', '-'))
+
+    plt.title('{system_title} {cent}%, $\eta/s$={etaos}'.format(
+              system_title=system_title, etaos=etaos.replace('p', '.'), cent=cent.replace('_', '-')))
+
     plt.savefig(fname)
     plt.close()
 
 
-#plot_pol_corr(withz=False, system='auau200', etaos='0p0')
-#plot_pol_corr(withz=False, system='auau200', etaos='0p08')
-#plot_pol_corr(withz=True, system='auau200', etaos='0p0')
-#plot_pol_corr(withz=True, system='auau200', etaos='0p08')
+import h5py
 
-plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p0')
-plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p02')
-plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p04')
-plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p08')
-plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p12')
-plot_pol_corr(withz=False, system='pbpb2p76', etaos='0p16')
+#with h5py.File('polarization_corr.h5', 'w') as h5:
+#    plot_pol_corr(h5, withz=False, system='auau200', etaos='0p0')
+#    plot_pol_corr(h5, withz=False, system='auau200', etaos='0p08')
 
-plot_pol_corr(withz=False, system='auau62p4', etaos='0p08')
-plot_pol_corr(withz=True, system='auau62p4', etaos='0p08')
+h5 = h5py.File('polarization_corr.h5', 'r+')
 
+#plot_pol_corr(h5, withz=True, system='auau200',  cent='0_5', etaos='0p0')
+#plot_pol_corr(h5, withz=True, system='auau200',  cent='0_5', etaos='0p08')
+
+#plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=True, system='pbpb2p76',  cent='0_5', etaos='0p08')
+#
+#plot_pol_corr(h5, withz=False, system='auau200',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=False, system='auau62p4',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=False, system='auau39',  cent='0_5', etaos='0p08')
+#
 ##
-##plot_pol_corr(withz=True, system='auau200', etaos='0p12')
-##plot_pol_corr(withz=True, system='auau62p4', etaos='0p08')
-plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p0')
-plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p02')
-plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p04')
-plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p08')
-plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p12')
-plot_pol_corr(withz=True, system='pbpb2p76', etaos='0p16')
+#plot_pol_corr(h5, withz=True, system='auau200',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=True, system='auau62p4',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=True, system='auau39',  cent='0_5', etaos='0p08')
+
+#plot_pol_corr(h5, withz=True, system='pbpb2p76',  cent='20_30', etaos='0p0')
+#plot_pol_corr(h5, withz=True, system='auau200',  cent='20_30', etaos='0p08')
+#plot_pol_corr(h5, withz=True, system='auau62p4',  cent='20_30', etaos='0p08')
+#
+#plot_pol_corr(h5, withz=True, system='pbpb2p76',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=True, system='auau200',  cent='0_5', etaos='0p08')
+#plot_pol_corr(h5, withz=True, system='auau62p4',  cent='0_5', etaos='0p08')
+
+
+#plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='20_30', etaos='0p08')
+#plot_pol_corr(h5, withz=False, system='auau200',  cent='20_30', etaos='0p08')
+#plot_pol_corr(h5, withz=False, system='auau62p4',  cent='20_30', etaos='0p08')
+plot_pol_corr(h5, withz=False, system='auau39',  cent='20_30', etaos='0p08')
+plot_pol_corr(h5, withz=True, system='auau39',  cent='20_30', etaos='0p08')
+
+

@@ -13,6 +13,7 @@ from time import time
 cwd, cwf = os.path.split(__file__)
 sys.path.append(cwd)
 from eos.eos import Eos
+from eos.chemical_potential import create_table as chemical_potential_on_hypersf
 #import matplotlib.pyplot as plt
 
 
@@ -55,9 +56,16 @@ class CLIdeal(object):
         # table information to definitions
         self.eos = Eos(self.cfg.IEOS)
 
+        # the default muB on hypersf is 0, unless IEOS=1, 'PCE165'
+        chemical_potential_on_hypersf(self.cfg.TFRZ, path,
+                                      eos_type='ZeroChemcialPotential')
+
         if self.cfg.IEOS == 1:
             self.eos_table = self.eos.create_table(self.ctx,
                     self.compile_options, nrow=100, ncol=1555)
+
+            chemical_potential_on_hypersf(self.cfg.TFRZ, path,
+                                          eos_type='PCE165')
         elif self.cfg.IEOS == 4:
             self.eos_table = self.eos.create_table(self.ctx,
                     self.compile_options, nrow=4, ncol=1001)
@@ -176,6 +184,7 @@ class CLIdeal(object):
         return value
 
 
+    #@profile
     def stepUpdate(self, step):
         ''' Do step update in kernel with KT algorithm 
             Args:
@@ -303,7 +312,7 @@ def main():
     #import pandas as pd
     print('start ...')
     t0 = time()
-    cfg.IEOS = 4
+    cfg.IEOS = 1
     cfg.NX = 301
     cfg.NY = 301
     cfg.NZ = 101
@@ -332,7 +341,7 @@ def main():
                   ideal.d_ev[1])
 
     #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    ideal.evolve(max_loops=200, save_bulk=True)
+    ideal.evolve(max_loops=2000, save_bulk=True)
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
 
