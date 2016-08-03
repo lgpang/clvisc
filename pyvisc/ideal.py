@@ -102,6 +102,8 @@ class CLIdeal(object):
         # d_hypersf: store the dSigma^{mu}, vx, vy, veta, tau, x, y, eta
         # on freeze out hyper surface
         self.d_hypersf = cl.Buffer(self.ctx, mf.READ_WRITE, size=1500000*self.cfg.sz_real8)
+        # the position of the hyper surface in cartersian coordinates
+        self.d_sf_txyz = cl.Buffer(self.ctx, mf.READ_WRITE, size=1500000*self.cfg.sz_real4)
         h_num_of_sf = np.zeros(1, np.int32)
         self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
 
@@ -250,7 +252,8 @@ class CLIdeal(object):
             tau_new = self.tau
             # get dSigma, vx, vy, veta, etas on hypersf
             self.kernel_hypersf.get_hypersf(self.queue, (nx, ny, nz), None,
-                    self.d_hypersf, self.d_num_of_sf, self.d_ev_old, self.d_ev[1],
+                    self.d_hypersf, self.d_sf_txyz, self.d_num_of_sf,
+                    self.d_ev_old, self.d_ev[1],
                     self.cfg.real(self.tau_old), self.cfg.real(tau_new)).wait()
 
             # update with current tau and d_ev[1]
@@ -267,9 +270,14 @@ class CLIdeal(object):
             hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
             cl.enqueue_copy(self.queue, hypersf, self.d_hypersf).wait()
             out_path = os.path.join(self.cfg.fPathOut, 'hypersf.dat')
-            print("hypersf save to ", out_path)
             np.savetxt(out_path, hypersf, fmt='%.6e', header =
               'Tfrz=%.6e ; other rows: dS0, dS1, dS2, dS3, vx, vy, veta, etas'%self.cfg.TFRZ)
+
+            sf_txyz = np.empty(self.num_of_sf, dtype=self.cfg.real4)
+            cl.enqueue_copy(self.queue, sf_txyz, self.d_sf_txyz).wait()
+            out_path = os.path.join(self.cfg.fPathOut, 'sf_txyz.dat')
+            np.savetxt(out_path, sf_txyz, fmt='%.6e', header =
+              '(t, x, y, z) the time-space coordinates of hypersf elements')
 
         if save_bulk:
             self.bulkinfo.save(viscous_on=viscous_on)
@@ -313,11 +321,11 @@ def main():
     print('start ...')
     t0 = time()
     cfg.IEOS = 1
-    cfg.NX = 301
-    cfg.NY = 301
+    cfg.NX = 201
+    cfg.NY = 201
     cfg.NZ = 101
-    cfg.DX = 0.08
-    cfg.DY = 0.08
+    cfg.DX = 0.1
+    cfg.DY = 0.1
     cfg.DZ = 0.15
     cfg.DT = 0.01
     cfg.ntskip = 24

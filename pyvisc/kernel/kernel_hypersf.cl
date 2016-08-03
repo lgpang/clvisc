@@ -402,6 +402,7 @@ real4 centroid_omega(__global real4 * d_omega_old, __global real4 * d_omega_new,
 // calc the hypersf and store them in one buffer DA0, DA1, DA2, DA3,
 // vx, vy, veta, tau, x, y, eta
 __kernel void get_hypersf(__global real8  * d_sf,
+                          __global real4  * d_sf_txyz,
                           __global int * num_of_sf,
                           __global real4 * d_ev_old,
                           __global real4 * d_ev_new,
@@ -486,7 +487,10 @@ __kernel void get_hypersf(__global real8  * d_sf,
             //if ( isnan(result.s0) ) {
             //        printf("non: used (i,j,k,=%d,%d,%d", i, j, k);
             //}
-            d_sf[atomic_inc(num_of_sf)] = result;
+            int id_ = atomic_inc(num_of_sf);
+            d_sf[id_] = result;
+
+            d_sf_txyz[id_] = (real4)(tau * cosh(eta), x, y, tau * sinh(eta));
         } // end surface calculation
     } // end boundary check
 }
@@ -495,6 +499,7 @@ __kernel void get_hypersf(__global real8  * d_sf,
 //DA0, DA1, DA2, DA3, vx, vy, veta, tau, x, y, eta
 //and another one for pimn terms
 __kernel void visc_hypersf(__global real8  * d_sf,
+                           __global real4  * d_sf_txyz,
                            __global real   * d_pi,
                            volatile __global int * num_of_sf,
                           __global real4 * d_ev_old,
@@ -591,6 +596,8 @@ __kernel void visc_hypersf(__global real8  * d_sf,
                 int id_ = atomic_inc(num_of_sf);
                                        
                 d_sf[id_] = result;
+
+                d_sf_txyz[id_] = (real4)(tau * cosh(eta), x, y, tau * sinh(eta));
                 d_pi[10*id_ + 0] = centroid_intp(d_pi_old, d_pi_new, mass_center, 0, i, j, k, 10);
                 d_pi[10*id_ + 1] = centroid_intp(d_pi_old, d_pi_new, mass_center, 1, i, j, k, 10);
                 d_pi[10*id_ + 2] = centroid_intp(d_pi_old, d_pi_new, mass_center, 2, i, j, k, 10);

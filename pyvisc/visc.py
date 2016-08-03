@@ -308,7 +308,8 @@ class CLVisc(object):
             nz = (self.cfg.NZ-1)//self.cfg.nzskip + 1
             tau_new = self.ideal.tau
             self.kernel_hypersf.visc_hypersf(self.queue, (nx, ny, nz), None,
-                    self.ideal.d_hypersf, self.d_pi_sf, self.ideal.d_num_of_sf,
+                    self.ideal.d_hypersf, self.ideal.d_sf_txyz,
+                    self.d_pi_sf, self.ideal.d_num_of_sf,
                     self.ideal.d_ev_old, self.ideal.d_ev[1],
                     self.d_pi_old, self.d_pi[1],
                     self.d_omega_sf, self.d_omega[0], self.d_omega[1],
