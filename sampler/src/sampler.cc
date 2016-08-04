@@ -491,7 +491,7 @@ namespace {
                 position.set_x0(ele.position[0]);
                 position.set_x1(ele.position[1]);
                 position.set_x2(ele.position[2]);
-                position.set_x3(ele.position[0]);
+                position.set_x3(ele.position[3]);
             }
 
             /** pmag = |\vec{momentum}| */
