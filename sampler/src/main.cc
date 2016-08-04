@@ -2,6 +2,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_coupling.h>
 #include <iostream>
+#include <cstdlib>
 
 #include "include/sampler.h"
 #include "include/constants.h"
@@ -52,13 +53,15 @@ namespace hirano_method {
 
 
 int main(int argc, char ** argv) {
-    if ( argc != 4 ) {
+    if ( argc != 5 ) {
         std::cerr << "usage:" << std::endl;
-        std::cerr << "./main hypersf_directory viscous_on_" << std::endl;
+        std::cerr << "./main hypersf_directory viscous_on_ force_decay\
+              number_of_sampling" << std::endl;
         std::cerr << "hypersf_directory: directory that has";
         std::cerr << "hypersf.dat and pimnsf.dat" << std::endl;
         std::cerr << "viscous_on: true to use viscous corrections" << std::endl;
         std::cerr << "force_decay: true to force decay" << std::endl;
+        std::cerr << "num_of_sampling: type int" << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -76,43 +79,55 @@ int main(int argc, char ** argv) {
         force_decay = true;
     }
 
+    int number_of_events = std::atoi(argv[4]);
+
     Sampler sampler(path, viscous_on, force_decay);
 
     std::clog << "initialize finished!" << std::endl;
 
-    constexpr int number_of_events = 2000;
-
-    for ( int nevent=0; nevent < number_of_events; nevent++ ) {
-        sampler.sample_particles_from_hypersf();
-        std::clog << "event " << nevent << " finished\n";
-    }
 
     int num_of_pion_plus = 0;
     std::stringstream fname_particle_list;
-    fname_particle_list << path << "/mc_particle_list.dat";
+    fname_particle_list << path << "/mc_particle_list0";
+    std::ofstream fpmag(fname_particle_list.str());
+    
+    for ( int nevent=0; nevent < number_of_events; nevent++ ) {
+        sampler.sample_particles_from_hypersf();
+        std::clog << nevent << "...";
+        int particle_number = 0;
+        for ( const auto & par : sampler.particles_ ) {
+            int nid = sampler.newpid[par.pdgcode];
+            if ( sampler.list_hadrons_.at(nid).stable &&
+                 sampler.list_hadrons_.at(nid).charge ) {
+            FourVector momentum = par.momentum;
+            double pmag = std::sqrt(momentum.sqr3());
+            double pseudo_rapidity = 0.5*(std::log(pmag+momentum.x3())-
+                        std::log(pmag-momentum.x3())); 
 
-    //std::ofstream fpmag(fname_particle_list.str());
+            double rapidity = 0.5*(std::log(momentum.x0()+momentum.x3())
+                      - std::log(momentum.x0()-momentum.x3()));
 
-    //std::cout << "#E px py pz Y pid eta\n";
-    for ( const auto & par : sampler.particles_ ) {
-        int nid = sampler.newpid[par.pdgcode];
-        if ( sampler.list_hadrons_.at(nid).stable &&
-             sampler.list_hadrons_.at(nid).charge ) {
-        FourVector momentum = par.momentum;
-        double pmag = std::sqrt(momentum.sqr3());
-        double pseudo_rapidity = 0.5*(std::log(pmag+momentum.x3())-
-                    std::log(pmag-momentum.x3())); 
+            std::cout << momentum.x0() << ' ' << momentum.x1() << ' '
+                << momentum.x2() << ' ' << momentum.x3() << ' '
+                << rapidity << ' ' << par.pdgcode << ' '
+                << pseudo_rapidity << std::endl;
+            }
+            if ( nid == 1 ) num_of_pion_plus ++;
 
-        double rapidity = 0.5*(std::log(momentum.x0()+momentum.x3())
-                  - std::log(momentum.x0()-momentum.x3()));
-
-        std::cout << momentum.x0() << ' ' << momentum.x1() << ' '
-            << momentum.x2() << ' ' << momentum.x3() << ' '
-            << rapidity << ' ' << par.pdgcode << ' '
-            << pseudo_rapidity << std::endl;
+            // write the output to mc_particle_list0
+            if (nevent == 0) {
+                particle_number ++;
+                fpmag << par.position.x0() << par.position.x1() << par.position.x2()
+                    << par.position.x3() << sampler.list_hadrons_.at(nid).mass
+                    << par.momentum.x0() << par.momentum.x1() << par.momentum.x2()
+                    << par.momentum.x3() << par.pdgcode << particle_number << std::endl;
+            }
         }
-        if ( nid == 1 ) num_of_pion_plus ++;
+        sampler.particles_.clear();
+        std::cout << "#finished" << std::endl;
     }
+    std::clog << std::endl;
+
     //fpmag.close();
 
     std::clog << "ntot for pion+ from sample=" << num_of_pion_plus/ \
