@@ -3,6 +3,7 @@
 #include <gsl/gsl_sf_coupling.h>
 #include <iostream>
 #include <cstdlib>
+#include <iomanip>
 
 #include "include/sampler.h"
 #include "include/constants.h"
@@ -85,16 +86,17 @@ int main(int argc, char ** argv) {
 
     std::clog << "initialize finished!" << std::endl;
 
-
     int num_of_pion_plus = 0;
-    std::stringstream fname_particle_list;
-    fname_particle_list << path << "/mc_particle_list0";
-    std::ofstream fpmag(fname_particle_list.str());
-    
+   
     for ( int nevent=0; nevent < number_of_events; nevent++ ) {
         sampler.sample_particles_from_hypersf();
         std::clog << nevent << "...";
         int particle_number = 0;
+
+        std::stringstream fname_particle_list;
+        fname_particle_list << path << "/mc_particle_list" << nevent;
+        std::ofstream fpmag(fname_particle_list.str());
+ 
         for ( const auto & par : sampler.particles_ ) {
             int nid = sampler.newpid[par.pdgcode];
             if ( sampler.list_hadrons_.at(nid).stable &&
@@ -115,14 +117,22 @@ int main(int argc, char ** argv) {
             if ( nid == 1 ) num_of_pion_plus ++;
 
             // write the output to mc_particle_list0
-            if (nevent == 0) {
-                particle_number ++;
-                fpmag << par.position.x0() << par.position.x1() << par.position.x2()
-                    << par.position.x3() << sampler.list_hadrons_.at(nid).mass
-                    << par.momentum.x0() << par.momentum.x1() << par.momentum.x2()
-                    << par.momentum.x3() << par.pdgcode << particle_number << std::endl;
-            }
+            particle_number ++;
+            fpmag << std::setprecision(6);
+            fpmag << std::setw(12) << par.position.x0()
+                  << std::setw(12) << par.position.x1()
+                  << std::setw(12) << par.position.x2()
+                  << std::setw(12) << par.position.x3()
+                  << std::setw(12) << sampler.list_hadrons_.at(nid).mass
+                  << std::setw(12) << par.momentum.x0()
+                  << std::setw(12) << par.momentum.x1()
+                  << std::setw(12) << par.momentum.x2()
+                  << std::setw(12) << par.momentum.x3()
+                  << std::setw(12) << par.pdgcode
+                  << std::setw(9) << particle_number << std::endl;
         }
+        fpmag.close();
+
         sampler.particles_.clear();
         std::cout << "#finished" << std::endl;
     }

@@ -71,6 +71,7 @@ typedef struct {
 typedef struct {
     FourVector dsigma;      // freeze out hypersurface dSigma^{\mu}
     ThreeVector velocity;   // fluid velocity, vx, vy, vetas
+    double etas;            // space-time rapidity
     FourVector position;    // position (tau, x, y, etas)
     /** shear viscous tensor in comoving frame of fluid
      * pi00, pi01, pi02, pi03, pi11, pi12, pi13, pi22, pi23, pi33*/
