@@ -119,16 +119,17 @@ int main(int argc, char ** argv) {
             // write the output to mc_particle_list0
             particle_number ++;
             fpmag << std::setprecision(6);
-            fpmag << std::setw(12) << par.position.x0()
-                  << std::setw(12) << par.position.x1()
-                  << std::setw(12) << par.position.x2()
-                  << std::setw(12) << par.position.x3()
-                  << std::setw(12) << sampler.list_hadrons_.at(nid).mass
-                  << std::setw(12) << par.momentum.x0()
-                  << std::setw(12) << par.momentum.x1()
-                  << std::setw(12) << par.momentum.x2()
-                  << std::setw(12) << par.momentum.x3()
-                  << std::setw(12) << par.pdgcode
+            fpmag << std::scientific;
+            fpmag << std::setw(14) << par.position.x0()
+                  << std::setw(14) << par.position.x1()
+                  << std::setw(14) << par.position.x2()
+                  << std::setw(14) << par.position.x3()
+                  << std::setw(14) << sampler.list_hadrons_.at(nid).mass
+                  << std::setw(14) << par.momentum.x0()
+                  << std::setw(14) << par.momentum.x1()
+                  << std::setw(14) << par.momentum.x2()
+                  << std::setw(14) << par.momentum.x3()
+                  << std::setw(14) << par.pdgcode
                   << std::setw(9) << particle_number << std::endl;
         }
         fpmag.close();
