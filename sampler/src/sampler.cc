@@ -98,6 +98,10 @@ void Sampler::read_hypersurface(const std::string & fpath) {
     char buf[256];
     std::stringstream hypersf_path;
     hypersf_path << fpath << "/hypersf.dat";
+
+    std::stringstream sf_txyz_path;
+    sf_txyz_path << fpath << "/sf_txyz.dat";
+
     std::ifstream fin(hypersf_path.str());
     fin.getline(buf, 256);  // readin the comment
     std::string comments(buf);
@@ -105,23 +109,27 @@ void Sampler::read_hypersurface(const std::string & fpath) {
 
     std::clog << "Tfrz=" << freezeout_temperature_ << std::endl;
 
+    std::ifstream fin_txyz(sf_txyz_path.str());
+
     std::string hyper_surface = read_all(std::move(fin));
+    std::string sf_txyz = read_all(std::move(fin_txyz));
 
     auto hyper_surface_elements = line_parser(hyper_surface);
 
-    double ds0, ds1, ds2, ds3, vx, vy, vetas, tau, x, y, etas;
+    auto sf_txyz_elements = line_parser(sf_txyz);
 
-    tau = 0.0;
-    x = 0.0;
-    y = 0.0;
+    double ds0, ds1, ds2, ds3, vx, vy, vetas, t, x, y, z, etas;
 
     for ( const Line & line : hyper_surface_elements ) {
         VolumnElement vi;
         std::istringstream lineinput(line.text);
-
         lineinput >> ds0 >> ds1 >> ds2 >> ds3 >> vx >> vy >> vetas \
             >> etas;
-        //    >> tau >> x >> y >> etas;
+
+        int line_number = line.number;
+        auto str_txyz = sf_txyz_elements[line_number].text;
+        std::istringstream coordinates(str_txyz);
+        coordinates >> t >> x >> y >> z;
         if ( lineinput.fail() ) {
             throw LoadFailure(build_error_string(
                         "While loading freeze out hypersurface:\n"
@@ -129,11 +137,9 @@ void Sampler::read_hypersurface(const std::string & fpath) {
                         "expected volume element.", line));
         } else {
             vi.dsigma = FourVector(ds0, ds1, ds2, ds3);
-
             vi.velocity = ThreeVector(vx, vy, vetas);
-
-            vi.position = FourVector(tau, x, y, etas);
-
+            vi.etas = etas;
+            vi.position = FourVector(t, x, y, z);
             elements_.emplace_back(std::move(vi));
         }
     }
@@ -480,12 +486,12 @@ namespace {
              * 2 particles to have the same position (if Ni>1) 
              * Scattering may happen after produced.*/
             if ( Ni != 0 ) {
-                cosheta = cosh(ele.position[3]);
-                sinheta = sinh(ele.position[3]);
-                position.set_x0(ele.position[0]*cosheta);
+                cosheta = cosh(ele.etas);
+                sinheta = sinh(ele.etas);
+                position.set_x0(ele.position[0]);
                 position.set_x1(ele.position[1]);
                 position.set_x2(ele.position[2]);
-                position.set_x3(ele.position[0]*sinheta);
+                position.set_x3(ele.position[0]);
             }
 
             /** pmag = |\vec{momentum}| */
@@ -590,7 +596,7 @@ namespace {
                                     momentum[3]*momentum[3]);
 
                             double Y = std::atanh(momentum[3]/momentum[0])
-                                    + ele.position[3];
+                                    + ele.etas;
 
                             momentum = FourVector(mt*std::cosh(Y), momentum.x1(),
                                             momentum.x2(), mt*std::sinh(Y));
