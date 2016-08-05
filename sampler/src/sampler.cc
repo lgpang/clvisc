@@ -95,7 +95,7 @@ Sampler::Sampler(const std::string & fpath,
 
 // read freeze out hyper surface
 void Sampler::read_hypersurface(const std::string & fpath) {
-    char buf[256];
+    char buf[512];
     std::stringstream hypersf_path;
     hypersf_path << fpath << "/hypersf.dat";
 
@@ -103,7 +103,9 @@ void Sampler::read_hypersurface(const std::string & fpath) {
     sf_txyz_path << fpath << "/sf_txyz.dat";
 
     std::ifstream fin(hypersf_path.str());
-    fin.getline(buf, 256);  // readin the comment
+
+    fin.getline(buf, 512);  // readin the comment
+
     std::string comments(buf);
     freezeout_temperature_ = std::stof(comments.substr(7));
 
@@ -120,14 +122,15 @@ void Sampler::read_hypersurface(const std::string & fpath) {
 
     double ds0, ds1, ds2, ds3, vx, vy, vetas, t, x, y, z, etas;
 
+    int line_number = 0;
     for ( const Line & line : hyper_surface_elements ) {
         VolumnElement vi;
         std::istringstream lineinput(line.text);
         lineinput >> ds0 >> ds1 >> ds2 >> ds3 >> vx >> vy >> vetas \
             >> etas;
 
-        int line_number = line.number;
         auto str_txyz = sf_txyz_elements[line_number].text;
+        line_number++;
         std::istringstream coordinates(str_txyz);
         coordinates >> t >> x >> y >> z;
         if ( lineinput.fail() ) {
