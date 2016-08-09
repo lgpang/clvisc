@@ -36,16 +36,18 @@ class EosQ(object):
         interp_order = 1
 
         f_ed_qgp = InterpolatedUnivariateSpline(
-                ed[QGP_LOWER_BOUNDER:],
+                T[QGP_LOWER_BOUNDER:],
                 ed[QGP_LOWER_BOUNDER:], k=interp_order)
 
+        # notice that this one is only used to get efrz from Tfrz
         def mixed_phase(temperature):
-            if temperature <= T[HRG_UPPER_BOUNDER]:
+            if temperature < T[HRG_UPPER_BOUNDER]:
                 return f_ed_hrg(temperature)
-            elif temperature >= T[QGP_LOWER_BOUNDER]:
+            elif temperature > T[QGP_LOWER_BOUNDER]:
                 return f_ed_qgp(temperature)
             else:
-                return T[HRG_UPPER_BOUNDER + 1]
+                return ed[HRG_UPPER_BOUNDER]
+
         self.f_ed = mixed_phase
 
         order = 1
