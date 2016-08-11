@@ -150,7 +150,7 @@ class Sampler {
     /** read pimn on freeze out hypersf */
     void read_pimn_on_sf(const std::string & pimn_directory);
 
-    void read_chemical_potential();
+    void read_chemical_potential(const std::string & muB_directory);
 
     /** Read particle data table pdg05.txt */
     void read_pdg_table();

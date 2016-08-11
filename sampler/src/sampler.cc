@@ -72,7 +72,7 @@ Sampler::Sampler(const std::string & fpath,
 
     force_decay_ = force_resonance_decay;
 
-    read_chemical_potential();
+    read_chemical_potential(fpath);
 
     read_pdg_table();
 
@@ -348,10 +348,14 @@ void Sampler::read_pdg_table() {
 
 }
 
-void Sampler::read_chemical_potential() {
+void Sampler::read_chemical_potential(const std::string & fpath) {
     int pid;
     double chemicalpotential;
-    std::ifstream fin("chemical_potential.dat");
+    char buf[512];
+    std::stringstream muB_path;
+    muB_path << fpath << "/ChemForReso.dat";
+
+    std::ifstream fin(muB_path.str());
     if( fin.is_open() ){
         while( fin.good() ){
             fin>>pid>>chemicalpotential;
