@@ -75,6 +75,12 @@ class ChemicalPotential(object):
             energy_density = np.array([e0 + i * de for i in range(ne)])
 
             idx = floor((efrz - e0) / de)
+
+            # when energy density is too big, return 0.0 chemical potential
+            if idx > 500:
+                zero_mu_for_stable = np.zeros_like(chemical_potential[0])
+                return zero_mu_for_stable
+
             ed0, ed1 = energy_density[idx], energy_density[idx+1]
             mu0, mu1 = chemical_potential[idx], chemical_potential[idx+1]
 
@@ -160,4 +166,6 @@ def create_table(Tfrz = 0.137, output_path='.', eos_type='PCE165'):
 
 
 if __name__ == '__main__':
-    create_table(Tfrz=0.137, output_path='.', eos_type='EOSQ')
+    #create_table(Tfrz=0.137, output_path='.', eos_type='EOSQ')
+    chem = ChemicalPotential(0.22, version='PCE165')
+    print chem.get_chemical_potential_for_stable(0.22)
