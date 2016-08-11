@@ -31,13 +31,13 @@ class EosQ(object):
 
         HRG_UPPER_BOUNDER = 21
         QGP_LOWER_BOUNDER = 77
-        f_ed_hrg = interp1d(T[:HRG_UPPER_BOUNDER],
-                            ed[:HRG_UPPER_BOUNDER])
+        f_ed_hrg = interp1d(T[:HRG_UPPER_BOUNDER+1],
+                            ed[:HRG_UPPER_BOUNDER+1])
         interp_order = 1
 
         f_ed_qgp = InterpolatedUnivariateSpline(
-                T[QGP_LOWER_BOUNDER:],
-                ed[QGP_LOWER_BOUNDER:], k=interp_order)
+                T[QGP_LOWER_BOUNDER-1:],
+                ed[QGP_LOWER_BOUNDER-1:], k=interp_order)
 
         # notice that this one is only used to get efrz from Tfrz
         def mixed_phase(temperature):
@@ -86,6 +86,8 @@ num_ed = 200000
 
 if __name__=='__main__':
     import matplotlib.pyplot as plt
-    plt.plot(ed, pr)
-    plt.show()
+    for i in range(100):
+        print('T=', T[i], ' ed=', f_ed(T[i]))
+    #plt.plot(ed, pr)
+    #plt.show()
 
