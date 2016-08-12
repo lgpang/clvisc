@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d
 
 # the InterpolatedUnivariateSpline works for both interpolation and extrapolation
 from scipy.interpolate import InterpolatedUnivariateSpline
+from scipy.optimize import curve_fit
 
 class Eos(object):
     '''create eos table for hydrodynamic simulation;
@@ -39,16 +40,18 @@ class Eos(object):
         self.f_T = lambda ed: hbarc*(1.0/(dof*coef)*np.array(ed)/hbarc)**0.25 + 1.0E-10
         self.f_S = lambda ed: (np.array(ed) + self.f_P(ed))/self.f_T(ed)
         self.f_ed = lambda T: dof*coef*hbarc*(np.array(T)/hbarc)**4.0
+        self.f_cs2 = lambda ed: 1.0/3.0 * np.ones_like(ed)
         self.ed = np.linspace(0, 1999.99, 200000)
         self.pr = self.f_P(self.ed)
         self.T = self.f_T(self.ed)
         self.s = self.f_S(self.ed)
+        self.cs2 = self.f_cs2(self.ed)
         self.ed_start = 0.0
         self.ed_step = 0.01
         self.num_of_ed = 200000
 
     def eosq(self):
-        import eosq as eosq
+        import eosq
         self.ed = eosq.ed
         self.pr = eosq.pr
         self.T = eosq.T
@@ -56,6 +59,8 @@ class Eos(object):
         self.ed_start = eosq.ed_start
         self.ed_step = eosq.ed_step
         self.num_of_ed = eosq.num_ed
+        #get cs2 using dp/de
+        self.eos_func_from_interp1d()
         self.f_P = eosq.f_P
         self.f_T = eosq.f_T
         self.f_S = eosq.f_S
@@ -68,6 +73,18 @@ class Eos(object):
         self.f_T = InterpolatedUnivariateSpline(self.ed, self.T, k=order, ext=0)
         self.f_P = InterpolatedUnivariateSpline(self.ed, self.pr, k=order, ext=0)
         self.f_S = InterpolatedUnivariateSpline(self.ed, self.s, k=order, ext=0)
+        # calc the speed of sound square
+        self.cs2 = np.gradient(self.pr, self.ed_step)
+        mask = self.ed >= 30.
+        ed_mask = self.ed[mask]
+        cs2_mask = self.cs2[mask]
+        def exp_func(x, a, b, c):
+            #return a * np.exp(-b * x) + c
+            #return a * np.exp(-b * x) + c + d * x
+            return a / (np.exp(b/x) + c)
+
+        popt, pcov = curve_fit(exp_func, ed_mask, cs2_mask)
+        self.cs2[mask] = exp_func(ed_mask, *popt)
 
     def lattice_pce(self):
         import os
@@ -129,7 +146,7 @@ class Eos(object):
         add some information to compile_options for EOS table'''
         import pyopencl as cl
         fmt = cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT)
-        src = np.array(zip(self.ed, self.pr, self.T, self.s),
+        src = np.array(zip(self.cs2, self.pr, self.T, self.s),
                  dtype=np.float32).reshape(nrow, ncol, 4)
 
         eos_table = cl.image_from_array(ctx, src, 4)
@@ -187,14 +204,16 @@ class Eos(object):
         print('result at (', test_ed, ')=', h_result[0])
      
 
+   
 if __name__ == '__main__':
-    eos = Eos(5)
-    #print eos.f_ed(0.63)
-    #print eos.f_ed(0.137)
-    import matplotlib.pyplot as plt
-    ed = np.linspace(400, 600, 1000)
-
-    print(eos.f_ed(0.137))
-    plt.plot(ed, eos.f_P(ed))
-    plt.show()
-    
+    def test_plot_cs2():
+        eos = Eos(5)
+        #print eos.f_ed(0.63)
+        #print eos.f_ed(0.137)
+        import matplotlib.pyplot as plt
+        #print(eos.f_ed(0.137))
+        plt.plot(eos.ed, np.gradient(eos.pr, eos.ed_step))
+        plt.plot(eos.ed, eos.cs2, 'r-')
+        plt.show()
+ 
+    test_plot_cs2()

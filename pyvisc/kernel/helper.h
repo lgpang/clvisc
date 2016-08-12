@@ -79,12 +79,13 @@ inline real4 dudw(real4 ul, real4 ur, real dw) {
  * The maximum lam can not be bigger than 1.0f, in relativity
  * if fluid velocity is v=1, maximum cs2=1/3, the signal speed
  * in computing frame is cs2' = (cs2+v)/(1+cs2*v) = 1.0 */
-inline real maxPropagationSpeed(real4 edv, real vk, real pr){
+inline real maxPropagationSpeed(real4 edv, real vk, read_only image2d_t eos_table){
     real ut = gamma(edv.s1, edv.s2, edv.s3);
     real uk = ut*vk;
     real ut2 = ut*ut;
     real uk2 = uk*uk;
-    real cs2 = pr/max(edv.s0, acu);
+    //real cs2 = pr/max(edv.s0, acu);
+    real cs2 = CS2(edv.s0, eos_table);
     real lam = (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
        /(ut2 - (ut2-1.0f)*cs2);
     return max(lam, 1.0f);
@@ -197,7 +198,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
 
    real4 ev_half = 0.5f*(ev_i+ev_ip1);
    // maximum local propagation speed at i+1/2
-   real lam = maxPropagationSpeed(ev_half, vi_half, pr_half);
+   real lam = maxPropagationSpeed(ev_half, vi_half, eos_table);
 
    // first part of kt1d; the final results = src[i]-src[i-1]
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
@@ -220,7 +221,7 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
 
    // maximum local propagation speed at i-1/2
    ev_half = 0.5f*(ev_i+ev_im1);
-   lam = maxPropagationSpeed(ev_half, vi_half, pr_half);
+   lam = maxPropagationSpeed(ev_half, vi_half, eos_table);
    // second part of kt1d; final results = src[i] - src[i-1]
    src -= 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
 

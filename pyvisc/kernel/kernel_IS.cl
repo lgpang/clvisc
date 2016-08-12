@@ -163,13 +163,11 @@ __kernel void visc_src_alongx(
         real u0_i = gamma_real4(ev_i);
         real u0_ip1 = gamma_real4(ev_ip1);
         real u0_ip2 = gamma_real4(ev_ip2);
-        real pr_mh = 0.5f*(P(ev_im1.s0, eos_table) + P(ev_i.s0, eos_table));
-        real pr_ph = 0.5f*(P(ev_ip1.s0, eos_table) + P(ev_i.s0, eos_table));
         // .s1 -> .s2 or .s3 in other directions
         real v_mh = 0.5f*(ev_im1.s1 + ev_i.s1);
         real v_ph = 0.5f*(ev_ip1.s1 + ev_i.s1);
-        real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
-        real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
+        real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, eos_table);
+        real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, eos_table);
         
         d_udx[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
@@ -248,13 +246,11 @@ __kernel void visc_src_alongy(
         real u0_i = gamma_real4(ev_i);
         real u0_ip1 = gamma_real4(ev_ip1);
         real u0_ip2 = gamma_real4(ev_ip2);
-        real pr_mh = 0.5f*(P(ev_im1.s0, eos_table) + P(ev_i.s0, eos_table));
-        real pr_ph = 0.5f*(P(ev_ip1.s0, eos_table) + P(ev_i.s0, eos_table));
         // .s1 -> .s2 or .s3 in other directions
         real v_mh = 0.5f*(ev_im1.s2 + ev_i.s2);
         real v_ph = 0.5f*(ev_ip1.s2 + ev_i.s2);
-        real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
-        real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
+        real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, eos_table);
+        real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, eos_table);
         
         d_udy[IND] = minmod4(0.5f*(umu4(ev_ip1)-umu4(ev_im1)),
                              minmod4(THETA*(umu4(ev_i) - umu4(ev_im1)),
@@ -332,13 +328,11 @@ __kernel void visc_src_alongz(__global real * d_Src,
         real u0_i = gamma_real4(ev_i);
         real u0_ip1 = gamma_real4(ev_ip1);
         real u0_ip2 = gamma_real4(ev_ip2);
-        real pr_mh = 0.5f*(P(ev_im1.s0, eos_table) + P(ev_i.s0, eos_table));
-        real pr_ph = 0.5f*(P(ev_ip1.s0, eos_table) + P(ev_i.s0, eos_table));
         // .s1 -> .s2 or .s3 in other directions
         real v_mh = 0.5f*(ev_im1.s3 + ev_i.s3);
         real v_ph = 0.5f*(ev_ip1.s3 + ev_i.s3);
-        real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, pr_mh);
-        real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, pr_ph);
+        real lam_mh = maxPropagationSpeed(0.5f*(ev_im1+ev_i), v_mh, eos_table);
+        real lam_ph = maxPropagationSpeed(0.5f*(ev_ip1+ev_i), v_ph, eos_table);
         
         real4 christoffel_term = (real4)(ev_i.s3, 0.0f, 0.0f, 1.0f)*u0_i/tau;
         

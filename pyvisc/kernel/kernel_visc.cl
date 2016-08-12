@@ -95,7 +95,7 @@ real4 kt1d_visc(real4 ev[5], real4 pim0[5], real4 pimi[5],
 
    real4 ev_half = 0.5f*(ev[2]+ev[3]);
    // maximum local propagation speed at i+1/2
-   real lam = maxPropagationSpeed(ev_half, vip_half, pr_half);
+   real lam = maxPropagationSpeed(ev_half, vip_half, eos_table);
 
    // first part of kt1d; the final results = src[i]-src[i-1]
    real4 src = 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
@@ -119,7 +119,7 @@ real4 kt1d_visc(real4 ev[5], real4 pim0[5], real4 pimi[5],
 
    // maximum local propagation speed at i-1/2
    ev_half = 0.5f*(ev[2] + ev[1]);
-   lam = maxPropagationSpeed(ev_half, vim_half, pr_half);
+   lam = maxPropagationSpeed(ev_half, vim_half, eos_table);
    // second part of kt1d; final results = src[i] - src[i-1]
    src -= 0.5f*(Jp+Jm) - 0.5f*lam*(AR-AL);
 
