@@ -72,11 +72,11 @@ __kernel void get_sub_dNdYPtdPtdPhi(
                                2.0f*pmu.s3*(pmu.s1*pimn[3] + pmu.s2*pimn[6]));
 
             real df = feq*(1.0f - fermi_boson*feq)*p2pi_o_T2ep;
-            real alpha = 1.90f;
-            df *= pow((real)(dot(pmu, umu)/Tfrz), alpha - 2.0f);
-            // if ( df < 0.0f ) df = 0.0f;
-            // df = min(df, 10*feq);
-            feq += df;
+
+            // if |df| > 1, set df = sign(df) * df; this is learned from Chun Shen, VishNew
+            real df_norm = min(1.0f, 1.0f/(fabs(df)));
+
+            feq += df * df_norm;
 #endif
             dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq;
         }
