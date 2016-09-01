@@ -403,9 +403,10 @@ class CLVisc(object):
             if force_run_to_maxloop and loop == max_loops:
                 break
 
-            self.ideal.edmax = self.ideal.max_energy_density()
-            self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
-            print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
+            if loop % self.cfg.ntskip == 0:
+                self.ideal.edmax = self.ideal.max_energy_density()
+                self.ideal.history.append([self.ideal.tau, self.ideal.edmax])
+                print('tau=', self.ideal.tau, ' EdMax= ',self.ideal.edmax)
 
             is_finished = self.ideal.edmax < self.ideal.efrz
 
