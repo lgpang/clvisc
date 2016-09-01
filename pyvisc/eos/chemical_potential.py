@@ -8,7 +8,7 @@ from math import floor
 import logging
 import os
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 '''This module is used to calculate the effective chemical potential
    for all the resonances at freeze out temperature, from the eos table
@@ -74,7 +74,7 @@ class ChemicalPotential(object):
             chemical_potential = np.loadtxt(fname, skiprows=3)[::-1]
             energy_density = np.array([e0 + i * de for i in range(ne)])
 
-            idx = floor((efrz - e0) / de)
+            idx = int(floor((efrz - e0) / de))
 
             # when energy density is too big, return 0.0 chemical potential
             if idx > 500:
