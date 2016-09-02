@@ -291,6 +291,7 @@ class CLIdeal(object):
             plot_bulk=True, to_maxloop=False):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
+            t0 = time()
             self.edmax = self.max_energy_density()
             self.history.append([self.tau, self.edmax])
             print('tau=', self.tau, ' EdMax= ',self.edmax)
@@ -308,6 +309,9 @@ class CLIdeal(object):
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.update_time(loop=n)
             self.stepUpdate(step=2)
+            t1 = time()
+            print('one step: {dtime}'.format(dtime = t1-t0 ))
+
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk)
 
@@ -319,27 +323,31 @@ def main():
     from config import cfg, write_config
     #import pandas as pd
     print('start ...')
-    t0 = time()
     cfg.IEOS = 1
-    cfg.NX = 201
-    cfg.NY = 201
-    cfg.NZ = 101
-    cfg.DX = 0.1
-    cfg.DY = 0.1
+    cfg.NX = 385
+    cfg.NY = 385
+    cfg.NZ = 105
+    cfg.DX = 0.08
+    cfg.DY = 0.08
     cfg.DZ = 0.15
     cfg.DT = 0.01
-    cfg.ntskip = 24
+    cfg.ntskip = 20
     cfg.nxskip = 3
     cfg.nyskip = 3
-    cfg.nzskip = 2
+    cfg.nzskip = 1
     cfg.Eta_gw = 0.4
-    cfg.ImpactParameter = 7.0
+    cfg.ImpactParameter = 10.0
     cfg.ETAOS = 0.0
     cfg.TFRZ = 0.137
 
-    cfg.fPathOut = '../results/ideal_for_christian/'
+    cfg.Edmax = 55
+    cfg.TAU0 = 0.4
+
+    cfg.fPathOut = '../results/ideal_for_christian_check/'
 
     cfg.save_to_hdf5 = True
+
+    cfg.BSZ = 64
 
     write_config(cfg)
 
@@ -348,10 +356,12 @@ def main():
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.compile_options,
                   ideal.d_ev[1])
 
+    t0 = time()
     #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    ideal.evolve(max_loops=2000, save_bulk=True)
+    #ideal.evolve(max_loops=2000, save_bulk=True)
+    ideal.evolve(max_loops=2000, save_bulk=False)
     t1 = time()
-    print('finished. Total time: {dtime}'.format(dtime = t1-t0 ))
+    print('finished. Total time for hydro evolution: {dtime}'.format(dtime = t1-t0 ))
 
     from subprocess import call
     call(['python', './spec.py', cfg.fPathOut])

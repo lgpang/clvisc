@@ -399,6 +399,7 @@ class CLVisc(object):
         loop = 0
         #for loop in xrange(max_loops):
         while True:
+            t0 = time()
             # stop at max_loops if force_run_to_maxloop set to True
             if force_run_to_maxloop and loop == max_loops:
                 break
@@ -449,6 +450,9 @@ class CLVisc(object):
                 self.get_vorticity(save_data=False)
 
             loop = loop + 1
+            t1 = time()
+            print('one step: {dtime}'.format(dtime = t1-t0 ))
+
 
         self.save(save_hypersf=save_hypersf, save_bulk=save_bulk, 
                   save_pi = save_pi, save_vorticity = save_vorticity)
@@ -461,9 +465,9 @@ def main():
     print >>sys.stdout, 'start ...'
     t0 = time()
     from config import cfg, write_config
-    cfg.NX = 256
-    cfg.NY = 256
-    cfg.NZ = 256
+    cfg.NX = 385
+    cfg.NY = 385
+    cfg.NZ = 115
 
     cfg.DT = 0.01
     cfg.DX = 0.08
@@ -494,6 +498,8 @@ def main():
     cfg.ETAOS = 0.08
     cfg.fPathOut = '../results/pbpb_cent0_5_vs_heinz/'
     cfg.save_to_hdf5 = True
+
+    cfg.BSZ = 8
 
     write_config(cfg)
 

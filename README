@@ -1,3 +1,12 @@
+==The BSZ dependence==
+For ideal hydrodynamics, with lattice 385*385*115, per step running time is:
+
+BSZ      8      16      32      64      128
+Ideal(s)  0.37  0.218   0.178   0.155   0.157
+Visc(s)-GPU  3.12  1.65     1.17   1.01    1.17
+Visc(s)-CPU 6.64   6.45  6.63   7.0   7.58 
+
+
 
 ==The importance of concurrent reading from Global memory.==
 Here I used NX=NY=NZ=201 for a test, in principle the time cost for visc_src_alongx, 
