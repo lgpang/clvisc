@@ -91,7 +91,7 @@ __kernel void CreateIniCond( __global float4 * d_ev,
    d_pi[ 10*IND+ 6] = 0.0f;
    d_pi[ 10*IND+ 7] = piyy(x, y);
    d_pi[ 10*IND+ 8] = 0.0f;
-   d_pi[ 10*IND+ 9] = pizz(x, y);
+   d_pi[ 10*IND+ 9] = tau*tau*pizz(x, y);
 
    //if ( i == NX/2 && j == NY/2 ) {
    //    d_pi[ 10*IND+ 4] = pixx_;

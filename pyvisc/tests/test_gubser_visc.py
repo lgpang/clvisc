@@ -50,7 +50,7 @@ if __name__ == '__main__':
     from visc import CLVisc
     cfg.IEOS = 0
     Lam = -10.0
-    L = 5.0
+    L = 1.0
     cfg.TAU0 = 1.0
     cfg.NX = 501
     cfg.NY = 501
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     visc.update_udiff(visc.ideal.d_ev[1], visc.ideal.d_ev[2])
 
-    visc.evolve(max_loops=2200, force_run_to_maxloop=True, save_bulk=False,
+    visc.evolve(max_loops=500, force_run_to_maxloop=True, save_bulk=False,
                 plot_bulk=True, save_hypersf=False, save_pi=True)
 
     bulk = visc.ideal.bulkinfo
@@ -94,14 +94,14 @@ if __name__ == '__main__':
     h5.attrs['NX'] = cfg.NX
     h5.create_dataset('x', data=bulk.x)
 
-    nstep = 10
+    nstep = 4
     tau_list = np.empty(nstep)
     for i in range(nstep):
         h5.create_dataset('clvisc/ex/%s'%i, data=bulk.ex[i])
         h5.create_dataset('clvisc/vx/%s'%i, data=bulk.vx[i])
         h5.create_dataset('clvisc/pizz/%s'%i, data=pimn.pizz_x[i])
         h5.create_dataset('clvisc/pixx/%s'%i, data=pimn.pixx_x[i])
-        tau = 1.0 + i*cfg.ntskip*cfg.DT
+        tau = cfg.TAU0 + i*cfg.ntskip*cfg.DT
         tau_list[i] = tau
         h5.create_dataset('gubser/ex/%s'%i,   data=gubser_ed(tau, bulk.x, L, Lam))
         h5.create_dataset('gubser/pizz/%s'%i, data=tau*tau*gubser_pizz(tau,bulk.x,L, Lam))
@@ -120,27 +120,27 @@ if __name__ == '__main__':
 
     for i in range(5):
         ax[0, 0].semilogy(bulk.x, bulk.ex[i], 'k-', label='CLVisc')
-        ax[0, 0].semilogy(bulk.x, gubser_ed(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), 'r--', label='Gubser')
+        ax[0, 0].semilogy(bulk.x, gubser_ed(cfg.TAU0 + i*cfg.ntskip*cfg.DT, bulk.x, L, Lam), 'r--', label='Gubser')
         ax[0, 0].set_xlabel(r'$r_{\perp}$', fontsize=25)
         ax[0, 0].set_ylabel(r'$\epsilon$', fontsize=25)
         ax[0, 0].legend(loc='best')
-        #ax[0, 0].text(bulk.x[xcent], bulk.ex[xcent], r'$\tau=%s$ fm'%i)
 
     for i in range(5):
         ax[0, 1].plot(bulk.x, bulk.vx[i],'k-')
-        ax[0, 1].plot(bulk.x, gubser_vr(1.0 + i*cfg.ntskip*cfg.DT, bulk.x, L), 'r--')
+        ax[0, 1].plot(bulk.x, gubser_vr(cfg.TAU0 + i*cfg.ntskip*cfg.DT, bulk.x, L), 'r--')
         ax[0, 1].set_xlabel(r'$r_{\perp}$', fontsize=25)
         ax[0, 1].set_ylabel(r'$v_r$', fontsize=25)
 
     for i in range(5):
-        tau = 1.0 + i*cfg.ntskip*cfg.DT
+        tau = cfg.TAU0 + i*cfg.ntskip*cfg.DT
         ax[1, 0].plot(pimn.x, pimn.pizz_x[i], 'k-')
+        #ax[1, 0].plot(pimn.x, tau*tau*gubser_pizz(tau, bulk.x, L, Lam), 'r--')
         ax[1, 0].plot(pimn.x, tau*tau*gubser_pizz(tau, bulk.x, L, Lam), 'r--')
         ax[1, 0].set_xlabel(r'$r_{\perp}$', fontsize=25)
         ax[1, 0].set_ylabel(r'$\tau^2 \pi^{\eta\eta}$', fontsize=25)
 
     for i in range(5):
-        tau = 1.0 + i*cfg.ntskip*cfg.DT
+        tau = cfg.TAU0 + i*cfg.ntskip*cfg.DT
         ax[1, 1].plot(pimn.x, pimn.pixx_x[i], 'k-')
         ax[1, 1].plot(pimn.x, gubser_pixx(tau, bulk.x, L, Lam), 'r--')
         ax[1, 1].set_xlabel(r'$r_{\perp}$', fontsize=25)
