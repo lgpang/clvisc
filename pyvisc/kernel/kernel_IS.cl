@@ -420,7 +420,7 @@ __kernel void update_pimn(
     //if ( step == 1 ) udt += d_udiff[I]/DT;
     if ( step == 1 ) { 
         udt = d_udiff[I]/DT;
-        u_new = u_old + udt;
+        u_new = u_old + d_udiff[I];
     }
 
     real4 udx = d_udx[I];
@@ -500,8 +500,7 @@ __kernel void update_pimn(
 
             real piNS = etav*sigma;
 
-            //real pi_old = d_pi1[10*I + mn] * u_old.s0;
-            real pi_old = d_pi1[10*I + mn] * (0.3*u_old.s0 + 0.7*u_new.s0);
+            real pi_old = d_pi1[10*I + mn] * u_old.s0;
 
             // /** step==1: Q' = Q0 + Src*DT
             //     step==2: Q  = Q0 + (Src(Q0)+Src(Q'))*DT/2
