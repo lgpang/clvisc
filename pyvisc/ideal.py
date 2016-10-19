@@ -119,7 +119,7 @@ class CLIdeal(object):
 
     def __compile_options(self):
         optlist = [ 'TAU0', 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
-        gpu_defines = [ '-D %s=(real)%s'%(key, value) for (key,value)
+        gpu_defines = [ '-D %s=%s'%(key, value) for (key,value)
                 in list(self.cfg.__dict__.items()) if key in optlist ]
         gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))
         gpu_defines.append('-D {key}={value}'.format(key='NY', value=self.cfg.NY))
@@ -150,28 +150,26 @@ class CLIdeal(object):
         return gpu_defines
       
     def __loadAndBuildCLPrg(self):
-        print(self.compile_options)
         #load and build *.cl programs with compile self.compile_options
         with open(os.path.join(self.cwd, 'kernel', 'kernel_ideal.cl'), 'r') as f:
             prg_src = f.read()
             self.kernel_ideal = cl.Program(self.ctx, prg_src).build(
-                                             options=self.compile_options)
+                                             options=' '.join(self.compile_options))
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_reduction.cl'), 'r') as f:
             src_maxEd = f.read()
             self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(
-                                                 options=self.compile_options)
+                                                 options=' '.join(self.compile_options))
 
         hypersf_defines = list(self.compile_options)
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nzskip', value=self.cfg.nzskip))
         hypersf_defines.append('-D {key}={value}f'.format(key='EFRZ', value=self.efrz))
-        print(hypersf_defines)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_hypersf.cl'), 'r') as f:
             src_hypersf = f.read()
             self.kernel_hypersf = cl.Program(self.ctx, src_hypersf).build(
-                                                 options=hypersf_defines)
+                                             options=' '.join(hypersf_defines))
 
 
 
@@ -265,6 +263,8 @@ class CLIdeal(object):
     def save(self, save_hypersf=True, save_bulk=False, viscous_on=False):
         self.num_of_sf = np.zeros(1, dtype=np.int32)
         cl.enqueue_copy(self.queue, self.num_of_sf, self.d_num_of_sf).wait()
+        # convert the single value array [num_of_sf] to num_of_sf.
+        self.num_of_sf = np.squeeze(self.num_of_sf)
         print("num of sf=", self.num_of_sf)
         if save_hypersf:
             hypersf = np.empty(self.num_of_sf, dtype=self.cfg.real8)
@@ -345,7 +345,7 @@ def main():
 
     cfg.fPathOut = '../results/ideal_for_christian_check/'
 
-    cfg.save_to_hdf5 = True
+    cfg.save_to_hdf5 = False
 
     cfg.BSZ = 64
 

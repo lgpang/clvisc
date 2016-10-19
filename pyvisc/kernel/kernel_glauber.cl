@@ -10,8 +10,12 @@ real thickness(real x, real y);
 real thickness(real x, real y)
 {
 	real r,thickness,f,z ,cut,a[10],b[10];
-	real zk[5]={-0.9061798f, -0.5386492f, 0.0f, 0.5386493f, 0.9061798f};//range(-1,1)
-	real Ak[5]={0.2369269f,0.4786287f,0.5688889f,0.4786287f,0.2369269f};//weight
+	real zk[5]={-0.9061798f, -0.5386492f, 0.0f, 0.5386493f, 0.9061798f};
+    //range(-1,1)
+
+	real Ak[5]={0.2369269f,0.4786287f,0.5688889f,0.4786287f,0.2369269f};
+    //weight
+
 	thickness = 0.0f;
 	cut  = 5.0f*R;
 	for (int j=0; j!=10; ++j){

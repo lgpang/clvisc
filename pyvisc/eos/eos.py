@@ -192,7 +192,7 @@ class Eos(object):
         }
         '''
 
-        prg = cl.Program(ctx, CL_SOURCE).build(self.compile_options)
+        prg = cl.Program(ctx, CL_SOURCE).build(' '.join(self.compile_options))
 
         mf = cl.mem_flags
 

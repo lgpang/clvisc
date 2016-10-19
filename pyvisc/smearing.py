@@ -56,7 +56,7 @@ class Smearing(object):
         with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing.cl'), 'r') as f:
             prg_src = f.read()
             self.prg = cl.Program(ctx, prg_src).build(
-                                             options=smearing_options)
+                                             options=' '.join(smearing_options))
 
 
 
@@ -116,7 +116,7 @@ class SmearingP4X4(object):
         print(smearing_options)
         with open(os.path.join(self.cwd, 'kernel', 'kernel_gaussian_smearing_new.cl'), 'r') as f:
             prg_src = f.read()
-            self.prg = cl.Program(ctx, prg_src).build(options=smearing_options)
+            self.prg = cl.Program(ctx, prg_src).build(options=' '.join(smearing_options))
 
 
 

@@ -17,9 +17,9 @@ sys.path.append(cwd)
 from eos.eos import Eos
 #import matplotlib.pyplot as plt
 
-import logging
+#import logging
 
-logging.basicConfig(filename='bulkinfo.log', level=logging.DEBUG)
+#logging.basicConfig(filename='bulkinfo.log', level=logging.DEBUG)
 
 
 class BulkInfo(object):
@@ -124,7 +124,7 @@ class BulkInfo(object):
             }
             '''
         self.kernel_edslice = cl.Program(self.ctx, edslice_src).build(
-                                         options=self.compile_options)
+                                 options=' '.join(self.compile_options))
 
     def get(self, tau, d_ev1, edmax, d_pi=None):
         self.time.append(tau)
@@ -178,7 +178,7 @@ class BulkInfo(object):
         self.vy_xz.append(h_evxz[:,2].reshape(NX, NZ))
         self.vz_xz.append(h_evxz[:,3].reshape(NX, NZ))
 
-        logging.debug('d_pi is not None: %s'%(d_pi is not None))
+        #logging.debug('d_pi is not None: %s'%(d_pi is not None))
         if d_pi is not None:
             h_pixx = np.zeros(NX*NY, self.cfg.real)
             h_piyy = np.zeros(NX*NY, self.cfg.real)

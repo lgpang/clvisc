@@ -96,19 +96,19 @@ class CLVisc(object):
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_IS.cl'), 'r') as f:
             src = f.read()
-            self.kernel_IS = cl.Program(self.ctx, src).build(options=self.compile_options)
+            self.kernel_IS = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_visc.cl'), 'r') as f:
             src = f.read()
-            self.kernel_visc = cl.Program(self.ctx, src).build(options=self.compile_options)
+            self.kernel_visc = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_checkpi.cl'), 'r') as f:
             src = f.read()
-            self.kernel_checkpi = cl.Program(self.ctx, src).build(options=self.compile_options)
+            self.kernel_checkpi = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
 
         with open(os.path.join(self.cwd, 'kernel', 'kernel_vorticity.cl'), 'r') as f:
             src = f.read()
-            self.kernel_vorticity = cl.Program(self.ctx, src).build(options=self.compile_options)
+            self.kernel_vorticity = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
             
     def IS_initialize(self):
         '''initialize pi^{mu nu} tensor'''
@@ -473,7 +473,7 @@ def main():
     cfg.DX = 0.08
     cfg.DY = 0.08
     cfg.DZ = 0.08
-    cfg.ImpactParameter = 3.54
+    cfg.ImpactParameter = 7.54
 
     cfg.A = 208
     cfg.Ra = 6.62
@@ -496,10 +496,10 @@ def main():
     cfg.Hwn = 0.95
 
     cfg.ETAOS = 0.08
-    cfg.fPathOut = '../results/pbpb_cent0_5_vs_heinz/'
+    cfg.fPathOut = '../results/pbpb_test_ptspec'
     cfg.save_to_hdf5 = True
 
-    cfg.BSZ = 8
+    cfg.BSZ = 64
 
     write_config(cfg)
 
@@ -508,7 +508,7 @@ def main():
     visc.optical_glauber_ini()
     #visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
     #            save_vorticity=False)
-    visc.evolve(max_loops=2000, save_hypersf=False, save_bulk=False,
+    visc.evolve(max_loops=2000, save_hypersf=True, save_bulk=False,
             force_run_to_maxloop=False, save_vorticity=False)
 
     t1 = time()

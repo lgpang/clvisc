@@ -73,7 +73,7 @@ class BulkInfo(object):
         with open(os.path.join(cwd, 'kernel', 'kernel_bulkinfo.cl')) as f:
                 prg_src = f.read()
                 self.kernel_bulk = cl.Program(self.ctx, prg_src).build(
-                    options = self.compile_options)
+                    options = ' '.join(self.compile_options))
 
     #@profile
     def get(self, tau, d_ev, edmax, d_pi=None):

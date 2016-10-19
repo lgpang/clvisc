@@ -494,7 +494,7 @@ __kernel void update_pimn(
 
             int mn = idx(mu, nu);
             //// set the sigma^{mu nu} and theta 0 when ed is too small
-            if ( u[0] > 100.0f ) {
+            if ( u[0] > 10000.0f ) {
                 sigma = 0.0f;
             }
 

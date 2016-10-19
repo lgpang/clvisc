@@ -65,7 +65,7 @@ class PimnInfo(object):
             }
             '''
         self.kernel_pislice = cl.Program(self.ctx, pislice_src).build(
-                                         options=self.compile_options)
+                                 options=' '.join(self.compile_options))
     def get(self, tau, d_pi):
         self.time.append(tau)
         mf = cl.mem_flags
