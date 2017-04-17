@@ -1,3 +1,42 @@
+==Installation==
+1. OpenCL
+
+2. Anaconda https://www.continuum.io/downloads
+Please install the python2.7 version; otherwise code does not run
+
+disable the mkl 
+
+    conda install nomkl numpy scipy scikit-learn numexpr
+    conda remove mkl mkl-service
+
+3. PyOpenCL
+The new PyOpenCL uses different build option:
+
+    ```prg.build(' '.join(compile_options))```
+
+when compile_options is a list of strings.
+
+And '-D x = (real) 4.0' does not work any more.
+One should use '-D x=4.0f' instead.
+
+
+4. Modify cache_dir in cache.py if the cluster does not have /tmp directory
+
+anaconda2/lib/python2.7/site-packages/pyopencl-2016.2-py2.7-linux-x86_64.egg/pyopencl/cache.py
+
+322 def _create_built_program_from_source_cached(ctx, src, options_bytes,
+323         devices, cache_dir, include_path):
+324     from os.path import join                                                        
+325 
+326     if cache_dir is None:
+327         import appdirs                                                              
+328         #cache_dir = join(appdirs.user_cache_dir("pyopencl", "pyopencl"),           
+329         #        "pyopencl-compiler-cache-v2-py%s" % (                              
+330         #            ".".join(str(i) for i in sys.version_info),))                  
+331         cache_dir = '/lustre/nyx/hyihp/lpang/tmp/'                                  
+
+
+
 ==The BSZ dependence==
 For ideal hydrodynamics, with lattice 385*385*115, per step running time is:
 
