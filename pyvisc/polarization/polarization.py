@@ -71,7 +71,7 @@ class Polarization(object):
 
         with open(fpath, 'r') as f:
             src = f.read()
-            self.prg = cl.Program(self.ctx, src).build(options=compile_options)
+            self.prg = cl.Program(self.ctx, src).build(options=' '.join(compile_options))
 
         size = num_of_mom
         h_pol = np.zeros((size, 4), np.float32)

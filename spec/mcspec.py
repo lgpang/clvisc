@@ -12,7 +12,7 @@ from time import time
 import math
 
 
-class mcspec(object):
+class Mcspec(object):
     def __init__(self, fpath, rapidity_kind='eta'):
         fname = os.path.join(fpath, 'mc_particle_list.dat')
 
@@ -147,7 +147,7 @@ class mcspec(object):
 
 if __name__=='__main__':
     t1 = time()
-    spec = mcspec('/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event1/')
+    spec = Mcspec('/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event1/')
     t2 = time()
     print('read data spent', t2-t1, ' s') 
     pt, pion_vn2, pion_vn4 = spec.differential_flow(n=2, pid='211')
@@ -155,6 +155,8 @@ if __name__=='__main__':
     pt, kaon_vn2, kaon_vn4 = spec.differential_flow(n=2, pid='321')
 
     pt, proton_vn2, proton_vn4 = spec.differential_flow(n=2, pid='2212')
+
+    np.savetxt('vn.dat', np.array([pt, pion_vn2]).T)
 
     plt.plot(pt, pion_vn2, label='pion vn2')
     plt.plot(pt, pion_vn4, label='pion vn4')

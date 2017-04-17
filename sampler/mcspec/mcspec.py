@@ -35,8 +35,8 @@ class mcspec(object):
         self.fpath = fpath
 
 
-    def pt_differential_vn(self, n=2, pid='211'):
-        pts = np.linspace(0, 4.2, 21)
+    def pt_differential_vn(self, n=2, pid='211', pt_min=0.3, pt_max=2.5, eta_max=2.0):
+        pts = np.linspace(0.3, 2.5, 21)
 
         avg2_list = np.zeros(self.num_of_events)
         avg4_list = np.zeros(self.num_of_events)
@@ -59,7 +59,7 @@ class mcspec(object):
 
             for ipt, pt in enumerate(pts):
                 avg2_prime_list[idx, ipt], avg4_prime_list[idx, ipt] = self.avg_prime(
-                        n, pid, pt_min=pt-0.2, pt_max=pt+0.2, eta_min=-0.8, eta_max=0.8)
+                        n, pid, pt_min=pt-0.2, pt_max=pt+0.2, eta_min=-eta_max, eta_max=eta_max)
 
         vn2, vn4 = self.differential_flow(avg2_list, avg4_list,
                                                avg2_prime_list, avg4_prime_list)
@@ -255,69 +255,64 @@ class mcspec(object):
 
     def plot_vn_pt(self, n=2, make_plot=False):
         '''plot vn as a function of pt '''
-        pts, v22_pion, v24_pion = mc.pt_differential_vn(n=n, pid='211')
-        pts, v22_kaon, v24_kaon = mc.pt_differential_vn(n=n, pid='321')
-        pts, v22_proton, v24_proton = mc.pt_differential_vn(n=n, pid='2212')
-        pts, v22_charged, v24_charged = mc.pt_differential_vn(n=n, pid='charged')
+        pts, vn2_pion,    vn4_pion = self.pt_differential_vn(n=n, pid='211')
+        pts, vn2_kaon,    vn4_kaon = self.pt_differential_vn(n=n, pid='321')
+        pts, vn2_proton,  vn4_proton = self.pt_differential_vn(n=n, pid='2212')
+        pts, vn2_charged, vn4_charged = self.pt_differential_vn(n=n, pid='charged')
 
-        np.savetxt(os.path.join(self.fpath, 'v%s_vs_pt.txt'%n), zip(pts,
-                   v22_pion, v22_kaon, v22_proton, v22_charged))
+        np.savetxt(os.path.join(self.fpath, 'v%s_2_vs_pt.txt'%n), zip(pts,
+                   vn2_pion, vn2_kaon, vn2_proton, vn2_charged))
+
+        np.savetxt(os.path.join(self.fpath, 'v%s_4_vs_pt.txt'%n), zip(pts,
+                   vn4_pion, vn4_kaon, vn4_proton, vn4_charged))
 
         print("v%s finished!"%n)
 
         if make_plot:
-            plt.plot(pts, v22_pion, label='v2{2} pion')
-            plt.plot(pts, v22_kaon, label='v2{2} kaon')
-            plt.plot(pts, v22_proton, label='v2{2} proton')
+            plt.plot(pts, vn4_pion, label='v%s{2} pion'%n)
+            plt.plot(pts, vn4_kaon, label='v%s{2} kaon'%n)
+            plt.plot(pts, vn4_proton, label='v%s{2} proton'%n)
 
             plt.legend(loc='best')
             plt.show()
 
 
 
+from subprocess import call, check_output
+
+def calc_vn(fpath, over_sampling=1000, make_plot=False):
+    cwd = os.getcwd()
+    os.chdir('../build')
+    #call(['cmake', '..'])
+    #call(['make'])
+    cmd = ['./main', fpath, 'true', 'true', '%s'%over_sampling]
+
+    proc = check_output(cmd)
+
+    stio = fstring()
+    stio.write(proc)
+
+    mc = mcspec(stio.getvalue(), fpath=fpath)
+
+    mc.vn_vs_eta(make_plot = make_plot)
+    mc.plot_vn_pt(n=4)
+    mc.plot_vn_pt(n=3)
+    mc.plot_vn_pt(n=2, make_plot=make_plot)
+
+    os.chdir(cwd)
+
 
 
 if __name__=='__main__':
     t1 = time()
-    #fname = '/lustre/nyx/hyihp/lpang/auau200_results/cent20_30/etas0p08/event1/')
 
-    #event = pd.read_csv(fname, sep=' ', header=None, dtype=np.float32,
-    #                   skiprows=1).values
+    import sys
 
-    #fpath = '/lustre/nyx/hyihp/lpang/new_polarization/auau200_results/cent20_30/etas0p08/event0/'
-    from subprocess import call, check_output
+    fpath = '/lustre/nyx/hyihp/lpang/trento_ini/bin/pbpb2p76/20_30/n2/mean'
 
-    for eid in range(1):
-        #fpath = '/lustre/nyx/hyihp/lpang/new_polarization/pbpb2p76_results/cent0_5/etas0p16/event%d/'%eid
-        #fpath = '/lustre/nyx/hyihp/lpang/pbpb5p02/20_30/n3/bin10/'
-        #fpath = '/lustre/nyx/hyihp/lpang/pbpb5p02/pbpb2p76/20_30/n2/bin10/0p16/'
-        fpath = '/lustre/nyx/hyihp/lpang/pbpb5p02/event501/'
+    if len(sys.argv) == 2:
+        fpath = sys.argv[1]
 
-        cwd = os.getcwd()
-        os.chdir('../build')
-        #call(['cmake', '..'])
-        #call(['make'])
-
-        cmd = ['./main', fpath, 'true', 'true', '1000']
-
-        proc = check_output(cmd)
-
-        #particle_lists = pd.read_csv(fstring(proc), sep=' ', header=None, dtype=np.float32, comment='#').values
-
-        stio = fstring()
-        stio.write(proc)
-
-        #st = stio.getvalue()
-
-        #print(st.split('#finished')[:-1])
-
-        mc = mcspec(stio.getvalue(), fpath=fpath)
-
-        mc.vn_vs_eta(make_plot = False)
-        mc.plot_vn_pt(n=4)
-        mc.plot_vn_pt(n=3)
-        mc.plot_vn_pt(n=2, make_plot=True)
-
-        os.chdir(cwd)
+    calc_vn(fpath, over_sampling=5000, make_plot=True)
 
 

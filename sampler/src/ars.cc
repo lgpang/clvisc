@@ -405,32 +405,32 @@ float AdaptiveRejectionSampler::get_one_sample() {
       return x;
     } else if ( rejection_test(x, j, rand) ) {
       return x;
-    } //else {
-      //if ( rejections < max_refine_loops_ ) {
-      //  Point rej;
-      //  rej.x = x;
-      //  rej.expy = f_(x);
-      //  rej.y = std::log(rej.expy);
-      //  try {
-      //      adaptive_update((j+1)/2, rej);
-      //  } catch (const std::out_of_range& oor) {
-      //      std::cerr << "Out of range:" << oor.what() << std::endl;
-      //      throw std::runtime_error("Error: Out of range error in ARS");
-      //  }
-      //  rejections++;
-      //}
-      //  std::cout << "don't do adaptive_update to test memory leak \n";
-    //}
+    }else {
+      if ( rejections < max_refine_loops_ ) {
+        Point rej;
+        rej.x = x;
+        rej.expy = f_(x);
+        rej.y = std::log(rej.expy);
+        try {
+            adaptive_update((j+1)/2, rej);
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "Out of range:" << oor.what() << std::endl;
+            throw std::runtime_error("Error: Out of range error in ARS");
+        }
+        rejections++;
+      }
+      //std::cout << "don't do adaptive_update to test memory leak \n";
+    }
 
-    //if ( rejections == max_refine_loops_ ) {
-    //  // log.fatal() << "In AdaptiveRejectionSampler:";
-    //  // log.fatal() << "reject too many time!\n";
-    //  std::cout << "f(0.1)=" << f_(0.1) << std::endl;
-    //  std::cout << "x, f(x), log(f)=" << x << " " << f_(x) << " " << std::log(f_(x)) << std::endl;
-    //  throw std::runtime_error(
-    //      "Error: Reject more than 40 times to get one sample "
-    //      "is not resonable in ARS method!");
-    //}
+    if ( rejections == max_refine_loops_ ) {
+      // log.fatal() << "In AdaptiveRejectionSampler:";
+      // log.fatal() << "reject too many time!\n";
+      std::cout << "f(0.1)=" << f_(0.1) << std::endl;
+      std::cout << "x, f(x), log(f)=" << x << " " << f_(x) << " " << std::log(f_(x)) << std::endl;
+      throw std::runtime_error(
+          "Error: Reject more than 40 times to get one sample "
+          "is not resonable in ARS method!");
+    }
   }
 }
 

@@ -24,6 +24,10 @@ def plot_dNdEta(num_of_events = 8):
     plot_hydro('event15_25')
     plot_hydro('event25_35')
 
+    #ebe = np.loadtxt('dNdEta_0_6_ebe.dat')
+
+    #plt.plot(ebe[:, 0], ebe[:, 1], 'r--')
+
     # 1304.0347
     dat0 = np.loadtxt('dNdEta_0_6.dat')
     dat1 = np.loadtxt('dNdEta_6_15.dat')
@@ -51,7 +55,7 @@ def plot_dNdEta(num_of_events = 8):
     plt.xlim(-8, 8)
     plt.ylim(0, 1000)
     plt.savefig('dNdEta_AuAu200.pdf')
-    #plt.show()
+    plt.show()
 
 
 plot_dNdEta()

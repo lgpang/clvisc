@@ -413,7 +413,6 @@ __kernel void decay_3body(
         phi = (k<NPHI/2) ? M_PI_F*(1.0-gaulep48[k]) : M_PI_F*(1.0+gaulep48[NPHI-1-k]);
 
         d_Decay[ n * nchannels + get_group_id(0) ] =  d_BranchRatio[get_group_id(0)] * Edndp3_3bodyN( y, pt, phi, m1, m2, m3, mr, norm3, pidR, d_Spec );
-        //d_Decay[ n * nchannels + get_group_id(0) ] =  0.0;
 
         n += get_local_size(0);
     }

@@ -382,15 +382,145 @@ inline real PiPi(int lam, int mu, int nu, __private real pimn[10],
   return firstTerm + secondTerm;
 }
 
-    /** update d_pinew with d_pi1, d_pistep and d_Src
-    where d_pi1 is for u0*d_pi as Q0_old
-    d_pistep is for src term in Runge Kutta method,
-    which is d_pi[1] for step==1 and d_pi[2] for step==2
-    d_ev[1] is the ev_visc 
-    d_ev[2] is ev_ideal*+correction at step==1
-    and ev_visc* at step==2
-    d_udiff is the correction from previous step
-    **/
+/** calc Omega^{mu nu} which is equal to:
+    1/2 Delta^{mu}_{alpha} Delta^{nu}_{beta} (nabla^alpha u^beta - nabla^beta u^alpha)
+    = 1/2 Delta^{mu}_{alpha} Delta^{nu}{beta} omega_{alpha beta}
+**/
+inline real OmegaMuNu(int mu, int nu,
+                     __private real omega[6],
+                     __private real u[4])
+{
+  real4 u_alpha = (real4)(u[0], -u[1], -u[2], -u[3]);
+
+  /** Delta^{mu}_{alpha}  = delta^{mu}_{alpha} - u^{mu} u_{alpha}
+   Delta4[] = (Delta^{0}_{alpha}, Delta^{1}_{alpha}, Delta^{2}_{alpha}, Delta^{3}_{alpha})
+  **/
+  real4 Delta4[] = {(real4)(1.0f, 0.0f, 0.0f, 0.0f) - u[0] * u_alpha,
+                    (real4)(0.0f, 1.0f, 0.0f, 0.0f) - u[1] * u_alpha,
+                    (real4)(0.0f, 0.0f, 1.0f, 0.0f) - u[2] * u_alpha,
+                    (real4)(0.0f, 0.0f, 0.0f, 1.0f) - u[3] * u_alpha};
+  real4 A[] = {(real4)(0.0f, omega[0], omega[1], omega[2]),
+                   (real4)(-omega[0], 0.0f, omega[3], omega[4]),
+                   (real4)(-omega[1], -omega[3], 0.0f, omega[5]),
+                   (real4)(-omega[2], -omega[4], -omega[5], 0.0f)};
+  
+  real4 temp = (real4)(dot(Delta4[nu], A[0]), dot(Delta4[nu], A[1]),
+                       dot(Delta4[nu], A[2]), dot(Delta4[nu], A[3]));
+
+  return  0.5f * dot(Delta4[mu], temp);
+}
+
+/** \pi^{< mu}_{lam} * omega^{nu> lam} coupling term
+    = Delta^{mu nu}_{alpha beta} A^{alpha}_{lambda} B^{beta lambda}
+    = 1/2(Delta^{mu alpha} Delta^{nu beta} * A_{alpha} * B_{beta}
+        + Delta^{mu alpha} Delta^{nu beta} * A_{beta} * B_{alpha})
+     -1/3.0 * Delta[mu][nu]  Delta^{alpha beta} * A_{alpha} * B_{beta}
+    where B = omega^{mu nu} = nabla^{mu} u^{nu} - nabla^{nu} u^{mu},
+    omega is anti-symmetric, only 6 independent components
+**/
+inline real pi_omega(int lam, int mu, int nu,
+                     __private real pimn[10],
+                     __private real omega[6],
+                     __private real u[4])
+{
+  /** pi_{\mu}^{lam} **/
+  real4 A = (real4)(pimn[idx(0, lam)], -pimn[idx(1, lam)], -pimn[idx(2, lam)],
+                    -pimn[idx(3, lam)]);
+
+  /** omega_{a}^{lam} = g_ab omega^{b lam} = 
+      (omega^{0 lam}, -omega^{1 lam}, -omega^{2 lam}, -omega^{3 lam})
+      =         |        0   omega[0],     omega[1],    omega[2]|
+                | omega[0],        0,      omega[3],    omega[4]|
+                | omega[1], -omega[3],            0 ,    omega[5]|
+                | omega[2], -omega[4],    -omega[5],           0]|
+      **/
+  real4 B;
+  if (lam == 0) {
+      B = (real4)(0.0f, omega[0], omega[1], omega[2]);
+  } else if (lam == 1) {
+      B = (real4)(omega[0], 0.0f,  omega[3], omega[4]);
+  } else if (lam == 2) {
+      B = (real4)(omega[1], -omega[3],   0.0f, omega[5]);
+  } else if (lam == 3) {
+      B = (real4)(omega[2], -omega[4],   -omega[5], 0.0f);
+  }
+
+  real4 umu = (real4)(u[0], u[1], u[2], u[3]);
+
+  real4 Delta4[] = {gm[0]-u[0]*umu, gm[1]-u[1]*umu,
+                    gm[2]-u[2]*umu, gm[3]-u[3]*umu};
+
+  /** 1/2( Delta^{mu alpha} Delta^{nu beta} * A_{alpha} * B_{beta}
+        + Delta^{mu alpha} Delta^{nu beta} * A_{beta} * B_{alpha} )
+  */
+  real firstTerm = 0.5f * (dot(Delta4[mu], A) * dot(Delta4[nu], B)
+                         + dot(Delta4[mu], B) * dot(Delta4[nu], A));
+
+  real4 temp = (real4)(dot(Delta4[0], A), dot(Delta4[1], A),
+                       dot(Delta4[2], A), dot(Delta4[3], A));
+
+  // -1/3.0 * Delta[mu][nu]  Delta^{alpha beta} * A_{alpha} * B_{beta}
+  real secondTerm = -1.0f/3.0f*(gmn[mu][nu] - u[mu]*u[nu]) * dot(temp, B);
+
+  return firstTerm + secondTerm;
+}
+
+/** \omega^{< mu}_{lam} * omega^{nu> lam} coupling term
+    = Delta^{mu nu}_{alpha beta} A^{alpha}_{lambda} B^{beta lambda}
+    = 1/2(Delta^{mu alpha} Delta^{nu beta} * A_{alpha} * B_{beta}
+        + Delta^{mu alpha} Delta^{nu beta} * A_{beta} * B_{alpha})
+     -1/3.0 * Delta[mu][nu]  Delta^{alpha beta} * A_{alpha} * B_{beta}
+    where B = omega^{mu nu} = nabla^{mu} u^{nu} - nabla^{nu} u^{mu},
+    omega is anti-symmetric, only 6 independent components
+**/
+inline real omega_omega(int lam, int mu, int nu,
+                     __private real omega[6],
+                     __private real u[4])
+{
+  /** B = omega_{a}^{lam} = g_ab omega^{b lam} = 
+      (omega^{0 lam}, -omega^{1 lam}, -omega^{2 lam}, -omega^{3 lam})
+      =         |        0   omega[0],     omega[1],    omega[2]|
+                | omega[0],        0,      omega[3],    omega[4]|
+                | omega[1], -omega[3],            0 ,    omega[5]|
+                | omega[2], -omega[4],    -omega[5],           0]|
+      **/
+  real4 B;
+  if (lam == 0) {
+      B = (real4)(0.0f, omega[0], omega[1], omega[2]);
+  } else if (lam == 1) {
+      B = (real4)(omega[0], 0.0f,  omega[3], omega[4]);
+  } else if (lam == 2) {
+      B = (real4)(omega[1], -omega[3],   0.0f, omega[5]);
+  } else if (lam == 3) {
+      B = (real4)(omega[2], -omega[4],   -omega[5], 0.0f);
+  }
+
+  real4 umu = (real4)(u[0], u[1], u[2], u[3]);
+
+  real4 Delta4[] = {gm[0]-u[0]*umu, gm[1]-u[1]*umu,
+                    gm[2]-u[2]*umu, gm[3]-u[3]*umu};
+
+  real firstTerm = dot(Delta4[mu], B) * dot(Delta4[nu], B);
+
+  real4 temp = (real4)(dot(Delta4[0], B), dot(Delta4[1], B),
+                       dot(Delta4[2], B), dot(Delta4[3], B));
+
+  // -1/3.0 * Delta[mu][nu]  Delta^{alpha beta} * A_{alpha} * B_{beta}
+  real secondTerm = -1.0f/3.0f*(gmn[mu][nu] - u[mu]*u[nu]) * dot(temp, B);
+
+  return firstTerm + secondTerm;
+}
+
+
+/** update d_pinew with d_pi1, d_pistep and d_Src
+where d_pi1 is for u0*d_pi as Q0_old
+d_pistep is for src term in Runge Kutta method,
+which is d_pi[1] for step==1 and d_pi[2] for step==2
+d_ev[1] is the ev_visc 
+d_ev[2] is ev_ideal*+correction at step==1
+and ev_visc* at step==2
+d_udiff is the correction from previous step
+**/
 
 __kernel void update_pimn(
 	__global real * d_pinew,
@@ -520,6 +650,56 @@ __kernel void update_pimn(
                 -PiPi(3, mu, nu, pi2, u));
 #endif
 
+#ifdef PIMUNU_OMEGA_COUPLING
+            real omega[6];
+            omega[0] = udt.s1 - udx.s0;
+            omega[1] = udt.s2 - udy.s0;
+            omega[2] = udt.s3 - udz.s0;
+            omega[3] = udx.s2 - udy.s1;
+            omega[4] = udx.s3 - udz.s1;
+            omega[5] = udy.s3 - udz.s2;
+
+            real Omega[6];
+            Omega[0] = OmegaMuNu(0, 1, omega, u);
+            Omega[1] = OmegaMuNu(0, 2, omega, u);
+            Omega[2] = OmegaMuNu(0, 3, omega, u);
+            Omega[3] = OmegaMuNu(1, 2, omega, u);
+            Omega[4] = OmegaMuNu(1, 3, omega, u);
+            Omega[5] = OmegaMuNu(2, 3, omega, u);
+
+            src += 2.0f*(pi_omega(0, mu, nu, pi2, Omega, u) 
+                -pi_omega(1, mu, nu, pi2, Omega, u)
+                -pi_omega(2, mu, nu, pi2, Omega, u)
+                -pi_omega(3, mu, nu, pi2, Omega, u));
+#endif
+
+#ifdef OMEGA_OMEGA_COUPLING
+#ifndef PIMUNU_OMEGA_COUPLING
+            real omega[6];
+            omega[0] = udt.s1 - udx.s0;
+            omega[1] = udt.s2 - udy.s0;
+            omega[2] = udt.s3 - udz.s0;
+            omega[3] = udx.s2 - udy.s1;
+            omega[4] = udx.s3 - udz.s1;
+            omega[5] = udy.s3 - udz.s2;
+
+            real Omega[6];
+            Omega[0] = OmegaMuNu(0, 1, omega, u);
+            Omega[1] = OmegaMuNu(0, 2, omega, u);
+            Omega[2] = OmegaMuNu(0, 3, omega, u);
+            Omega[3] = OmegaMuNu(1, 2, omega, u);
+            Omega[4] = OmegaMuNu(1, 3, omega, u);
+            Omega[5] = OmegaMuNu(2, 3, omega, u);
+
+#endif
+            src -= 1.0f*one_over_taupi*(
+                 omega_omega(0, mu, nu, Omega, u) 
+                -omega_omega(1, mu, nu, Omega, u)
+                -omega_omega(2, mu, nu, Omega, u)
+                -omega_omega(3, mu, nu, Omega, u));
+#endif
+
+
             d_Src[idn(I, mn)] += src;
 
             // use implicit method for stiff term; 
@@ -535,21 +715,10 @@ __kernel void update_pimn(
     real T00 = (e_v2.s0 + pre)*u_new.s0*u_new.s0 - pre;
     if ( max_pimn_abs > T00 ) {
         for ( int mn = 0; mn <10; mn++ ) {
-            //d_pinew[10*I + mn] *= 0.8f * T00 / max(acu, max_pimn_abs);
-            //d_pinew[10*I + mn] = 0.8f*d_pi1[10*I+mn];
             d_pinew[10*I + mn] = 0.0f;
             d_goodcell[I] = 0.0f;
         }
-        // for the bad cells, update T^{mu nu}_{ideal} istead of T^{mu nu}_{visc}
     }        
-
-//    d_checkpi[I] = (real4)((d_pinew[10*I]-d_pinew[10*I+idx(1,1)]-
-//                            d_pinew[10*I+idx(2,2)]-d_pinew[10*I+idx(3,3)])
-//                           /max(d_pinew[idn(I, idx(1,1))], 1.0E-6f),
-//    u[0]*sigma[idx(0, 1)]-u[1]*sigma[idx(1, 1)]-u[2]*sigma[idx(2, 1)]-u[3]*sigma[idx(3, 1)],
-//    u[0]*sigma[idx(0, 2)]-u[1]*sigma[idx(1, 2)]-u[2]*sigma[idx(2, 2)]-u[3]*sigma[idx(3, 2)],
-//    u[0]*sigma[idx(0, 3)]-u[1]*sigma[idx(1, 3)]-u[2]*sigma[idx(2, 3)]-u[3]*sigma[idx(3, 3)]);
-    
 }
 
 

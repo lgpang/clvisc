@@ -181,6 +181,12 @@ def read_config():
     parser.add_argument('--gubser_visc_test', nargs='?', const=1, type=bool, 
             default=False, help='true to switch to 2nd order gubser visc test')
 
+    parser.add_argument('--pimn_omega_coupling', nargs='?', const=1, type=bool, 
+            default=False, help='true to switch on pi^{mu nu} and vorticity coupling term')
+
+    parser.add_argument('--omega_omega_coupling', nargs='?', const=1, type=bool, 
+            default=False, help='true to switch on vorticity and vorticity coupling term')
+
     parser.add_argument('--use_float32', nargs='?', const=1, type=bool, 
             default=True, help='true for float and false for double precision')
 

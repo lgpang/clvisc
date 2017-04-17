@@ -62,7 +62,7 @@ smash_style_default = {'backend' : 'pdf',
         'ytick.major.pad':15,
         'ytick.major.width' : 2.0,
 
-        'figure.figsize': (15., 12.)}
+        'figure.figsize': (12., 9.)}
 
 
 class SmashStyle(argparse.Namespace):

@@ -53,7 +53,7 @@ class lattice_qcd(object):
 
 
 CE = lattice_qcd('CE')
-PCE = lattice_qcd('PCE150')
+PCE = lattice_qcd('PCE165')
 
 #CE.plot()
 #PCE.plot()
@@ -64,6 +64,9 @@ from eos import Eos
 vishnu = Eos(1)
 
 ed = PCE.eps_dat[:, 0]
-plt.plot(ed, PCE.eps_dat[:, 2], 'r-')
-plt.plot(ed[:2000], vishnu.f_S(ed[:2000]), 'b--')
+T = PCE.T_dat[:, 0]
+#plt.plot(ed, PCE.eps_dat[:, 2], 'r-')
+plt.plot(ed[:20], T[:20], 'r-')
+plt.plot(ed[:20], vishnu.f_T(ed[:20]), 'b--')
+#plt.plot(ed[:2000], vishnu.f_S(ed[:2000]), 'b--')
 plt.show()

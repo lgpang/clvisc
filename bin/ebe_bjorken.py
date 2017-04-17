@@ -54,7 +54,7 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0,
     cfg.DX = 0.1
     cfg.DY = 0.1
     cfg.DZ = 0.15
-    cfg.IEOS = 4
+    cfg.IEOS = 1
     cfg.TFRZ = 0.136
 
     cfg.ntskip = 60
@@ -88,7 +88,7 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0,
 if __name__ == '__main__':
     import sys
     if len(sys.argv) != 5:
-        print("Usage: python ebe.py collision_system centrality_range  etaos")
+        print("Usage: python ebe_bjorken.py collision_system centrality_range  etaos gpuid")
         exit()
 
     collision_system = sys.argv[1]

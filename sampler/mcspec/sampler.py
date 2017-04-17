@@ -27,7 +27,7 @@ def get_dNdY(fpath, dat, pid=211, nsampling=2000, kind='Y'):
     np.savetxt(os.path.join(fpath, 'dNd%s_mc_%s.dat'%(kind, pid)), res)
     return res[:, 0], res[:, 1]
 
-def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y'):
+def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y', rapidity_window=1.0):
     E = dat[:,0]
     pz = dat[:,3]
     rapidity_col = 4
@@ -48,45 +48,37 @@ def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y'):
 
     pti = np.sqrt(dat[particle_type, 1]**2+dat[particle_type, 2]**2)
 
-    pti = pti[np.abs(Yi)<0.8]
+    pti = pti[np.abs(Yi)<0.5*rapidity_window]
 
     dN, pt = np.histogram(pti, bins=50)
 
     dpt = pt[1:]-pt[:-1]
     pt = 0.5*(pt[1:]+pt[:-1])
 
-    res = np.array([pt, dN/(2*np.pi*float(nsampling)*pt*dpt*1.6)]).T
+    res = np.array([pt, dN/(2*np.pi*float(nsampling)*pt*dpt*rapidity_window)]).T
 
     fname = os.path.join(fpath, 'dN_over_2pid%sptdpt_mc_%s.dat'%(kind, pid))
     np.savetxt(fname, res)
     #return res[:, 0], res[:, 1]
 
-#@profile
-def plot(fpath, particle_lists, kind):
-
-    Y0, dNdY_charged = get_dNdY(fpath, particle_lists, pid='charged', kind=kind)
-
-    Y0, dNdY_nodecay = get_dNdY(fpath, particle_lists, pid=211, kind=kind)
-
-    Y2_kaon, dNdY_kaon = get_dNdY(fpath, particle_lists, pid=321, kind=kind)
-
-    Y2_proton, dNdY_proton = get_dNdY(fpath, particle_lists, pid=2212, kind=kind)
-
-    get_ptspec(fpath, particle_lists, pid=211, kind=kind)
-    get_ptspec(fpath, particle_lists, pid=321, kind=kind)
-    get_ptspec(fpath, particle_lists, pid=2212, kind=kind)
-    get_ptspec(fpath, particle_lists, pid='charged', kind=kind)
+def plot(fpath, particle_lists, nsampling):
+    Y0, dNdY_charged = get_dNdY(fpath, particle_lists, pid='charged', nsampling=nsampling, kind='Eta')
+    get_ptspec(fpath, particle_lists, pid=211,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
+    get_ptspec(fpath, particle_lists, pid=321,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
+    get_ptspec(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', rapidity_window=1.0)
+    get_ptspec(fpath, particle_lists, pid='charged', nsampling=nsampling,  kind='Eta', rapidity_window=1.6)
 
 
 
-def main(fpath, viscous_on, force_decay):
+def main(fpath, viscous_on, force_decay, nsampling):
     from subprocess import call, check_output
     cwd = os.getcwd()
     os.chdir('../build')
     call(['cmake', '..'])
     call(['make'])
 
-    cmd = ['./main', fpath, viscous_on, force_decay]
+    ns_str = '%s'%nsampling
+    cmd = ['./main', fpath, viscous_on, force_decay, ns_str]
 
     proc = check_output(cmd)
 
@@ -97,24 +89,37 @@ def main(fpath, viscous_on, force_decay):
         # used in python 3.*
         from io import StringIO as fstring
 
-    particle_lists = np.genfromtxt(fstring(proc))
+    #particle_lists = np.genfromtxt(fstring(proc))
+
+    particle_lists = pd.read_csv(fstring(proc), sep=' ', header=None, dtype=np.float32, comment='#').values
+
+    print('particle list read in')
+
+    np.savetxt('mc_particle_list.txt', particle_lists)
+
+    print('particle list saved')
+
+    from mcspec import mcspec
+
+    #mcspec(fstring(proc))
 
     os.chdir(cwd)
 
-    plot(fpath, particle_lists, kind='Eta')
-    plot(fpath, particle_lists, kind='Y')
+    plot(fpath, particle_lists, nsampling = nsampling)
+
 
 
 if __name__ == '__main__':
     import sys
 
-    if len(sys.argv) != 4:
-        print('usage:python dNdY_test.py fpath viscous_on  force_decay')
+    if len(sys.argv) != 5:
+        print('usage:python sampler.py fpath viscous_on  force_decay nsampling')
         exit(0)
 
     fpath = sys.argv[1]
     viscous_on = sys.argv[2]
     force_decay = sys.argv[3]
-    main(fpath, viscous_on, force_decay)
+    nsampling = int(sys.argv[4])
+    main(fpath, viscous_on, force_decay, nsampling=nsampling)
 
 

@@ -8,16 +8,19 @@ from subprocess import call
 import os, sys
 
 if len(sys.argv) != 2:
-    print 'usage:python run.py directory'
+    print 'usage:python spec.py directory'
     exit()
 
 path = os.path.abspath(sys.argv[1])
 
 #call(['python', 'pyvisc/visc.py'])
-cwd = os.getcwd()
+cwd, cwf = os.path.split(__file__)
+os.chdir(cwd)
 os.chdir('../CLSmoothSpec/build')
 os.system('cmake -D VISCOUS_ON=ON ..')
 os.system('make')
 call(['./spec', path])
 os.chdir(cwd)
-call(['python', '../spec/main.py', path, '0'])
+after_reso = '0'
+call(['python', '../spec/main.py', path, after_reso])
+os.chdir(cwd)

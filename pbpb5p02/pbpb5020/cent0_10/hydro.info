@@ -1,18 +1,17 @@
 [path]
 fpathini = ../results/event0/edv0.txt
-fpathout = /lustre/nyx/hyihp/lpang/pbpb5p02/event304/
+fpathout = /lustre/nyx/hyihp/lpang/pbpb5p02/event401/
 
 [glauber]
-edmax = 105.0
+edmax = 115.0
 a = 208
-sqrts = 200.0
 nucleondensity = 0.17
 ra = 6.62
 eta = 0.546
 si0 = 6.4
 impactparameter = 3.65653975968
 hwn = 0.95
-eta_flat = 2.2
+eta_flat = 2.0
 eta_gw = 1.8
 
 [geometry]

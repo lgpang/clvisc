@@ -63,7 +63,7 @@ class HelmholtzHodge2D(object):
         dxdy = self.dx*self.dy
         return Az*dxdy/(np.pi*4)
 
-    def gradient_free(self, scale=20, color='k'):
+    def gradient_free(self, scale=20, color='k', flip=False):
         ''' nabla \times \vec{A} '''
         Az = self.__int_nabla_v()
         x, y = np.meshgrid(self.x, self.y, indexing='ij')
@@ -73,7 +73,11 @@ class HelmholtzHodge2D(object):
         dyAz[mask] = 0.0
         dxAz[mask] = 0.0
 
-        plt.quiver(x, y, dyAz, -dxAz, scale=scale, color=color)
+        if flip == True:
+            plt.quiver(x, y, -dyAz, dxAz, scale=scale, color=color)
+        else:
+            plt.quiver(x, y, dyAz, -dxAz, scale=scale, color=color)
+
         smash_style.set()
 
     def curl_free(self, scale=20, color='k'):

@@ -94,6 +94,12 @@ class CLVisc(object):
         if self.cfg.riemann_test:
             self.compile_options.append('-D RIEMANN_TEST')
 
+        if self.cfg.pimn_omega_coupling:
+            self.compile_options.append('-D PIMUNU_OMEGA_COUPLING')
+
+        if self.cfg.omega_omega_coupling:
+            self.compile_options.append('-D OMEGA_OMEGA_COUPLING')
+
         with open(os.path.join(self.cwd, 'kernel', 'kernel_IS.cl'), 'r') as f:
             src = f.read()
             self.kernel_IS = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
@@ -480,6 +486,7 @@ def main():
     cfg.Edmax = 30
     cfg.Eta = 0.546
     cfg.Si0 = 6.4
+    cfg.omega_omega_coupling = True
 
 
     cfg.Eta_flat = 3.0

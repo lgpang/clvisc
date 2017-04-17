@@ -47,8 +47,8 @@ for i, fname in enumerate(finis):
     cwd = os.getcwd()
     
     os.chdir('../CLSmoothSpec/build')
-    #os.system('cmake -D VISCOUS_ON=ON ..')
-    #os.system('make')
-    call(['./spec', fpath_out])
+    os.system('cmake -D VISCOUS_ON=ON ..')
+    os.system('make')
+    call(['./spec', fpath_out, '1'])
     os.chdir(cwd)
     call(['python', '../spec/main.py', fpath_out])

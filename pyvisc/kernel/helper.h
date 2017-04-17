@@ -85,6 +85,7 @@ inline real maxPropagationSpeed(real4 edv, real vk, read_only image2d_t eos_tabl
     real ut2 = ut*ut;
     real uk2 = uk*uk;
     //real cs2 = pr/max(edv.s0, acu);
+    //real cs2 = P(edv.s0, eos_table)/max(edv.s0, acu);
     real cs2 = CS2(edv.s0, eos_table);
     real lam = (fabs(ut*uk*(1.0f-cs2))+sqrt((ut2-uk2-(ut2-uk2-1.0f)*cs2)*cs2))
        /(ut2 - (ut2-1.0f)*cs2);

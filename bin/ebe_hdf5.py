@@ -20,7 +20,7 @@ from visc import CLVisc
 
 
 def read_p4x4(cent='30_35', idx=0,
-        fname='/u/lpang/hdf5_data/auau200_run1.h5'):
+        fname='/lustre/nyx/hyihp/lpang/hdf5_data/auau200.h5'):
     '''read 4-momentum and 4-coordiantes from h5 file,
     return: np.array with shape (num_of_partons, 8)
     the first 4 columns store: E, px, py, pz
@@ -73,22 +73,29 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0):
     visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.3)
 
     visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=True, save_vorticity=True)
+
+    # test whether queue.finish() fix the opencl memory leak problem
+    visc.queue.finish()
+
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
 
 if __name__ == '__main__':
     cent = '20_25'
-    path = '/tmp/lgpang/cent20_25_etas0p08/'
+    #path = '/lustre/nyx/hyihp/lpang/auau200_results/visc_etas0p08/cent20_25_etas0p08/'
+    path = '/lustre/nyx/hyihp/lpang/auau200_results/ideal/cent20_25_etas0p00/'
 
-    for idx in range(0, 50):
+    etaos = 0.08
+
+    for idx in range(50, 100):
         fpath_out = path + 'cent%s_event%s'%(cent, idx)
-        event_by_event(fpath_out, cent, idx, etaos=0.08)
+        event_by_event(fpath_out, cent, idx, etaos=etaos)
 
         cwd = os.getcwd()
         os.chdir('../CLSmoothSpec/build')
-        os.system('cmake -D VISCOUS_ON=ON ..')
-        os.system('make')
+        #os.system('cmake -D VISCOUS_ON=ON ..')
+        #os.system('make')
         call(['./spec', fpath_out])
         os.chdir(cwd)
         call(['python', '../spec/main.py', fpath_out])

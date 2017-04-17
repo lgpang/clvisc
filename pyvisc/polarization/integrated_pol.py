@@ -94,9 +94,9 @@ def update_h5(start_id, end_id, f_h5name, path, rapidity, create=False):
         fpath = '%s/event%s'%(path, event_id)
         try:
             integrated_polarization(f_h5, fpath, event_id, rapidity)
+            print('event', event_id, 'finished')
         except:
             print('event does not exist')
-        print('event', event_id, 'finished')
     f_h5.close()
 
 
@@ -115,20 +115,21 @@ def fin_grid_mid_rapidity(etaos='0p08', system='auau200', cent='20_30'):
 
     update_h5(0, 650, f_h5name, path, rapidity, create=True)
 
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0', cent='20_30')
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08', cent='0_5')
-#fin_grid_mid_rapidity(system='auau200', etaos='0p08', cent='0_5')
-#fin_grid_mid_rapidity(system='auau62p4', etaos='0p08', cent='0_5')
-#fin_grid_mid_rapidity(system='auau39', etaos='0p08', cent='0_5')
-fin_grid_mid_rapidity(system='auau19p6', etaos='0p08', cent='0_5')
-#
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08', cent='20_30')
-#fin_grid_mid_rapidity(system='auau200', etaos='0p08', cent='20_30') 
-#fin_grid_mid_rapidity(system='auau62p4', etaos='0p08', cent='20_30')
-#fin_grid_mid_rapidity(system='auau39', etaos='0p08', cent='20_30')
-fin_grid_mid_rapidity(system='auau19p6', etaos='0p08', cent='20_30')
-
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0')
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08')
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p12')
-#fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p16')
+if __name__ == '__main__':
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0', cent='20_30')
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08', cent='0_5')
+    #fin_grid_mid_rapidity(system='auau200', etaos='0p08', cent='0_5')
+    #fin_grid_mid_rapidity(system='auau62p4', etaos='0p08', cent='0_5')
+    #fin_grid_mid_rapidity(system='auau39', etaos='0p08', cent='0_5')
+    fin_grid_mid_rapidity(system='auau19p6', etaos='0p08', cent='0_5')
+    #
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08', cent='20_30')
+    #fin_grid_mid_rapidity(system='auau200', etaos='0p08', cent='20_30') 
+    #fin_grid_mid_rapidity(system='auau62p4', etaos='0p08', cent='20_30')
+    #fin_grid_mid_rapidity(system='auau39', etaos='0p08', cent='20_30')
+    fin_grid_mid_rapidity(system='auau19p6', etaos='0p08', cent='20_30')
+    
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p0')
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p08')
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p12')
+    #fin_grid_mid_rapidity(system='pbpb2p76', etaos='0p16')

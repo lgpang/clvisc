@@ -39,15 +39,16 @@ class Spec:
         self.get_dNdYPtdPt2D()
         self.get_dNdY()
 
-    def get_ptspec(self, ylo=-0.8, yhi=0.8):
-        self.get_dNPtdPt_over2pi(ylo, yhi)
+    def get_ptspec(self, ylo=-0.8, yhi=0.8, comment=""):
+        self.get_dNPtdPt_over2pi(ylo, yhi, comment)
 
 
-    def get_vn(self, ylo=-2.5, yhi=2.5, event_plane_window=(3.3, 4.8)):
+    def get_vn(self, ylo=-2.5, yhi=2.5, event_plane_window=(3.3, 4.8), comment=""):
         ''' calculate the pt differential vn in event plane method
         Args:
            ylo, yhi: calc vn for particles in the rapidity window [ylo, yhi]
            event_plane_window: Tupe (ylo_ep, yhi_ep) for event plane calculation
+           comment: additional information to add to the output file name
 
         Return:
            The pt, vn(pt) is saved in text file vn_*.dat
@@ -55,7 +56,7 @@ class Spec:
         self.get_event_planes(ylo=event_plane_window[0], 
                               yhi=event_plane_window[1])
         print('psi[23456]=', self.event_plane[1:6])
-        self.get_Vn_vs_pt(ylo, yhi)
+        self.get_Vn_vs_pt(ylo, yhi, comment)
         pass
 
 
@@ -93,7 +94,7 @@ class Spec:
 
     ######################################################################
     # @profile
-    def get_dNPtdPt_over2pi(self, ylo=-1.3, yhi=1.3):
+    def get_dNPtdPt_over2pi(self, ylo=-1.3, yhi=1.3, comment=""):
         ''' return (1/2pi)dN/(dYPtdPt) and (1/2pi)dN/(dEtaPtdPt) '''
         # print self.specs
         dNPtdPt_over2pi = np.zeros( NPT )
@@ -103,8 +104,8 @@ class Spec:
         
         dNPtdPt_over2pi /= ( 2.0*np.pi*(yhi-ylo) )
 
-        fout_name = self.path + "/dNd{rapidity}PtdPt_over_2pi".format(
-                rapidity=self.rapidity_kind) + self.strout
+        fout_name = self.path + "/dNd{rapidity}PtdPt_over_2pi{comment}".format(
+                rapidity=self.rapidity_kind, comment=comment) + self.strout
 
         np.savetxt(fout_name, np.array(zip(PT, dNPtdPt_over2pi)),
            header='#PT (1/2pi)dN/d{rapidity}ptdpt'.format(
@@ -141,7 +142,7 @@ class Spec:
 
 
 
-    def get_Vn_vs_pt(self, ylo=-0.5, yhi=0.5):
+    def get_Vn_vs_pt(self, ylo=-0.5, yhi=0.5, comment=''):
         ''' return pt differential Vn=vn*exp(i n Psi_n) '''
         Vn_vs_pt = np.zeros(shape=(7, NPT))
         angles = np.zeros(shape=(7, NPT))
@@ -155,7 +156,7 @@ class Spec:
                     spec_along_phi*np.exp(1j*n*(PHI-self.event_plane[n])))
                     /norm_factor)
 
-        fout_name = self.path + "/vn" + self.strout
+        fout_name = self.path + "/vn%s"%comment + self.strout
 
         np.savetxt(fout_name, np.array(zip(PT, Vn_vs_pt[1,:],
                                                Vn_vs_pt[2,:],

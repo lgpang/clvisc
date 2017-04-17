@@ -9,15 +9,6 @@ int main(int argc, char** argv)
     //
     Spec spec;
     
-    char particleDataTable[256] = "../Resource/pdg05.dat";
-    spec.ReadParticles( particleDataTable );
-
-    std::cout<<"stable particle: \n";
-    for( int i=0; i<spec.particles.size(); i++ ){
-        if( spec.particles.at(i).stable == true ) std::cout<<spec.particles.at(i).monval<<' ';
-    }
-    std::cout<<'\n';
-
     std::string pathin;
     cl_real Tfrz = 0.137;
     if ( argc == 2 ) {
@@ -35,6 +26,15 @@ int main(int argc, char** argv)
     std::stringstream chemical_potential_datafile;
     chemical_potential_datafile<<pathin<<"/ChemForReso.dat";
     spec.ReadMuB(chemical_potential_datafile.str());
+
+    // ReadParticles must be after ReadMuB()
+    char particleDataTable[256] = "../Resource/pdg05.dat";
+    spec.ReadParticles( particleDataTable );
+    std::cout<<"stable particle: \n";
+    for( int i=0; i<spec.particles.size(); i++ ){
+        if( spec.particles.at(i).stable == true ) std::cout<<spec.particles.at(i).monval<<' ';
+    }
+    std::cout<<'\n';
 
 #ifdef VISCOUS_ON
     // pisfDataFile stores comments in the first row, 1.0/(2.0*T^2(e+P)) in the second row

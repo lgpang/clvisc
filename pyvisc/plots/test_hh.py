@@ -72,17 +72,17 @@ def test_quiver5(kind='gradient_free'):
 
     grad_ed = np.gradient(ed)
 
-    U, V = None, None
-    if kind == 'gradient_free':
-        U = grad_ed[1]
-        V = -grad_ed[0]
-    else:
-        U = -grad_ed[0]
-        V = -grad_ed[1]
+    U, V = np.ones_like(ed), np.ones_like(ed)
+
+    U += grad_ed[1]
+    V += -grad_ed[0]
+
+    U += -grad_ed[0]
+    V += -grad_ed[1]
 
     hh = HelmholtzHodge2D(U, V, x, y, ed)
 
-    hh.quiver(scale=3)
+    #hh.quiver(scale=30)
 
     if kind == 'gradient_free':
         hh.gradient_free(scale=2, color='r')
@@ -91,4 +91,5 @@ def test_quiver5(kind='gradient_free'):
 
     plt.show()
 
-test_quiver5()
+test_quiver5(kind='curl_free')
+#test_quiver5(kind='gradient_free')

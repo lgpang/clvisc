@@ -118,19 +118,21 @@ int main(int argc, char ** argv) {
 
             // write the output to mc_particle_list0
             particle_number ++;
-            fpmag << std::setprecision(6);
-            fpmag << std::scientific;
-            fpmag << std::setw(14) << par.position.x0()
-                  << std::setw(14) << par.position.x1()
-                  << std::setw(14) << par.position.x2()
-                  << std::setw(14) << par.position.x3()
-                  << std::setw(14) << sampler.list_hadrons_.at(nid).mass
-                  << std::setw(14) << par.momentum.x0()
-                  << std::setw(14) << par.momentum.x1()
-                  << std::setw(14) << par.momentum.x2()
-                  << std::setw(14) << par.momentum.x3()
-                  << std::setw(14) << par.pdgcode
-                  << std::setw(9) << particle_number << std::endl;
+            if (nevent == 0 ) {
+                fpmag << std::setprecision(6);
+                fpmag << std::scientific;
+                fpmag << std::setw(14) << par.position.x0()
+                      << std::setw(14) << par.position.x1()
+                      << std::setw(14) << par.position.x2()
+                      << std::setw(14) << par.position.x3()
+                      << std::setw(14) << sampler.list_hadrons_.at(nid).mass
+                      << std::setw(14) << par.momentum.x0()
+                      << std::setw(14) << par.momentum.x1()
+                      << std::setw(14) << par.momentum.x2()
+                      << std::setw(14) << par.momentum.x3()
+                      << std::setw(14) << par.pdgcode
+                      << std::setw(9) << particle_number << std::endl;
+            }
         }
         fpmag.close();
 
@@ -138,8 +140,6 @@ int main(int argc, char ** argv) {
         std::cout << "#finished" << std::endl;
     }
     std::clog << std::endl;
-
-    //fpmag.close();
 
     std::clog << "ntot for pion+ from sample=" << num_of_pion_plus/ \
         static_cast<float>(number_of_events)  << std::endl;

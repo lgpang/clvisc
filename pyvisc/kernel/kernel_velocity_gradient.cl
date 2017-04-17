@@ -119,8 +119,6 @@ __kernel void get_dudy(__global real4 * d_udy,
     for ( int K = get_global_id(2); K < NZ; K = K + BSZ ) {
         int IND = I*NY*NZ + J*NZ + K;
         int k = K + 2;
-        d_Src[IND] = d_Src[IND] - kt1d(ev[k-2], ev[k-1],
-                                       ev[k], ev[k+1], ev[k+2], tau, ALONG_Z)/(tau*DZ);
     }
 }
 

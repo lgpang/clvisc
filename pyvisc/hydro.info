@@ -86,4 +86,4 @@ LAM1 = -10
 
 [opencl]
 
-local_workgroup_size = 32
+local_workgroup_size = 64

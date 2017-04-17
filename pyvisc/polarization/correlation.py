@@ -258,23 +258,24 @@ def plot_pol_corr(h5, withz=True, system='auau200', cent='20_30', etaos='0p08'):
     plt.close()
 
 
-import h5py
-
-h5 = h5py.File('correlation.hdf5', 'r+')
-
-#plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='0_5', etaos='0p08')
-#plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='20_30', etaos='0p0')
-#plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='20_30', etaos='0p08')
-#
-#
-#plot_pol_corr(h5, withz=False, system='auau200',  cent='0_5', etaos='0p08')
-#plot_pol_corr(h5, withz=False, system='auau62p4',  cent='0_5', etaos='0p08')
-#plot_pol_corr(h5, withz=False, system='auau39',  cent='0_5', etaos='0p08')
-#
-#plot_pol_corr(h5, withz=False, system='auau200',  cent='20_30', etaos='0p08')
-#plot_pol_corr(h5, withz=False, system='auau62p4',  cent='20_30', etaos='0p08')
-#plot_pol_corr(h5, withz=False, system='auau39',  cent='20_30', etaos='0p08')
-
-plot_pol_corr(h5, withz=False, system='auau19p6',  cent='20_30', etaos='0p08')
-plot_pol_corr(h5, withz=False, system='auau19p6',  cent='0_5', etaos='0p08')
-
+if __name__ == '__main__':
+    import h5py
+    
+    h5 = h5py.File('correlation.hdf5', 'r+')
+    
+    #plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='0_5', etaos='0p08')
+    #plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='20_30', etaos='0p0')
+    #plot_pol_corr(h5, withz=False, system='pbpb2p76',  cent='20_30', etaos='0p08')
+    #
+    #
+    #plot_pol_corr(h5, withz=False, system='auau200',  cent='0_5', etaos='0p08')
+    #plot_pol_corr(h5, withz=False, system='auau62p4',  cent='0_5', etaos='0p08')
+    #plot_pol_corr(h5, withz=False, system='auau39',  cent='0_5', etaos='0p08')
+    #
+    #plot_pol_corr(h5, withz=False, system='auau200',  cent='20_30', etaos='0p08')
+    #plot_pol_corr(h5, withz=False, system='auau62p4',  cent='20_30', etaos='0p08')
+    #plot_pol_corr(h5, withz=False, system='auau39',  cent='20_30', etaos='0p08')
+    
+    plot_pol_corr(h5, withz=False, system='auau19p6',  cent='20_30', etaos='0p08')
+    plot_pol_corr(h5, withz=False, system='auau19p6',  cent='0_5', etaos='0p08')
+    

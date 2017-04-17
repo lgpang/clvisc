@@ -48,17 +48,17 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0,
         os.mkdir(fout)
     cfg.NX = 301
     cfg.NY = 301
-    cfg.NZ = 101
+    cfg.NZ = 181
 
     cfg.DT = 0.005
     cfg.DX = 0.1
     cfg.DY = 0.1
-    cfg.DZ = 0.15
-    cfg.IEOS = 4
-    cfg.TFRZ = 0.136
+    cfg.DZ = 0.1
+    cfg.IEOS = 1
+    cfg.TFRZ = 0.137
 
     cfg.ntskip = 60
-    cfg.nzskip = 2
+    cfg.nzskip = 3
 
     cfg.TAU0 = 0.4
     cfg.ETAOS = etaos
@@ -74,9 +74,9 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0,
 
     write_config(cfg, comments)
 
-    visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.3)
+    visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.5)
 
-    visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=False, save_vorticity=True)
+    visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=True, save_vorticity=True)
 
     # test whether queue.finish() fix the opencl memory leak problem
     visc.queue.finish()
@@ -87,14 +87,16 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0,
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) != 5:
-        print("Usage: python ebe.py collision_system centrality_range  etaos")
+    if len(sys.argv) != 7:
+        print("Usage: python ebe.py collision_system centrality_range  etaos gpuid start_id end_id")
         exit()
 
     collision_system = sys.argv[1]
     cent = sys.argv[2]
     etaos = np.float32(sys.argv[3])
     gpuid = int(sys.argv[4])
+    start_id = int(sys.argv[5])
+    end_id = int(sys.argv[6])
 
     path = '/lustre/nyx/hyihp/lpang/%s_results/cent%s/etas%s/'%(collision_system,
               cent, etaos)
@@ -103,9 +105,12 @@ if __name__ == '__main__':
     fname_ini='/lustre/nyx/hyihp/lpang/hdf5_data/%s.h5'%collision_system
 
     if not os.path.exists(path):
-        os.makedirs(path)
+        try:
+            os.makedirs(path)
+        except:
+            print("path exists, may be created just now by another thread")
 
-    for idx in range(0, 100):
+    for idx in xrange(start_id, end_id):
         fpath_out = path + 'event%s'%(idx)
         event_by_event(fpath_out, cent, idx, etaos=etaos,
                        fname_ini=fname_ini, gpu_id=gpuid)

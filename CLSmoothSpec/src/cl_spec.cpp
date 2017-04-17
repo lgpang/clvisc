@@ -274,15 +274,8 @@ void Spec::ReadParticles(char * particle_data_table)
     }
 
 
-    //char chemical_datafile[256];
-    //sprintf(chemical_datafile, "%s/ChemForReso.dat", DataPath.c_str());
-    //std::cout << chemical_datafile << std::endl;
-    //ReadMuB(chemical_datafile);
-
-
     CParticle antiB;//anti-baryon
     int N=particles.size();
-    cl_real mu_B = 0.0;
     for(std::vector<CParticle>::size_type i=0; i!=N; i++){
         /** If unstable, pt range 0-8; if stable, pt range 0-4 */
         //cl_real resizePtRange = particles[i].stable ? 1.0 : 1.0 ;

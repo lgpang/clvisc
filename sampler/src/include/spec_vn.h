@@ -34,7 +34,7 @@ namespace Smash {
 
         void dndpt_(std::string hadron_type);
 
-        void vn_(std::string hadron_type, int n);
+        void vn_(std::string hadron_type);
     };
 }
 

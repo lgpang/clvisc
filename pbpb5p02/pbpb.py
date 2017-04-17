@@ -60,7 +60,7 @@ def pbpb_collisions(fout, cent_min=0, cent_max=5, edmax=85,
 
     cfg.save_to_hdf5 = True
 
-    comments = 'pb+pb test'
+    comments = 'pb+pb test, cent_min=%s, cent_max=%s, etaos=%s'%(cent_min, cent_max, etaos)
 
 
     t0 = time()
@@ -98,10 +98,13 @@ def main(edmax=98, idx=0, cent_min=0, cent_max=5, gpuid=0, etaos=0.08):
     from create_table import create_table_for_jet
     create_table_for_jet(fpath_out)
 
-    os.chdir('../sampler/plot/')
+    os.chdir('../sampler/mcspec/')
     viscous_on = 'true'
     after_reso = 'true'
-    call(['python', 'dNdY_test.py', fpath_out, viscous_on, after_reso])
+    nsampling = '2000'
+    call(['python', 'sampler.py', fpath_out, viscous_on, after_reso, nsampling])
+
+    #python sampler.py fpath viscous_on  force_decay nsampling
 
 
 if __name__ == '__main__':
@@ -116,25 +119,5 @@ if __name__ == '__main__':
     gpuid = int(sys.argv[5])
 
     main(edmax, idx,  cent_min, cent_max, gpuid)
-
-    #main(edmax=88, idx=100,  cent_min=0, cent_max=5, gpuid=0)
-    #main(edmax=105, idx=101, cent_min=0, cent_max=5, gpuid=0)
-
-    #main(edmax=105, idx=12, cent_min=0, cent_max=5, gpuid=0)
-    #main(edmax=105, idx=11, cent_min=0, cent_max=80, gpuid=0)
-    #main(edmax=105, idx=13, cent_min=5, cent_max=10, gpuid=0)
-    #main(edmax=105, idx=14, cent_min=10, cent_max=20, gpuid=0)
-    #main(edmax=105, idx=15, cent_min=20, cent_max=30, gpuid=0)
-    #main(edmax=105, idx=16, cent_min=10, cent_max=30, gpuid=0)
-    #main(edmax=105, idx=17, cent_min=30, cent_max=50, gpuid=0)
-    #main(edmax=105, idx=18, cent_min=50, cent_max=80, gpuid=0)
-    #main(edmax=105, idx=19, cent_min=0, cent_max=10, gpuid=0)
-
-    #main(edmax=88, idx=0,  cent_min=0, cent_max=5, gpuid=0)
-    #main(edmax=88, idx=1, cent_min=5, cent_max=10, gpuid=0)
-    #main(edmax=88, idx=2, cent_min=10, cent_max=20, gpuid=0)
-    #main(edmax=88, idx=3, cent_min=20, cent_max=30, gpuid=0)
-    #main(edmax=88, idx=4, cent_min=0, cent_max=10, gpuid=0)
-
 
 

@@ -1,13 +1,13 @@
-#Path: /HepData/8210/d1-x1-y1
-#Normalized differential primary charged particle yield  in the centrality interval 0-5%
-#Location: F 1
-#CENTRALITY : 0.0 - 5.0 pct
-#ETARAP : -0.8 - 0.8
-#RE : PB PB --> CHARGED X
-#SQRT(S)/NUCLEON : 2760.0 GeV
-#x : PT IN GEV
-#y : (1/Nevt)*(1/*(2PI*PT))*D2(N)/DETARAP/DPT IN GEV**-2
-#xdesc   x   xlow    xhigh   y   dy+ dy- dy+ dy- 
+Path: /HepData/8210/d1-x1-y1
+Normalized differential primary charged particle yield  in the centrality interval 0-5%
+Location: F 1
+CENTRALITY : 0.0 - 5.0 pct
+ETARAP : -0.8 - 0.8
+RE : PB PB --> CHARGED X
+SQRT(S)/NUCLEON : 2760.0 GeV
+x : PT IN GEV
+y : (1/Nevt)*(1/*(2PI*PT))*D2(N)/DETARAP/DPT IN GEV**-2
+xdesc   x   xlow    xhigh   y   dy+ dy- dy+ dy- 
     0.175   0.15    0.2 1810.0  +3.0    -3.0    +243.0  -243.0
     0.225   0.2 0.25    1509.0  +1.0    -1.0    +171.0  -171.0
     0.275   0.25    0.3 1226.0  +1.0    -1.0    +121.0  -121.0

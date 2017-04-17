@@ -103,30 +103,32 @@ class HelmholtzHodge2D(object):
         plt.show()
 
 
-
-x = np.linspace(-15, 15, 301)
-y = np.linspace(-15, 15, 301)
-
-''' notice that vx, vy should be stored in the following way
-to 2 different files.
-for ( int i=0; i<Nx; i++ ) {
-    for ( int j=0; j<Ny; j++ ) {
-        fout << vx[i][j] << ' ';
+def example():
+    x = np.linspace(-15, 15, 301)
+    y = np.linspace(-15, 15, 301)
+    
+    ''' notice that vx, vy should be stored in the following way
+    to 2 different files.
+    for ( int i=0; i<Nx; i++ ) {
+        for ( int j=0; j<Ny; j++ ) {
+            fout << vx[i][j] << ' ';
+        }
+        fout << std::endl;
     }
-    fout << std::endl;
-}
-'''
-
-#vx = np.loadtxt('../results/P30_idealgas/vx_xy8.dat')
-#vy = np.loadtxt('../results/P30_idealgas/vy_xy8.dat')
-
-vx = np.loadtxt('../results/P30/vx_xy8.dat')
-vy = np.loadtxt('../results/P30/vy_xy8.dat')
-
-hh = HelmholtzHodge2D(vx[::5, ::5], vy[::5, ::5], x[::5], y[::5])
-#hh = HelmholtzHodge2D(vx, vy, x, y)
-hh.quiver()
-#hh.gradient_free()
-#hh.curl_free()
+    '''
+    
+    #vx = np.loadtxt('../results/P30_idealgas/vx_xy8.dat')
+    #vy = np.loadtxt('../results/P30_idealgas/vy_xy8.dat')
+    
+    vx = np.loadtxt('../results/P30/vx_xy8.dat')
+    vy = np.loadtxt('../results/P30/vy_xy8.dat')
+    
+    hh = HelmholtzHodge2D(vx[::5, ::5], vy[::5, ::5], x[::5], y[::5])
+    #hh = HelmholtzHodge2D(vx, vy, x, y)
+    hh.quiver()
+    #hh.gradient_free()
+    #hh.curl_free()
 
 
+if __name__ == '__main__':
+    example()
