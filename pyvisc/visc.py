@@ -486,7 +486,6 @@ def main():
     cfg.Edmax = 30
     cfg.Eta = 0.546
     cfg.Si0 = 6.4
-    cfg.omega_omega_coupling = True
 
 
     cfg.Eta_flat = 3.0
