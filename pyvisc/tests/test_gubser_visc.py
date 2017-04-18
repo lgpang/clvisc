@@ -50,7 +50,7 @@ if __name__ == '__main__':
     from visc import CLVisc
     cfg.IEOS = 0
     Lam = -10.0
-    L = 1.0
+    L = 2.0
     cfg.TAU0 = 1.0
     cfg.NX = 501
     cfg.NY = 501
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     xcent = cfg.NX//2
 
     import h5py
-    h5 = h5py.File('gubser_visc_L1.h5', 'w')
+    h5 = h5py.File('gubser_visc_L2.h5', 'w')
     h5.attrs['lam'] = Lam
     h5.attrs['L'] = L
     h5.attrs['eta_over_s'] = cfg.ETAOS
