@@ -24,7 +24,10 @@ class TestBjorken(unittest.TestCase):
         cfg.NY = 8
         cfg.NZ = 1
         cfg.IEOS = 0
-        cfg.ETAOS = 0.08
+        cfg.ETAOS_YMIN = 0.08
+        cfg.ETAOS_XMIN = 0.0
+        cfg.ETAOS_LEFT_SLOP = 0.0
+        cfg.ETAOS_RIGHT_SLOP = 0.0
         self.visc = CLVisc(cfg)
         self.ctx = self.visc.ideal.ctx
         self.queue = self.visc.ideal.queue
@@ -55,12 +58,12 @@ class TestBjorken(unittest.TestCase):
     
         compile_options = ['-I %s'%os.path.join(cwd, '..', 'kernel')]
         compile_options.append('-D USE_SINGLE_PRECISION')
-        compile_options.append('-D ETAOS=%sf'%cfg.ETAOS)
+        compile_options.append('-D ETAOS=%sf'%cfg.ETAOS_YMIN)
         compile_options.append('-D TAU0=%sf'%cfg.TAU0)
         compile_options.append('-D S0=%sf'%self.visc.ideal.eos.f_S(30.0))
         print(compile_options)
 
-        prg = cl.Program(self.ctx, kernel_src).build(compile_options)
+        prg = cl.Program(self.ctx, kernel_src).build(' '.join(compile_options))
         prg.init_ev(self.queue, (self.visc.ideal.size,), None,
                 self.visc.ideal.d_ev[1], 
                 self.visc.eos_table, np.int32(self.visc.ideal.size)).wait()
@@ -73,7 +76,7 @@ class TestBjorken(unittest.TestCase):
         a = tau[0]/tau
         T0 = (edmax[0])**0.25
         lhs = edmax**0.25/T0
-        b = cfg.ETAOS/tau[0]/0.36*0.19732*(1.0-a**(2.0/3.0))
+        b = cfg.ETAOS_YMIN/tau[0]/0.36*0.19732*(1.0-a**(2.0/3.0))
         rhs = a**(1.0/3.0) * (1+2.0/3.0*b)
 
         import matplotlib.pyplot as plt

@@ -390,7 +390,8 @@ class CLVisc(object):
         default parameters: save_hypersf, don't save bulk info
         store bulk info by switch on plot_bulk'''
         # if etaos<1.0E-6, use ideal hydrodynamics which is much faster
-        if self.cfg.ETAOS < 1.0E-6 and not save_vorticity:
+        if self.cfg.ETAOS_YMIN < 1.0E-6 and self.cfg.ETAOS_LEFT_SLOP < 1.0E-6 \
+           and self.cfg.ETAOS_RIGHT_SLOP < 1.0E-6 and not save_vorticity:
             self.ideal.evolve(max_loops, save_hypersf, save_bulk,
                     plot_bulk, force_run_to_maxloop)
 
@@ -501,7 +502,12 @@ def main():
 
     cfg.Hwn = 0.95
 
-    cfg.ETAOS = 0.08
+    # etaos(T) = 0.08
+    cfg.ETAOS_XMIN = 0.0
+    cfg.ETAOS_YMIN = 0.08
+    cfg.ETAOS_LEFT_SLOP = 0.0
+    cfg.ETAOS_RIGHT_SLOP = 0.0
+
     cfg.fPathOut = '../results/pbpb_test_ptspec'
     cfg.save_to_hdf5 = True
 

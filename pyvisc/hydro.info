@@ -78,8 +78,17 @@ IEOS = 2
 #in units GeV
 TFRZ = 0.137          
 
-# eta/s
-ETAOS = 0.08          
+# eta/s parametrization
+## etaos = (T < ETAOS_XMIN) ? ETAOS_LEFT_SLOP * (T - ETAOS_XMIN) + ETAOS_YMIN
+##                          : ETAOS_RIGHT_SLOP * (T - ETAOS_XMIN) + ETAOS_YMIN
+#### Temperature for the minimum etaos(T)
+ETAOS_XMIN = 0.18          
+#### minimum etaos(T)
+ETAOS_YMIN = 0.08          
+#### slop of etaos(T) when T < ETAOS_XMIN
+ETAOS_LEFT_SLOP = 0.0
+#### slop of etaos(T) when T > ETAOS_XMIN
+ETAOS_RIGHT_SLOP = 0.0
 
 # \hat{ \lambda_1 }
 LAM1 = -10

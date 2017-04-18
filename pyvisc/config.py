@@ -55,7 +55,10 @@ def write_config(configs, comments=''):
         Config.set('intrinsic', 'TAU0', configs.TAU0)
         Config.set('intrinsic', 'IEOS', configs.IEOS)
         Config.set('intrinsic', 'TFRZ', configs.TFRZ)
-        Config.set('intrinsic', 'ETAOS', configs.ETAOS)
+        Config.set('intrinsic', 'ETAOS_XMIN', configs.ETAOS_XMIN)
+        Config.set('intrinsic', 'ETAOS_YMIN', configs.ETAOS_YMIN)
+        Config.set('intrinsic', 'ETAOS_LEFT_SLOP', configs.ETAOS_LEFT_SLOP)
+        Config.set('intrinsic', 'ETAOS_RIGHT_SLOP', configs.ETAOS_RIGHT_SLOP)
         Config.set('intrinsic', 'LAM1', configs.LAM1)
         Config.set('intrinsic', 'BSZ', configs.BSZ)
 
@@ -159,8 +162,15 @@ def read_config():
     config['TFRZ'] = (_parser.getfloat('intrinsic', 'TFRZ'), 
             'Freeze out temperature, default=0.137')
 
-    config['ETAOS']= (_parser.getfloat('intrinsic', 'ETAOS'), 
-            'Shear viscosity over entropy density')
+    #### parametrization for temperature dependent eta/s
+    config['ETAOS_XMIN']= (_parser.getfloat('intrinsic', 'ETAOS_XMIN'), 
+            'temperature for minimum eta/s(T)')
+    config['ETAOS_YMIN']= (_parser.getfloat('intrinsic', 'ETAOS_YMIN'), 
+            'minimum eta/s(T)')
+    config['ETAOS_LEFT_SLOP']= (_parser.getfloat('intrinsic', 'ETAOS_LEFT_SLOP'), 
+            'slop of eta/s(T) when T < ETAOS_XMIN')
+    config['ETAOS_RIGHT_SLOP']= (_parser.getfloat('intrinsic', 'ETAOS_RIGHT_SLOP'), 
+            'slop of eta/s(T) when T > ETAOS_XMIN')
 
     config['LAM1']= (_parser.getfloat('intrinsic', 'LAM1'), 
             'coefficient for pimn^2 term')

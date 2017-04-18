@@ -35,7 +35,7 @@ inline real CS2(real eps, read_only image2d_t eos_table){
 constant const sampler_t sampler =  CLK_NORMALIZED_COORDS_FALSE
           | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
-// read e, p, T, s from eos_table
+// read cs2, p, T, s from eos_table
 inline real4 eos(real eps, read_only image2d_t eos_table){
     real ed_per_row = EOS_ED_STEP*EOS_NUM_OF_COLS;
     int row = eps/ed_per_row;
@@ -70,7 +70,7 @@ inline real P(real eps, read_only image2d_t eos_table){
     }
 }
 
-// get the pressure from eos_table
+// get the entropy density from eos_table
 inline real S(real eps, read_only image2d_t eos_table){
     if ( eps < EOS_ED_START + EOS_NUM_ED * EOS_ED_STEP ) {
         return eos(eps, eos_table).s3;
@@ -81,7 +81,7 @@ inline real S(real eps, read_only image2d_t eos_table){
 }
 
 
-// get the pressure from eos_table
+// get the temperature from eos_table
 inline real T(real eps, read_only image2d_t eos_table){
     if ( eps < EOS_ED_START + EOS_NUM_ED * EOS_ED_STEP ) {
         return eos(eps, eos_table).s2;

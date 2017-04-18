@@ -28,7 +28,10 @@ class TestBjorken(unittest.TestCase):
         cfg.TAU0 = 0.0
         cfg.ntskip = 100
         cfg.IEOS = 0
-        cfg.ETAOS = 0.0
+        cfg.ETAOS_XMIN = 0.0
+        cfg.ETAOS_YMIN = 0.0
+        cfg.ETAOS_LEFT_SLOP = 0.0
+        cfg.ETAOS_RIGHT_SLOP = 0.0
         cfg.save_to_hdf5 = False
         cfg.riemann_test = True
 

@@ -58,7 +58,13 @@ if __name__ == '__main__':
     cfg.DT = 0.005
     cfg.DX = 0.04
     cfg.DY = 0.04
-    cfg.ETAOS = 0.2
+
+    # etaos(T) = 0.2
+    cfg.ETAOS_YMIN = 0.2
+    cfg.ETAOS_XMIN = 0.0
+    cfg.ETAOS_LEFT_SLOP = 0.0
+    cfg.ETAOS_RIGHT_SLOP = 0.0
+
     cfg.LAM1 = Lam
     cfg.ntskip = 100
     cfg.gubser_visc_test = True
@@ -89,7 +95,7 @@ if __name__ == '__main__':
     h5 = h5py.File('gubser_visc_L2.h5', 'w')
     h5.attrs['lam'] = Lam
     h5.attrs['L'] = L
-    h5.attrs['eta_over_s'] = cfg.ETAOS
+    h5.attrs['eta_over_s'] = cfg.ETAOS_YMIN
     h5.attrs['DT'] = cfg.DT
     h5.attrs['DX'] = cfg.DX
     h5.attrs['DY'] = cfg.DY

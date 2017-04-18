@@ -19,6 +19,12 @@
 #define ALONG_Y 1
 #define ALONG_Z 2
 
+// parametrization of temperature dependent eta/s
+inline real etaos(real temperature) {
+    return (temperature < ETAOS_XMIN) ? (ETAOS_LEFT_SLOP * (temperature - ETAOS_XMIN) + ETAOS_YMIN)
+                                      : (ETAOS_RIGHT_SLOP * (temperature - ETAOS_XMIN) + ETAOS_YMIN);
+}
+
 // kt1d to calc H(i+1/2)-H(i-1/2), along=0,1,2 for x, y, z
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2,
            real tau, int along, read_only image2d_t eos_table);

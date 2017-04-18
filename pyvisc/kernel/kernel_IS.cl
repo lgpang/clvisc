@@ -59,7 +59,10 @@ __kernel void visc_initialize(
 
     if ( I < NX*NY*NZ ) {
        real4 ev = d_ev[I];
-       real etav = ETAOS * S(ev.s0, eos_table) * hbarc;
+       //real temperature = T(ev.s0, eos_table);
+       //real etav = etaos(temperature) * S(ev.s0, eos_table) * hbarc;
+       real4 cpTs = eos(ev.s0, eos_table);
+       real etav = etaos(cpTs.s2) * cpTs.s3 * hbarc;
        real tmp = 2.0f/3.0f * etav / tau;
        d_pi1[10*I+idx(1, 1)] = tmp;
        d_pi1[10*I+idx(2, 2)] = tmp;
@@ -590,15 +593,22 @@ __kernel void update_pimn(
     // theta = dtut + dxux + dyuy + dzuz where d=coviariant differential
     real theta = udt.s0 + udx.s1 + udy.s2 + udz.s3;
 
-    real etav = ETAOS * S(ed_step, eos_table) * hbarc;
+    //real temperature = T(ed_step, eos_table);
+    //real local_etaos = etaos(temperature);
+    //real etav =  local_etaos * S(ed_step, eos_table) * hbarc;
+    real4 cpTs = eos(ed_step, eos_table);
+    real temperature = cpTs.s2;
+    real local_etaos = etaos(temperature);
+    real etav =  local_etaos * cpTs.s3 * hbarc;
 
-    real one_over_taupi = T(ed_step, eos_table)/(3.0f*max(acu, ETAOS)*hbarc);
+    real one_over_taupi = temperature/(3.0f*max(acu, local_etaos)*hbarc);
 
 // the following definition is switchon if cfg.gubser_visc_test is set to True
 //#define GUBSER_VISC_TEST
 #ifdef GUBSER_VISC_TEST
     // for gubser visc solution test, use EOS: P=e/3, T=e**1/4, S=e**1/3
     // where e is in units of fm^{-4}
+    real ETAOS = ETAOS_YMIN;
     real etavH = ETAOS * 4.0f/3.0f;
     real taupiH = LAM1*LAM1*etavH/3.0f;
     one_over_taupi = 1.0f/(taupiH*pow(ed_step, -0.25f));
@@ -691,13 +701,13 @@ __kernel void update_pimn(
             Omega[4] = OmegaMuNu(1, 3, omega, u);
             Omega[5] = OmegaMuNu(2, 3, omega, u);
 
-#endif
+#endif   //end PIMUNU_OMEGA_COUPLING
             src -= 1.0f*one_over_taupi*(
                  omega_omega(0, mu, nu, Omega, u) 
                 -omega_omega(1, mu, nu, Omega, u)
                 -omega_omega(2, mu, nu, Omega, u)
                 -omega_omega(3, mu, nu, Omega, u));
-#endif
+#endif  // end OMEGA_OMEGA_COUPLING
 
 
             d_Src[idn(I, mn)] += src;

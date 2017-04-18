@@ -118,7 +118,8 @@ class CLIdeal(object):
         print('end of loading ini data')
 
     def __compile_options(self):
-        optlist = [ 'TAU0', 'DT', 'DX', 'DY', 'DZ', 'ETAOS', 'LAM1' ]
+        optlist = ['TAU0', 'DT', 'DX', 'DY', 'DZ', 'ETAOS_XMIN', 'ETAOS_YMIN', \
+                    'ETAOS_LEFT_SLOP', 'ETAOS_RIGHT_SLOP', 'LAM1']
         gpu_defines = [ '-D %s=%sf'%(key, value) for (key,value)
                 in list(self.cfg.__dict__.items()) if key in optlist ]
         gpu_defines.append('-D {key}={value}'.format(key='NX', value=self.cfg.NX))
@@ -171,8 +172,6 @@ class CLIdeal(object):
             self.kernel_hypersf = cl.Program(self.ctx, src_hypersf).build(
                                              options=' '.join(hypersf_defines))
 
-
-
     @classmethod
     def roundUp(cls, value, multiple):
         '''This function rounds one integer up to the nearest multiple of another integer,
@@ -182,7 +181,6 @@ class CLIdeal(object):
         if remainder != 0:
             value += multiple - remainder
         return value
-
 
     #@profile
     def stepUpdate(self, step):
