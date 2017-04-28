@@ -27,7 +27,7 @@ def get_dNdY(fpath, dat, pid=211, nsampling=2000, kind='Y'):
     np.savetxt(os.path.join(fpath, 'dNd%s_mc_%s.dat'%(kind, pid)), res)
     return res[:, 0], res[:, 1]
 
-def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y', rapidity_window=1.0):
+def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y', rapidity_window=1.6):
     E = dat[:,0]
     pz = dat[:,3]
     rapidity_col = 4
@@ -63,9 +63,13 @@ def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y', rapidity_window=1.
 
 def plot(fpath, particle_lists, nsampling):
     Y0, dNdY_charged = get_dNdY(fpath, particle_lists, pid='charged', nsampling=nsampling, kind='Eta')
-    get_ptspec(fpath, particle_lists, pid=211,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
-    get_ptspec(fpath, particle_lists, pid=321,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
-    get_ptspec(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', rapidity_window=1.0)
+    Y0, dNdY_pion = get_dNdY(fpath, particle_lists, pid=211, nsampling=nsampling, kind='Eta')
+    Y0, dNdY_kaon = get_dNdY(fpath, particle_lists, pid=321, nsampling=nsampling, kind='Eta')
+    Y0, dNdY_proton = get_dNdY(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Eta')
+
+    get_ptspec(fpath, particle_lists, pid=211,  nsampling=nsampling, kind='Y', rapidity_window=1.6)
+    get_ptspec(fpath, particle_lists, pid=321,  nsampling=nsampling, kind='Y', rapidity_window=1.6)
+    get_ptspec(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', rapidity_window=1.6)
     get_ptspec(fpath, particle_lists, pid='charged', nsampling=nsampling,  kind='Eta', rapidity_window=1.6)
 
 
@@ -95,7 +99,7 @@ def main(fpath, viscous_on, force_decay, nsampling):
 
     print('particle list read in')
 
-    np.savetxt('mc_particle_list.txt', particle_lists)
+    #np.savetxt('mc_particle_list.txt', particle_lists)
 
     print('particle list saved')
 

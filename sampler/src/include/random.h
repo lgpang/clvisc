@@ -157,15 +157,19 @@ class discrete_dist {
 
   /** reset the discrete distribution with new list*/
   void reset_weights(const std::vector<T> & plist){
-    distribution = std::discrete_distribution<>(plist.begin(), plist.end());
+    distribution = std::discrete_distribution<int>(plist.begin(), plist.end());
   }
   /** returns a random number in the interval */
   int operator ()() {
     return distribution(engine);
   }
+
+  std::vector<double> probabilities() {
+      return distribution.probabilities();
+  }
   /** the distribution object that is being used. */
  private:
-  std::discrete_distribution<> distribution;
+  std::discrete_distribution<int> distribution;
 };
 
 }  // namespace Random

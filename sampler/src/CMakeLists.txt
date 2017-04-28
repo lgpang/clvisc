@@ -36,6 +36,7 @@ set (SRC_LIST
               random.cc
               distributions.cc
               fourvector.cc
+              particletype.cc
               inputfunctions.cc)
 
 include_directories( ${CMAKE_SOURCE_DIR}/include )

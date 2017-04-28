@@ -54,8 +54,6 @@ double sample_momenta(const double temperature, const double mass);
 
 double sample_momenta1(const double temperature, const double mass);
 
-
-
 /**\param[in] lam +/-1 or 0 to determine the distribution type
  * lam=0,  for juttner distribution
  * lam=-1, for bose-einstein distribution

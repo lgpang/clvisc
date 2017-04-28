@@ -6,7 +6,6 @@
  *    GNU General Public License (GPLv3 or later)
  *
  */
-#include"include/sampler.h"
 
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_math.h>
@@ -23,6 +22,8 @@
 #include "include/inputfunctions.h"
 #include"include/random.h"
 #include "include/integrate.h"
+#include"include/sampler.h"
+
 
 #define idx(i,j) (((i)<(j))?((7*(i)+2*(j)-(i)*(i))/2):((7*(j)+2*(i)-(j)*(j))/2))
 
@@ -80,9 +81,27 @@ Sampler::Sampler(const std::string & fpath,
 
     draw_hadron_type_.reset_weights(densities_);
 
+    /** Test draw_hadron_type_() work correctly */
+    // size_t num_hadrons = list_hadrons_.size();
+    // std::vector<double> Ni(num_hadrons, 0);
+
+    // int rare_hadron = num_hadrons - 1;
+    // for (int i=0; i<100000000; i++) {
+    //     int nid = draw_hadron_type_();
+    //     Ni.at(nid) += 1.0;
+    // }
+
+    // std::ofstream fout("test_draw_hadron_type.out");
+    // for (int i=0; i<num_hadrons; i++) {
+    //     fout << i << ' '
+    //          << densities_.at(i) / densities_.at(0) << ' '
+    //          << Ni.at(i)/Ni.at(0) << std::endl;
+    // }
+    // fout.close();
+
     // tot density for all hadrons
     dntot_ = std::accumulate(densities_.begin(),
-                             densities_.end(), 0.0);
+                              densities_.end(), 0.0);
 
     // get pion_after_reso / pion_before_reso ratio from equilibrium
     // density and decay chain in pdg05.dat
@@ -118,7 +137,7 @@ void Sampler::read_hypersurface(const std::string & fpath) {
 
     auto hyper_surface_elements = line_parser(hyper_surface);
 
-    auto sf_txyz_elements = line_parser(sf_txyz);
+    //auto sf_txyz_elements = line_parser(sf_txyz);
 
     double ds0, ds1, ds2, ds3, vx, vy, vetas, t, x, y, z, etas;
 
@@ -129,10 +148,10 @@ void Sampler::read_hypersurface(const std::string & fpath) {
         lineinput >> ds0 >> ds1 >> ds2 >> ds3 >> vx >> vy >> vetas \
             >> etas;
 
-        auto str_txyz = sf_txyz_elements[line_number].text;
+        //auto str_txyz = sf_txyz_elements[line_number].text;
         line_number++;
-        std::istringstream coordinates(str_txyz);
-        coordinates >> t >> x >> y >> z;
+        //std::istringstream coordinates(str_txyz);
+        //coordinates >> t >> x >> y >> z;
         if ( lineinput.fail() ) {
             throw LoadFailure(build_error_string(
                         "While loading freeze out hypersurface:\n"
@@ -242,6 +261,7 @@ void Sampler::read_pdg_table() {
                 >>p.gspin>>p.baryon>>p.strange>>p.charm     \
                 >>p.bottom>>p.gisospin>>p.charge>>p.decays;
 
+
             p.antibaryon_spec_exists = 0;
 
             if ( fin.eof() ) break;
@@ -288,7 +308,7 @@ void Sampler::read_pdg_table() {
 
 
     for(std::vector<ParticleType>::size_type i=0; i!=N; i++){
-        if ( list_hadrons_[i].baryon ) {
+        if (list_hadrons_[i].baryon != 0) {
             ParticleType antiB;//anti-baryon
             antiB.pdgcode = -list_hadrons_[i].pdgcode;
             antiB.name   = "A";
@@ -317,14 +337,14 @@ void Sampler::read_pdg_table() {
                     int nid = newpid[channel.daughters[j]];
                     ParticleType *daughter = &list_hadrons_[nid];
                     //std::clog << "daughter->charge=" << daughter->charge << std::endl;
-                    if ( daughter->charge != 0 ) {
+                    if ( daughter->charge != 0 || daughter->strange !=0) {
                         anti_baryon_decay.daughters[j] = -daughter->pdgcode;
                     } else {
                         if ( daughter->baryon ) {
                             // for neutral baryons; like anti-neutron
                             anti_baryon_decay.daughters[j] = -daughter->pdgcode;
                         } else {
-                            // for neutral mesons 
+                            // for neutral mesons without strangeness
                             anti_baryon_decay.daughters[j] = daughter->pdgcode;
                         }
                     }
@@ -353,7 +373,7 @@ void Sampler::read_chemical_potential(const std::string & fpath) {
     double chemicalpotential;
     char buf[512];
     std::stringstream muB_path;
-    muB_path << fpath << "/ChemForReso.dat";
+    muB_path << fpath << "/chemical_potential.dat";
 
     std::ifstream fin(muB_path.str());
     if( fin.is_open() ){
@@ -406,12 +426,16 @@ namespace {
     void Sampler::get_equilibrium_properties() {
         densities_.resize(0);
         particle_dist_.resize(0);
-        for ( const auto & particle_type : list_hadrons_ ) {
+        for ( auto & particle_type : list_hadrons_ ) {
             double baryon_chemical_potential = particle_type.mu_B;
             //double baryon_chemical_potential = 0.0;
             // determine fermi-dirac or bose-einstein distribution
             double baryon_meson_factor = -1.0;
-            if ( particle_type.baryon != 0 ) baryon_meson_factor = 1.0;
+            if ( particle_type.baryon != 0 ) {
+                baryon_meson_factor = 1.0;
+            } else {
+                particle_type.update_expansion_rate(freezeout_temperature_);
+            }
 
             // calc the equilibrium density
             double density = get_equilibrium_density(particle_type.mass,
@@ -442,24 +466,8 @@ namespace {
      *  (3) Sample momentum for sampled particle type in local rest frame,
      *  keep or reject according to weight function
      *      \f$ p^{\mu} d\Sigma_{\mu} / p^{0} \f$
-     *  (5)boost it with fluid velocity
+     *  (4)boost it with fluid velocity
      *
-     *  The difficulties:
-     *  (1) Sample momentum from boson or fermion distribution with finite 
-     *  chemical potential (use Adaptive Rejection Sampler).
-     *  (2) There are two ways to calculate dntot and do rejection
-     *      A: \f$ dntot = density * (u_{\mu} d\Sigma^{\mu}) \f$
-     *      fix total number, do repeating if 
-     *      \f$ rand > p^{\mu*} d\Sigma_{\mu*} / p^{0*} \f$.
-     *
-     *      B: \f$ dntot = density * sigma_max \f$
-     *      reject if \f$rand > p^{\mu*} d\Sigma_{\mu*}/(p^{0*}*sigma_max)\f$
-     *
-     *      However, the second method gives 1-2% more particles than the first
-     *      method. Why?
-     *      I guess there are some freeze out hyper surface whose 
-     *      \f$ u_{\mu} d\Sigma^{\mu} ==0 \f$, and in method A, dntot=0 is set
-     *      in the begining.
      */
 
     void Sampler::sample_particles_from_hypersf() {
@@ -472,7 +480,6 @@ namespace {
         FourVector sigma_lrf;
 
         for ( auto & ele : elements_ ) {
-
             /** Boost dSigma to local rest frame */
             sigma_lrf = ele.dsigma.LorentzBoost(ele.velocity);
 
@@ -483,7 +490,6 @@ namespace {
             double sigmamax = udotsigma + std::sqrt(sigma_lrf.sqr3());
 
             double dNtot = dntot_ * udotsigma;
-            //double dNtot = dntot_*sigmamax;
 
             int Ni = Random::poisson(dNtot);
 
@@ -509,9 +515,13 @@ namespace {
                 int nid = draw_hadron_type_();
 
                 double mass = list_hadrons_.at(nid).mass;
+                int pdg = list_hadrons_.at(nid).pdgcode;
 
-                //pmag = particle_dist_.at(nid).get_one_sample();
-                pmag = sample_momenta1(freezeout_temperature_, mass);
+                pmag = list_hadrons_.at(nid).sample_momentum(freezeout_temperature_);
+
+                if (std::isnan(pmag) || std::isinf(pmag)) {
+                    std::clog << "pmag is nan or inf" << std::endl;
+                }
 
                 int while_loop_num = 0;
 
@@ -525,6 +535,7 @@ namespace {
                     double pdotsigma = momentum_in_lrf.Dot(sigma_lrf);
 
                     double p0_star = momentum_in_lrf[0];
+
                     double weight_visc = pdotsigma/(p0_star*sigmamax);
 
                     if ( viscous_correction_ ) {
@@ -543,9 +554,6 @@ namespace {
                         double baryon_chemical_potential = list_hadrons_.at(nid).mu_B;
                         double fermion_boson_factor;
 
-                        // alpha is the regulation factor from ShenChun
-                        double alpha = 1.9;
-                        //double regulation = std::pow(pmag/freezeout_temperature_, alpha - 2.0);
                         double regulation = 1.0;
 
                         if ( list_hadrons_.at(nid).baryon ) {
@@ -577,7 +585,7 @@ namespace {
                     }
 
                     while_loop_num ++;
-                    if ( while_loop_num > 10000 &&  weight_visc <= 0.0 ) {
+                    if ( while_loop_num > 10000 && weight_visc < 0.0 ) {
                       std::clog << "more than 10000 loops for this cell, skip it ..." << std::endl;
                       std::clog << "smaller than 0 weight_visc=" << weight_visc << std::endl;
                       std::clog << "pdotsigma=" << pdotsigma << std::endl;
@@ -592,7 +600,7 @@ namespace {
 
 
                     /// keep or reject 
-                    if ( Random::canonical() < weight_visc ) {
+                    if ( Random::canonical() <= weight_visc ) {
                             ParticleData particle; 
                             particle.pdgcode = list_hadrons_.at(nid).pdgcode;
                             particle.position = position;
@@ -610,7 +618,6 @@ namespace {
 
                             particle.momentum = momentum;
 
-                            // if stable and charged, store
                             if ( list_hadrons_.at(nid).stable == 1 ) {
                                 particles_.push_back(particle);
                             } else {
@@ -645,7 +652,6 @@ namespace {
             int newid = newpid[reso_data.pdgcode];
             ParticleType reso_type = list_hadrons_.at(newid);
 
-
             int channel_id = reso_type.draw_decay();
 
             DecayChannel channel = reso_type.decay_channels.at(channel_id);
@@ -657,7 +663,6 @@ namespace {
             } else if ( n == 3 ) {
                 three_body_decay(reso_data, channel, unstable_daughters);
             }
-
         } while (!unstable_daughters.empty());
     }
 

@@ -1,0 +1,3092 @@
+Tfrz=0.136
+num of sf = 297286
+one_over_2TsqrEplusP_=184.835
+pid=211 muB=0.0457165
+pid=111 muB=0.0452131
+pid=-211 muB=0.0457165
+pid=321 muB=0.0801189
+pid=-321 muB=0.0801189
+pid=311 muB=0.0808221
+pid=-311 muB=0.0808221
+pid=221 muB=0.0799424
+pid=213 muB=0.0909296
+pid=113 muB=0.0914329
+pid=-213 muB=0.0909296
+pid=223 muB=0.127648
+pid=323 muB=0.126137
+pid=-323 muB=0.126137
+pid=313 muB=0.125902
+pid=-313 muB=0.125902
+pid=2212 muB=0.151012
+pid=2112 muB=0.151194
+pid=331 muB=0.142671
+pid=9010221 muB=0.0710559
+pid=9000211 muB=0.106056
+pid=9000111 muB=0.105631
+pid=-9000211 muB=0.106056
+pid=333 muB=0.156065
+pid=3122 muB=0.139295
+pid=10223 muB=0.136646
+pid=3222 muB=0.170505
+pid=3212 muB=0.139295
+pid=3112 muB=0.184291
+pid=10213 muB=0.173365
+pid=10113 muB=0.172862
+pid=-10213 muB=0.173365
+pid=20213 muB=0.136646
+pid=20113 muB=0.136646
+pid=-20213 muB=0.136646
+pid=2224 muB=0.196729
+pid=2214 muB=0.196181
+pid=2114 muB=0.196242
+pid=1114 muB=0.19691
+pid=10323 muB=0.104627
+pid=-10323 muB=0.104627
+pid=10313 muB=0.128559
+pid=-10313 muB=0.128559
+pid=225 muB=0.103415
+pid=20223 muB=0.166088
+pid=100221 muB=0.153454
+pid=100211 muB=0.136713
+pid=100111 muB=0.136512
+pid=-100211 muB=0.136713
+pid=3322 muB=0.185249
+pid=3312 muB=0.196004
+pid=215 muB=0.144871
+pid=115 muB=0.14485
+pid=-215 muB=0.144871
+pid=9000213 muB=0.125659
+pid=9000113 muB=0.125155
+pid=-9000213 muB=0.125659
+pid=3224 muB=0.186854
+pid=3214 muB=0.189141
+pid=3114 muB=0.187681
+pid=10221 muB=0.0955674
+pid=20323 muB=0.168465
+pid=-20323 muB=0.168465
+pid=20313 muB=0.168539
+pid=-20313 muB=0.168539
+pid=13122 muB=0.21022
+pid=100323 muB=0.168533
+pid=-100323 muB=0.168533
+pid=100313 muB=0.168591
+pid=-100313 muB=0.168591
+pid=9020221 muB=0.179612
+pid=10321 muB=0.126137
+pid=-10321 muB=0.126137
+pid=10311 muB=0.125902
+pid=-10311 muB=0.125902
+pid=100223 muB=0.136646
+pid=20333 muB=0.206489
+pid=325 muB=0.156011
+pid=-325 muB=0.156011
+pid=315 muB=0.155902
+pid=-315 muB=0.155902
+pid=12212 muB=0.212558
+pid=12112 muB=0.212562
+pid=100213 muB=0.0909296
+pid=100113 muB=0.0914329
+pid=-100213 muB=0.0909296
+pid=10211 muB=0.206689
+pid=10111 muB=0.206775
+pid=-10211 muB=0.206689
+pid=100331 muB=0.20649
+pid=9030221 muB=0.148227
+pid=3124 muB=0.221848
+pid=2124 muB=0.174733
+pid=1214 muB=0.174732
+pid=335 muB=0.160204
+pid=3324 muB=0.237971
+pid=3314 muB=0.234379
+pid=22212 muB=0.197469
+pid=22112 muB=0.197524
+pid=32224 muB=0.214222
+pid=32214 muB=0.21422
+pid=32114 muB=0.214253
+pid=31114 muB=0.214324
+pid=23122 muB=0.217736
+pid=10225 muB=0.186034
+pid=2222 muB=0.170144
+pid=2122 muB=0.170171
+pid=1212 muB=0.170208
+pid=1112 muB=0.170256
+pid=9010213 muB=0.136814
+pid=9010113 muB=0.136311
+pid=-9010213 muB=0.136814
+pid=32212 muB=0.186751
+pid=32112 muB=0.186772
+pid=13222 muB=0.204432
+pid=13212 muB=0.21214
+pid=13112 muB=0.206688
+pid=30223 muB=0.176383
+pid=227 muB=0.170718
+pid=33122 muB=0.218252
+pid=13224 muB=0.202798
+pid=13214 muB=0.217218
+pid=13114 muB=0.20712
+pid=10215 muB=0.142665
+pid=10115 muB=0.142425
+pid=-10215 muB=0.142665
+pid=3334 muB=0.197057
+pid=2216 muB=0.221504
+pid=2116 muB=0.221533
+pid=100333 muB=0.20649
+pid=12216 muB=0.188361
+pid=12116 muB=0.188359
+pid=217 muB=0.16105
+pid=117 muB=0.161351
+pid=-217 muB=0.16105
+pid=13124 muB=0.22975
+pid=13322 muB=0.193517
+pid=13312 muB=0.146349
+pid=22124 muB=0.21332
+pid=21214 muB=0.213428
+pid=12224 muB=0.138371
+pid=12214 muB=0.13842
+pid=12114 muB=0.138449
+pid=11114 muB=0.138448
+pid=42212 muB=0.163382
+pid=42112 muB=0.163532
+pid=10331 muB=0.155804
+pid=30323 muB=0.154011
+pid=-30323 muB=0.154011
+pid=30313 muB=0.15387
+pid=-30313 muB=0.15387
+pid=30213 muB=0.182229
+pid=30113 muB=0.182128
+pid=-30213 muB=0.182229
+pid=32124 muB=0.234252
+pid=31214 muB=0.23428
+pid=23222 muB=0.241644
+pid=23212 muB=0.225272
+pid=23112 muB=0.248637
+pid=10325 muB=0.193998
+pid=-10325 muB=0.193998
+pid=10315 muB=0.194044
+pid=-10315 muB=0.194044
+pid=3226 muB=0.229443
+pid=3216 muB=0.229609
+pid=3116 muB=0.229414
+pid=327 muB=0.159513
+pid=-327 muB=0.159513
+pid=317 muB=0.159621
+pid=-317 muB=0.159621
+pid=43122 muB=0.181392
+pid=53122 muB=0.133586
+pid=9010211 muB=0.169298
+pid=9010111 muB=0.168795
+pid=-9010211 muB=0.169298
+pid=20325 muB=0.184105
+pid=-20325 muB=0.184105
+pid=20315 muB=0.184301
+pid=-20315 muB=0.184301
+pid=3126 muB=0.227521
+pid=13324 muB=0.240208
+pid=13314 muB=0.241206
+pid=13126 muB=0.220546
+pid=337 muB=0.177156
+pid=23124 muB=0.24127
+pid=2226 muB=0.236512
+pid=2126 muB=0.236799
+pid=1216 muB=0.236857
+pid=1116 muB=0.236683
+pid=22222 muB=0.240915
+pid=22122 muB=0.240746
+pid=21212 muB=0.240773
+pid=21112 muB=0.240996
+pid=13226 muB=0.200599
+pid=13216 muB=0.209434
+pid=13116 muB=0.203298
+pid=22224 muB=0.244352
+pid=22214 muB=0.243804
+pid=22114 muB=0.243931
+pid=21114 muB=0.244732
+pid=2228 muB=0.219415
+pid=2218 muB=0.219173
+pid=2118 muB=0.219271
+pid=1118 muB=0.21972
+pid=23224 muB=0.239214
+pid=23214 muB=0.242378
+pid=23114 muB=0.240396
+pid=9050225 muB=0.111755
+pid=23324 muB=0.229039
+pid=23314 muB=0.226902
+pid=12226 muB=0.196729
+pid=12126 muB=0.196453
+pid=11216 muB=0.196514
+pid=11116 muB=0.19691
+pid=9060225 muB=0.312131
+pid=13334 muB=0.319964
+newpid of pion = 0
+newpid of proton = 16
+newpid of -13334 = 318
+density[211]=0.0291411
+density[111]=0.029589
+density[-211]=0.0291411
+density[321]=0.00604495
+density[-321]=0.00604495
+density[311]=0.00592188
+density[-311]=0.00592188
+density[221]=0.00455092
+density[213]=0.00383182
+density[113]=0.00383182
+density[-213]=0.00383182
+density[223]=0.00368411
+density[323]=0.00194103
+density[-323]=0.00194103
+density[313]=0.0018904
+density[-313]=0.0018904
+density[2212]=0.000978648
+density[2112]=0.000971039
+density[331]=0.000435379
+density[9010221]=0.00039451
+density[9000211]=0.000369984
+density[9000111]=0.000369984
+density[-9000211]=0.000369984
+density[333]=0.000898511
+density[3122]=0.000331545
+density[10223]=0.000354899
+density[3222]=0.000209619
+density[3212]=0.000205376
+density[3112]=0.000199254
+density[10213]=0.00024448
+density[10113]=0.00024448
+density[-10213]=0.00024448
+density[20213]=0.000243713
+density[20113]=0.000243713
+density[-20213]=0.000243713
+density[2224]=0.000320868
+density[2214]=0.000320868
+density[2114]=0.000320868
+density[1114]=0.000320868
+density[10323]=0.0001859
+density[-10323]=0.0001859
+density[10313]=0.0001859
+density[-10313]=0.0001859
+density[225]=0.00030517
+density[20223]=0.000175843
+density[100221]=5.42603e-05
+density[100211]=5.22371e-05
+density[100111]=5.22371e-05
+density[-100211]=5.22371e-05
+density[3322]=9.50944e-05
+density[3312]=9.12625e-05
+density[215]=0.000232567
+density[115]=0.000232567
+density[-215]=0.000232567
+density[9000213]=9.66404e-05
+density[9000113]=9.66404e-05
+density[-9000213]=9.66404e-05
+density[3224]=0.000123374
+density[3214]=0.000122667
+density[3114]=0.000119953
+density[10221]=2.76317e-05
+density[20323]=8.18408e-05
+density[-20323]=8.18408e-05
+density[20313]=8.18408e-05
+density[-20313]=8.18408e-05
+density[13122]=5.30099e-05
+density[100323]=7.57865e-05
+density[-100323]=7.57865e-05
+density[100313]=7.57865e-05
+density[-100313]=7.57865e-05
+density[9020221]=2.58682e-05
+density[10321]=2.5588e-05
+density[-10321]=2.5588e-05
+density[10311]=2.5588e-05
+density[-10311]=2.5588e-05
+density[100223]=7.33962e-05
+density[20333]=7.00392e-05
+density[325]=0.000117257
+density[-325]=0.000117257
+density[315]=0.000112251
+density[-315]=0.000112251
+density[12212]=4.27611e-05
+density[12112]=4.27611e-05
+density[100213]=5.46172e-05
+density[100113]=5.46172e-05
+density[-100213]=5.46172e-05
+density[10211]=1.71805e-05
+density[10111]=1.71805e-05
+density[-10211]=1.71805e-05
+density[100331]=1.69605e-05
+density[9030221]=1.38859e-05
+density[3124]=5.12322e-05
+density[2124]=5.10668e-05
+density[1214]=5.10668e-05
+density[335]=6.18025e-05
+density[3324]=4.7313e-05
+density[3314]=4.63429e-05
+density[22212]=2.31715e-05
+density[22112]=2.31715e-05
+density[32224]=3.0391e-05
+density[32214]=3.0391e-05
+density[32114]=3.0391e-05
+density[31114]=3.0391e-05
+density[23122]=1.51955e-05
+density[10225]=3.40084e-05
+density[2222]=1.24981e-05
+density[2122]=1.24981e-05
+density[1212]=1.24981e-05
+density[1112]=1.24981e-05
+density[9010213]=1.61342e-05
+density[9010113]=1.61342e-05
+density[-9010213]=1.61342e-05
+density[32212]=1.06165e-05
+density[32112]=1.06165e-05
+density[13222]=1.02753e-05
+density[13212]=1.02753e-05
+density[13112]=1.02753e-05
+density[30223]=1.44377e-05
+density[227]=3.43552e-05
+density[33122]=9.62508e-06
+density[13224]=1.92502e-05
+density[13214]=1.92502e-05
+density[13114]=1.92502e-05
+density[10215]=2.3688e-05
+density[10115]=2.3688e-05
+density[-10215]=2.3688e-05
+density[3334]=1.89467e-05
+density[2216]=2.79463e-05
+density[2116]=2.79463e-05
+density[100333]=1.35235e-05
+density[12216]=2.61762e-05
+density[12116]=2.61762e-05
+density[217]=2.97886e-05
+density[117]=2.97886e-05
+density[-217]=2.97886e-05
+density[13124]=1.68888e-05
+density[13322]=8.4444e-06
+density[13312]=8.4444e-06
+density[22124]=1.5818e-05
+density[21214]=1.5818e-05
+density[12224]=1.5818e-05
+density[12214]=1.5818e-05
+density[12114]=1.5818e-05
+density[11114]=1.5818e-05
+density[42212]=7.40727e-06
+density[42112]=7.40727e-06
+density[10331]=3.58418e-06
+density[30323]=1.06124e-05
+density[-30323]=1.06124e-05
+density[30313]=1.06124e-05
+density[-30313]=1.06124e-05
+density[30213]=1.04056e-05
+density[30113]=1.04056e-05
+density[-30213]=1.04056e-05
+density[32124]=1.38741e-05
+density[31214]=1.38741e-05
+density[23222]=5.69663e-06
+density[23212]=5.69663e-06
+density[23112]=5.69663e-06
+density[10325]=1.22421e-05
+density[-10325]=1.22421e-05
+density[10315]=1.22421e-05
+density[-10315]=1.22421e-05
+density[3226]=1.44984e-05
+density[3216]=1.44984e-05
+density[3116]=1.44984e-05
+density[327]=1.68039e-05
+density[-327]=1.68039e-05
+density[317]=1.68039e-05
+density[-317]=1.68039e-05
+density[43122]=4.09896e-06
+density[53122]=3.83737e-06
+density[9010211]=1.89354e-06
+density[9010111]=1.89354e-06
+density[-9010211]=1.89354e-06
+density[20325]=9.2211e-06
+density[-20325]=9.2211e-06
+density[20315]=9.2211e-06
+density[-20315]=9.2211e-06
+density[3126]=1.0777e-05
+density[13324]=7.04381e-06
+density[13314]=7.04381e-06
+density[13126]=1.00885e-05
+density[337]=1.00437e-05
+density[23124]=4.52236e-06
+density[2226]=6.78353e-06
+density[2126]=6.78353e-06
+density[1216]=6.78353e-06
+density[1116]=6.78353e-06
+density[22222]=1.98041e-06
+density[22122]=1.98041e-06
+density[21212]=1.98041e-06
+density[21112]=1.98041e-06
+density[13226]=5.74739e-06
+density[13216]=5.74739e-06
+density[13116]=5.74739e-06
+density[22224]=3.70656e-06
+density[22214]=3.70656e-06
+density[22114]=3.70656e-06
+density[21114]=3.70656e-06
+density[2228]=6.93703e-06
+density[2218]=6.93703e-06
+density[2118]=6.93703e-06
+density[1118]=6.93703e-06
+density[23224]=3.24564e-06
+density[23214]=3.24564e-06
+density[23114]=3.24564e-06
+density[9050225]=3.9245e-06
+density[23324]=3.03699e-06
+density[23314]=3.03699e-06
+density[12226]=4.26249e-06
+density[12126]=4.26249e-06
+density[11216]=4.26249e-06
+density[11116]=4.26249e-06
+density[9060225]=2.52941e-06
+density[13334]=4.02472e-07
+density[-2212]=0.000978648
+density[-2112]=0.000971039
+density[-3122]=0.000331545
+density[-3222]=0.000209619
+density[-3212]=0.000205376
+density[-3112]=0.000199254
+density[-2224]=0.000320868
+density[-2214]=0.000320868
+density[-2114]=0.000320868
+density[-1114]=0.000320868
+density[-3322]=9.50944e-05
+density[-3312]=9.12625e-05
+density[-3224]=0.000123374
+density[-3214]=0.000122667
+density[-3114]=0.000119953
+density[-13122]=5.30099e-05
+density[-12212]=4.27611e-05
+density[-12112]=4.27611e-05
+density[-3124]=5.12322e-05
+density[-2124]=5.10668e-05
+density[-1214]=5.10668e-05
+density[-3324]=4.7313e-05
+density[-3314]=4.63429e-05
+density[-22212]=2.31715e-05
+density[-22112]=2.31715e-05
+density[-32224]=3.0391e-05
+density[-32214]=3.0391e-05
+density[-32114]=3.0391e-05
+density[-31114]=3.0391e-05
+density[-23122]=1.51955e-05
+density[-2222]=1.24981e-05
+density[-2122]=1.24981e-05
+density[-1212]=1.24981e-05
+density[-1112]=1.24981e-05
+density[-32212]=1.06165e-05
+density[-32112]=1.06165e-05
+density[-13222]=1.02753e-05
+density[-13212]=1.02753e-05
+density[-13112]=1.02753e-05
+density[-33122]=9.62508e-06
+density[-13224]=1.92502e-05
+density[-13214]=1.92502e-05
+density[-13114]=1.92502e-05
+density[-3334]=1.89467e-05
+density[-2216]=2.79463e-05
+density[-2116]=2.79463e-05
+density[-12216]=2.61762e-05
+density[-12116]=2.61762e-05
+density[-13124]=1.68888e-05
+density[-13322]=8.4444e-06
+density[-13312]=8.4444e-06
+density[-22124]=1.5818e-05
+density[-21214]=1.5818e-05
+density[-12224]=1.5818e-05
+density[-12214]=1.5818e-05
+density[-12114]=1.5818e-05
+density[-11114]=1.5818e-05
+density[-42212]=7.40727e-06
+density[-42112]=7.40727e-06
+density[-32124]=1.38741e-05
+density[-31214]=1.38741e-05
+density[-23222]=5.69663e-06
+density[-23212]=5.69663e-06
+density[-23112]=5.69663e-06
+density[-3226]=1.44984e-05
+density[-3216]=1.44984e-05
+density[-3116]=1.44984e-05
+density[-43122]=4.09896e-06
+density[-53122]=3.83737e-06
+density[-3126]=1.0777e-05
+density[-13324]=7.04381e-06
+density[-13314]=7.04381e-06
+density[-13126]=1.00885e-05
+density[-23124]=4.52236e-06
+density[-2226]=6.78353e-06
+density[-2126]=6.78353e-06
+density[-1216]=6.78353e-06
+density[-1116]=6.78353e-06
+density[-22222]=1.98041e-06
+density[-22122]=1.98041e-06
+density[-21212]=1.98041e-06
+density[-21112]=1.98041e-06
+density[-13226]=5.74739e-06
+density[-13216]=5.74739e-06
+density[-13116]=5.74739e-06
+density[-22224]=3.70656e-06
+density[-22214]=3.70656e-06
+density[-22114]=3.70656e-06
+density[-21114]=3.70656e-06
+density[-2228]=6.93703e-06
+density[-2218]=6.93703e-06
+density[-2118]=6.93703e-06
+density[-1118]=6.93703e-06
+density[-23224]=3.24564e-06
+density[-23214]=3.24564e-06
+density[-23114]=3.24564e-06
+density[-23324]=3.03699e-06
+density[-23314]=3.03699e-06
+density[-12226]=4.26249e-06
+density[-12126]=4.26249e-06
+density[-11216]=4.26249e-06
+density[-11116]=4.26249e-06
+density[-13334]=4.02472e-07
+pion after reso over before ratio=1.78639
+initialize finished!
+event 0 finished
+event 1 finished
+event 2 finished
+event 3 finished
+event 4 finished
+event 5 finished
+event 6 finished
+event 7 finished
+event 8 finished
+event 9 finished
+event 10 finished
+event 11 finished
+event 12 finished
+event 13 finished
+event 14 finished
+event 15 finished
+event 16 finished
+event 17 finished
+event 18 finished
+event 19 finished
+event 20 finished
+event 21 finished
+event 22 finished
+event 23 finished
+event 24 finished
+event 25 finished
+event 26 finished
+event 27 finished
+event 28 finished
+event 29 finished
+event 30 finished
+event 31 finished
+event 32 finished
+event 33 finished
+event 34 finished
+event 35 finished
+event 36 finished
+event 37 finished
+event 38 finished
+event 39 finished
+event 40 finished
+event 41 finished
+event 42 finished
+event 43 finished
+event 44 finished
+event 45 finished
+event 46 finished
+event 47 finished
+event 48 finished
+event 49 finished
+event 50 finished
+event 51 finished
+event 52 finished
+event 53 finished
+event 54 finished
+event 55 finished
+event 56 finished
+event 57 finished
+event 58 finished
+event 59 finished
+event 60 finished
+event 61 finished
+event 62 finished
+event 63 finished
+event 64 finished
+event 65 finished
+event 66 finished
+event 67 finished
+event 68 finished
+event 69 finished
+event 70 finished
+event 71 finished
+event 72 finished
+event 73 finished
+event 74 finished
+event 75 finished
+event 76 finished
+event 77 finished
+event 78 finished
+event 79 finished
+event 80 finished
+event 81 finished
+event 82 finished
+event 83 finished
+event 84 finished
+event 85 finished
+event 86 finished
+event 87 finished
+event 88 finished
+event 89 finished
+event 90 finished
+event 91 finished
+event 92 finished
+event 93 finished
+event 94 finished
+event 95 finished
+event 96 finished
+event 97 finished
+event 98 finished
+event 99 finished
+event 100 finished
+event 101 finished
+event 102 finished
+event 103 finished
+event 104 finished
+event 105 finished
+event 106 finished
+event 107 finished
+event 108 finished
+event 109 finished
+event 110 finished
+event 111 finished
+event 112 finished
+event 113 finished
+event 114 finished
+event 115 finished
+event 116 finished
+event 117 finished
+event 118 finished
+event 119 finished
+event 120 finished
+event 121 finished
+event 122 finished
+event 123 finished
+event 124 finished
+event 125 finished
+event 126 finished
+event 127 finished
+event 128 finished
+event 129 finished
+event 130 finished
+event 131 finished
+event 132 finished
+event 133 finished
+event 134 finished
+event 135 finished
+event 136 finished
+event 137 finished
+event 138 finished
+event 139 finished
+event 140 finished
+event 141 finished
+event 142 finished
+event 143 finished
+event 144 finished
+event 145 finished
+event 146 finished
+event 147 finished
+event 148 finished
+event 149 finished
+event 150 finished
+event 151 finished
+event 152 finished
+event 153 finished
+event 154 finished
+event 155 finished
+event 156 finished
+event 157 finished
+event 158 finished
+event 159 finished
+event 160 finished
+event 161 finished
+event 162 finished
+event 163 finished
+event 164 finished
+event 165 finished
+event 166 finished
+event 167 finished
+event 168 finished
+event 169 finished
+event 170 finished
+event 171 finished
+event 172 finished
+event 173 finished
+event 174 finished
+event 175 finished
+event 176 finished
+event 177 finished
+event 178 finished
+event 179 finished
+event 180 finished
+event 181 finished
+event 182 finished
+event 183 finished
+event 184 finished
+event 185 finished
+event 186 finished
+event 187 finished
+event 188 finished
+event 189 finished
+event 190 finished
+event 191 finished
+event 192 finished
+event 193 finished
+event 194 finished
+event 195 finished
+event 196 finished
+event 197 finished
+event 198 finished
+event 199 finished
+event 200 finished
+event 201 finished
+event 202 finished
+event 203 finished
+event 204 finished
+event 205 finished
+event 206 finished
+event 207 finished
+event 208 finished
+event 209 finished
+event 210 finished
+event 211 finished
+event 212 finished
+event 213 finished
+event 214 finished
+event 215 finished
+event 216 finished
+event 217 finished
+event 218 finished
+event 219 finished
+event 220 finished
+event 221 finished
+event 222 finished
+event 223 finished
+event 224 finished
+event 225 finished
+event 226 finished
+event 227 finished
+event 228 finished
+event 229 finished
+event 230 finished
+event 231 finished
+event 232 finished
+event 233 finished
+event 234 finished
+event 235 finished
+event 236 finished
+event 237 finished
+event 238 finished
+event 239 finished
+event 240 finished
+event 241 finished
+event 242 finished
+event 243 finished
+event 244 finished
+event 245 finished
+event 246 finished
+event 247 finished
+event 248 finished
+event 249 finished
+event 250 finished
+event 251 finished
+event 252 finished
+event 253 finished
+event 254 finished
+event 255 finished
+event 256 finished
+event 257 finished
+event 258 finished
+event 259 finished
+event 260 finished
+event 261 finished
+event 262 finished
+event 263 finished
+event 264 finished
+event 265 finished
+event 266 finished
+event 267 finished
+event 268 finished
+event 269 finished
+event 270 finished
+event 271 finished
+event 272 finished
+event 273 finished
+event 274 finished
+event 275 finished
+event 276 finished
+event 277 finished
+event 278 finished
+event 279 finished
+event 280 finished
+event 281 finished
+event 282 finished
+event 283 finished
+event 284 finished
+event 285 finished
+event 286 finished
+event 287 finished
+event 288 finished
+event 289 finished
+event 290 finished
+event 291 finished
+event 292 finished
+event 293 finished
+event 294 finished
+event 295 finished
+event 296 finished
+event 297 finished
+event 298 finished
+event 299 finished
+event 300 finished
+event 301 finished
+event 302 finished
+event 303 finished
+event 304 finished
+event 305 finished
+event 306 finished
+event 307 finished
+event 308 finished
+event 309 finished
+event 310 finished
+event 311 finished
+event 312 finished
+event 313 finished
+event 314 finished
+event 315 finished
+event 316 finished
+event 317 finished
+event 318 finished
+event 319 finished
+event 320 finished
+event 321 finished
+event 322 finished
+event 323 finished
+event 324 finished
+event 325 finished
+event 326 finished
+event 327 finished
+event 328 finished
+event 329 finished
+event 330 finished
+event 331 finished
+event 332 finished
+event 333 finished
+event 334 finished
+event 335 finished
+event 336 finished
+event 337 finished
+event 338 finished
+event 339 finished
+event 340 finished
+event 341 finished
+event 342 finished
+event 343 finished
+event 344 finished
+event 345 finished
+event 346 finished
+event 347 finished
+event 348 finished
+event 349 finished
+event 350 finished
+event 351 finished
+event 352 finished
+event 353 finished
+event 354 finished
+event 355 finished
+event 356 finished
+event 357 finished
+event 358 finished
+event 359 finished
+event 360 finished
+event 361 finished
+event 362 finished
+event 363 finished
+event 364 finished
+event 365 finished
+event 366 finished
+event 367 finished
+event 368 finished
+event 369 finished
+event 370 finished
+event 371 finished
+event 372 finished
+event 373 finished
+event 374 finished
+event 375 finished
+event 376 finished
+event 377 finished
+event 378 finished
+event 379 finished
+event 380 finished
+event 381 finished
+event 382 finished
+event 383 finished
+event 384 finished
+event 385 finished
+event 386 finished
+event 387 finished
+event 388 finished
+event 389 finished
+event 390 finished
+event 391 finished
+event 392 finished
+event 393 finished
+event 394 finished
+event 395 finished
+event 396 finished
+event 397 finished
+event 398 finished
+event 399 finished
+event 400 finished
+event 401 finished
+event 402 finished
+event 403 finished
+event 404 finished
+event 405 finished
+event 406 finished
+event 407 finished
+event 408 finished
+event 409 finished
+event 410 finished
+event 411 finished
+event 412 finished
+event 413 finished
+event 414 finished
+event 415 finished
+event 416 finished
+event 417 finished
+event 418 finished
+event 419 finished
+event 420 finished
+event 421 finished
+event 422 finished
+event 423 finished
+event 424 finished
+event 425 finished
+event 426 finished
+event 427 finished
+event 428 finished
+event 429 finished
+event 430 finished
+event 431 finished
+event 432 finished
+event 433 finished
+event 434 finished
+event 435 finished
+event 436 finished
+event 437 finished
+event 438 finished
+event 439 finished
+event 440 finished
+event 441 finished
+event 442 finished
+event 443 finished
+event 444 finished
+event 445 finished
+event 446 finished
+event 447 finished
+event 448 finished
+event 449 finished
+event 450 finished
+event 451 finished
+event 452 finished
+event 453 finished
+event 454 finished
+event 455 finished
+event 456 finished
+event 457 finished
+event 458 finished
+event 459 finished
+event 460 finished
+event 461 finished
+event 462 finished
+event 463 finished
+event 464 finished
+event 465 finished
+event 466 finished
+event 467 finished
+event 468 finished
+event 469 finished
+event 470 finished
+event 471 finished
+event 472 finished
+event 473 finished
+event 474 finished
+event 475 finished
+event 476 finished
+event 477 finished
+event 478 finished
+event 479 finished
+event 480 finished
+event 481 finished
+event 482 finished
+event 483 finished
+event 484 finished
+event 485 finished
+event 486 finished
+event 487 finished
+event 488 finished
+event 489 finished
+event 490 finished
+event 491 finished
+event 492 finished
+event 493 finished
+event 494 finished
+event 495 finished
+event 496 finished
+event 497 finished
+event 498 finished
+event 499 finished
+event 500 finished
+event 501 finished
+event 502 finished
+event 503 finished
+event 504 finished
+event 505 finished
+event 506 finished
+event 507 finished
+event 508 finished
+event 509 finished
+event 510 finished
+event 511 finished
+event 512 finished
+event 513 finished
+event 514 finished
+event 515 finished
+event 516 finished
+event 517 finished
+event 518 finished
+event 519 finished
+event 520 finished
+event 521 finished
+event 522 finished
+event 523 finished
+event 524 finished
+event 525 finished
+event 526 finished
+event 527 finished
+event 528 finished
+event 529 finished
+event 530 finished
+event 531 finished
+event 532 finished
+event 533 finished
+event 534 finished
+event 535 finished
+event 536 finished
+event 537 finished
+event 538 finished
+event 539 finished
+event 540 finished
+event 541 finished
+event 542 finished
+event 543 finished
+event 544 finished
+event 545 finished
+event 546 finished
+event 547 finished
+event 548 finished
+event 549 finished
+event 550 finished
+event 551 finished
+event 552 finished
+event 553 finished
+event 554 finished
+event 555 finished
+event 556 finished
+event 557 finished
+event 558 finished
+event 559 finished
+event 560 finished
+event 561 finished
+event 562 finished
+event 563 finished
+event 564 finished
+event 565 finished
+event 566 finished
+event 567 finished
+event 568 finished
+event 569 finished
+event 570 finished
+event 571 finished
+event 572 finished
+event 573 finished
+event 574 finished
+event 575 finished
+event 576 finished
+event 577 finished
+event 578 finished
+event 579 finished
+event 580 finished
+event 581 finished
+event 582 finished
+event 583 finished
+event 584 finished
+event 585 finished
+event 586 finished
+event 587 finished
+event 588 finished
+event 589 finished
+event 590 finished
+event 591 finished
+event 592 finished
+event 593 finished
+event 594 finished
+event 595 finished
+event 596 finished
+event 597 finished
+event 598 finished
+event 599 finished
+event 600 finished
+event 601 finished
+event 602 finished
+event 603 finished
+event 604 finished
+event 605 finished
+event 606 finished
+event 607 finished
+event 608 finished
+event 609 finished
+event 610 finished
+event 611 finished
+event 612 finished
+event 613 finished
+event 614 finished
+event 615 finished
+event 616 finished
+event 617 finished
+event 618 finished
+event 619 finished
+event 620 finished
+event 621 finished
+event 622 finished
+event 623 finished
+event 624 finished
+event 625 finished
+event 626 finished
+event 627 finished
+event 628 finished
+event 629 finished
+event 630 finished
+event 631 finished
+event 632 finished
+event 633 finished
+event 634 finished
+event 635 finished
+event 636 finished
+event 637 finished
+event 638 finished
+event 639 finished
+event 640 finished
+event 641 finished
+event 642 finished
+event 643 finished
+event 644 finished
+event 645 finished
+event 646 finished
+event 647 finished
+event 648 finished
+event 649 finished
+event 650 finished
+event 651 finished
+event 652 finished
+event 653 finished
+event 654 finished
+event 655 finished
+event 656 finished
+event 657 finished
+event 658 finished
+event 659 finished
+event 660 finished
+event 661 finished
+event 662 finished
+event 663 finished
+event 664 finished
+event 665 finished
+event 666 finished
+event 667 finished
+event 668 finished
+event 669 finished
+event 670 finished
+event 671 finished
+event 672 finished
+event 673 finished
+event 674 finished
+event 675 finished
+event 676 finished
+event 677 finished
+event 678 finished
+event 679 finished
+event 680 finished
+event 681 finished
+event 682 finished
+event 683 finished
+event 684 finished
+event 685 finished
+event 686 finished
+event 687 finished
+event 688 finished
+event 689 finished
+event 690 finished
+event 691 finished
+event 692 finished
+event 693 finished
+event 694 finished
+event 695 finished
+event 696 finished
+event 697 finished
+event 698 finished
+event 699 finished
+event 700 finished
+event 701 finished
+event 702 finished
+event 703 finished
+event 704 finished
+event 705 finished
+event 706 finished
+event 707 finished
+event 708 finished
+event 709 finished
+event 710 finished
+event 711 finished
+event 712 finished
+event 713 finished
+event 714 finished
+event 715 finished
+event 716 finished
+event 717 finished
+event 718 finished
+event 719 finished
+event 720 finished
+event 721 finished
+event 722 finished
+event 723 finished
+event 724 finished
+event 725 finished
+event 726 finished
+event 727 finished
+event 728 finished
+event 729 finished
+event 730 finished
+event 731 finished
+event 732 finished
+event 733 finished
+event 734 finished
+event 735 finished
+event 736 finished
+event 737 finished
+event 738 finished
+event 739 finished
+event 740 finished
+event 741 finished
+event 742 finished
+event 743 finished
+event 744 finished
+event 745 finished
+event 746 finished
+event 747 finished
+event 748 finished
+event 749 finished
+event 750 finished
+event 751 finished
+event 752 finished
+event 753 finished
+event 754 finished
+event 755 finished
+event 756 finished
+event 757 finished
+event 758 finished
+event 759 finished
+event 760 finished
+event 761 finished
+event 762 finished
+event 763 finished
+event 764 finished
+event 765 finished
+event 766 finished
+event 767 finished
+event 768 finished
+event 769 finished
+event 770 finished
+event 771 finished
+event 772 finished
+event 773 finished
+event 774 finished
+event 775 finished
+event 776 finished
+event 777 finished
+event 778 finished
+event 779 finished
+event 780 finished
+event 781 finished
+event 782 finished
+event 783 finished
+event 784 finished
+event 785 finished
+event 786 finished
+event 787 finished
+event 788 finished
+event 789 finished
+event 790 finished
+event 791 finished
+event 792 finished
+event 793 finished
+event 794 finished
+event 795 finished
+event 796 finished
+event 797 finished
+event 798 finished
+event 799 finished
+event 800 finished
+event 801 finished
+event 802 finished
+event 803 finished
+event 804 finished
+event 805 finished
+event 806 finished
+event 807 finished
+event 808 finished
+event 809 finished
+event 810 finished
+event 811 finished
+event 812 finished
+event 813 finished
+event 814 finished
+event 815 finished
+event 816 finished
+event 817 finished
+event 818 finished
+event 819 finished
+event 820 finished
+event 821 finished
+event 822 finished
+event 823 finished
+event 824 finished
+event 825 finished
+event 826 finished
+event 827 finished
+event 828 finished
+event 829 finished
+event 830 finished
+event 831 finished
+event 832 finished
+event 833 finished
+event 834 finished
+event 835 finished
+event 836 finished
+event 837 finished
+event 838 finished
+event 839 finished
+event 840 finished
+event 841 finished
+event 842 finished
+event 843 finished
+event 844 finished
+event 845 finished
+event 846 finished
+event 847 finished
+event 848 finished
+event 849 finished
+event 850 finished
+event 851 finished
+event 852 finished
+event 853 finished
+event 854 finished
+event 855 finished
+event 856 finished
+event 857 finished
+event 858 finished
+event 859 finished
+event 860 finished
+event 861 finished
+event 862 finished
+event 863 finished
+event 864 finished
+event 865 finished
+event 866 finished
+event 867 finished
+event 868 finished
+event 869 finished
+event 870 finished
+event 871 finished
+event 872 finished
+event 873 finished
+event 874 finished
+event 875 finished
+event 876 finished
+event 877 finished
+event 878 finished
+event 879 finished
+event 880 finished
+event 881 finished
+event 882 finished
+event 883 finished
+event 884 finished
+event 885 finished
+event 886 finished
+event 887 finished
+event 888 finished
+event 889 finished
+event 890 finished
+event 891 finished
+event 892 finished
+event 893 finished
+event 894 finished
+event 895 finished
+event 896 finished
+event 897 finished
+event 898 finished
+event 899 finished
+event 900 finished
+event 901 finished
+event 902 finished
+event 903 finished
+event 904 finished
+event 905 finished
+event 906 finished
+event 907 finished
+event 908 finished
+event 909 finished
+event 910 finished
+event 911 finished
+event 912 finished
+event 913 finished
+event 914 finished
+event 915 finished
+event 916 finished
+event 917 finished
+event 918 finished
+event 919 finished
+event 920 finished
+event 921 finished
+event 922 finished
+event 923 finished
+event 924 finished
+event 925 finished
+event 926 finished
+event 927 finished
+event 928 finished
+event 929 finished
+event 930 finished
+event 931 finished
+event 932 finished
+event 933 finished
+event 934 finished
+event 935 finished
+event 936 finished
+event 937 finished
+event 938 finished
+event 939 finished
+event 940 finished
+event 941 finished
+event 942 finished
+event 943 finished
+event 944 finished
+event 945 finished
+event 946 finished
+event 947 finished
+event 948 finished
+event 949 finished
+event 950 finished
+event 951 finished
+event 952 finished
+event 953 finished
+event 954 finished
+event 955 finished
+event 956 finished
+event 957 finished
+event 958 finished
+event 959 finished
+event 960 finished
+event 961 finished
+event 962 finished
+event 963 finished
+event 964 finished
+event 965 finished
+event 966 finished
+event 967 finished
+event 968 finished
+event 969 finished
+event 970 finished
+event 971 finished
+event 972 finished
+event 973 finished
+event 974 finished
+event 975 finished
+event 976 finished
+event 977 finished
+event 978 finished
+event 979 finished
+event 980 finished
+event 981 finished
+event 982 finished
+event 983 finished
+event 984 finished
+event 985 finished
+event 986 finished
+event 987 finished
+event 988 finished
+event 989 finished
+event 990 finished
+event 991 finished
+event 992 finished
+event 993 finished
+event 994 finished
+event 995 finished
+event 996 finished
+event 997 finished
+event 998 finished
+event 999 finished
+ntot for pion+ from sample=929.858
+ntot for pion+ from udotsigma=532.532
+ntot for pion+ from hirano=524.845
+Tfrz=0.136
+num of sf = 275151
+one_over_2TsqrEplusP_=184.835
+pid=211 muB=0.0457165
+pid=111 muB=0.0452131
+pid=-211 muB=0.0457165
+pid=321 muB=0.0801189
+pid=-321 muB=0.0801189
+pid=311 muB=0.0808221
+pid=-311 muB=0.0808221
+pid=221 muB=0.0799424
+pid=213 muB=0.0909296
+pid=113 muB=0.0914329
+pid=-213 muB=0.0909296
+pid=223 muB=0.127648
+pid=323 muB=0.126137
+pid=-323 muB=0.126137
+pid=313 muB=0.125902
+pid=-313 muB=0.125902
+pid=2212 muB=0.151012
+pid=2112 muB=0.151194
+pid=331 muB=0.142671
+pid=9010221 muB=0.0710559
+pid=9000211 muB=0.106056
+pid=9000111 muB=0.105631
+pid=-9000211 muB=0.106056
+pid=333 muB=0.156065
+pid=3122 muB=0.139295
+pid=10223 muB=0.136646
+pid=3222 muB=0.170505
+pid=3212 muB=0.139295
+pid=3112 muB=0.184291
+pid=10213 muB=0.173365
+pid=10113 muB=0.172862
+pid=-10213 muB=0.173365
+pid=20213 muB=0.136646
+pid=20113 muB=0.136646
+pid=-20213 muB=0.136646
+pid=2224 muB=0.196729
+pid=2214 muB=0.196181
+pid=2114 muB=0.196242
+pid=1114 muB=0.19691
+pid=10323 muB=0.104627
+pid=-10323 muB=0.104627
+pid=10313 muB=0.128559
+pid=-10313 muB=0.128559
+pid=225 muB=0.103415
+pid=20223 muB=0.166088
+pid=100221 muB=0.153454
+pid=100211 muB=0.136713
+pid=100111 muB=0.136512
+pid=-100211 muB=0.136713
+pid=3322 muB=0.185249
+pid=3312 muB=0.196004
+pid=215 muB=0.144871
+pid=115 muB=0.14485
+pid=-215 muB=0.144871
+pid=9000213 muB=0.125659
+pid=9000113 muB=0.125155
+pid=-9000213 muB=0.125659
+pid=3224 muB=0.186854
+pid=3214 muB=0.189141
+pid=3114 muB=0.187681
+pid=10221 muB=0.0955674
+pid=20323 muB=0.168465
+pid=-20323 muB=0.168465
+pid=20313 muB=0.168539
+pid=-20313 muB=0.168539
+pid=13122 muB=0.21022
+pid=100323 muB=0.168533
+pid=-100323 muB=0.168533
+pid=100313 muB=0.168591
+pid=-100313 muB=0.168591
+pid=9020221 muB=0.179612
+pid=10321 muB=0.126137
+pid=-10321 muB=0.126137
+pid=10311 muB=0.125902
+pid=-10311 muB=0.125902
+pid=100223 muB=0.136646
+pid=20333 muB=0.206489
+pid=325 muB=0.156011
+pid=-325 muB=0.156011
+pid=315 muB=0.155902
+pid=-315 muB=0.155902
+pid=12212 muB=0.212558
+pid=12112 muB=0.212562
+pid=100213 muB=0.0909296
+pid=100113 muB=0.0914329
+pid=-100213 muB=0.0909296
+pid=10211 muB=0.206689
+pid=10111 muB=0.206775
+pid=-10211 muB=0.206689
+pid=100331 muB=0.20649
+pid=9030221 muB=0.148227
+pid=3124 muB=0.221848
+pid=2124 muB=0.174733
+pid=1214 muB=0.174732
+pid=335 muB=0.160204
+pid=3324 muB=0.237971
+pid=3314 muB=0.234379
+pid=22212 muB=0.197469
+pid=22112 muB=0.197524
+pid=32224 muB=0.214222
+pid=32214 muB=0.21422
+pid=32114 muB=0.214253
+pid=31114 muB=0.214324
+pid=23122 muB=0.217736
+pid=10225 muB=0.186034
+pid=2222 muB=0.170144
+pid=2122 muB=0.170171
+pid=1212 muB=0.170208
+pid=1112 muB=0.170256
+pid=9010213 muB=0.136814
+pid=9010113 muB=0.136311
+pid=-9010213 muB=0.136814
+pid=32212 muB=0.186751
+pid=32112 muB=0.186772
+pid=13222 muB=0.204432
+pid=13212 muB=0.21214
+pid=13112 muB=0.206688
+pid=30223 muB=0.176383
+pid=227 muB=0.170718
+pid=33122 muB=0.218252
+pid=13224 muB=0.202798
+pid=13214 muB=0.217218
+pid=13114 muB=0.20712
+pid=10215 muB=0.142665
+pid=10115 muB=0.142425
+pid=-10215 muB=0.142665
+pid=3334 muB=0.197057
+pid=2216 muB=0.221504
+pid=2116 muB=0.221533
+pid=100333 muB=0.20649
+pid=12216 muB=0.188361
+pid=12116 muB=0.188359
+pid=217 muB=0.16105
+pid=117 muB=0.161351
+pid=-217 muB=0.16105
+pid=13124 muB=0.22975
+pid=13322 muB=0.193517
+pid=13312 muB=0.146349
+pid=22124 muB=0.21332
+pid=21214 muB=0.213428
+pid=12224 muB=0.138371
+pid=12214 muB=0.13842
+pid=12114 muB=0.138449
+pid=11114 muB=0.138448
+pid=42212 muB=0.163382
+pid=42112 muB=0.163532
+pid=10331 muB=0.155804
+pid=30323 muB=0.154011
+pid=-30323 muB=0.154011
+pid=30313 muB=0.15387
+pid=-30313 muB=0.15387
+pid=30213 muB=0.182229
+pid=30113 muB=0.182128
+pid=-30213 muB=0.182229
+pid=32124 muB=0.234252
+pid=31214 muB=0.23428
+pid=23222 muB=0.241644
+pid=23212 muB=0.225272
+pid=23112 muB=0.248637
+pid=10325 muB=0.193998
+pid=-10325 muB=0.193998
+pid=10315 muB=0.194044
+pid=-10315 muB=0.194044
+pid=3226 muB=0.229443
+pid=3216 muB=0.229609
+pid=3116 muB=0.229414
+pid=327 muB=0.159513
+pid=-327 muB=0.159513
+pid=317 muB=0.159621
+pid=-317 muB=0.159621
+pid=43122 muB=0.181392
+pid=53122 muB=0.133586
+pid=9010211 muB=0.169298
+pid=9010111 muB=0.168795
+pid=-9010211 muB=0.169298
+pid=20325 muB=0.184105
+pid=-20325 muB=0.184105
+pid=20315 muB=0.184301
+pid=-20315 muB=0.184301
+pid=3126 muB=0.227521
+pid=13324 muB=0.240208
+pid=13314 muB=0.241206
+pid=13126 muB=0.220546
+pid=337 muB=0.177156
+pid=23124 muB=0.24127
+pid=2226 muB=0.236512
+pid=2126 muB=0.236799
+pid=1216 muB=0.236857
+pid=1116 muB=0.236683
+pid=22222 muB=0.240915
+pid=22122 muB=0.240746
+pid=21212 muB=0.240773
+pid=21112 muB=0.240996
+pid=13226 muB=0.200599
+pid=13216 muB=0.209434
+pid=13116 muB=0.203298
+pid=22224 muB=0.244352
+pid=22214 muB=0.243804
+pid=22114 muB=0.243931
+pid=21114 muB=0.244732
+pid=2228 muB=0.219415
+pid=2218 muB=0.219173
+pid=2118 muB=0.219271
+pid=1118 muB=0.21972
+pid=23224 muB=0.239214
+pid=23214 muB=0.242378
+pid=23114 muB=0.240396
+pid=9050225 muB=0.111755
+pid=23324 muB=0.229039
+pid=23314 muB=0.226902
+pid=12226 muB=0.196729
+pid=12126 muB=0.196453
+pid=11216 muB=0.196514
+pid=11116 muB=0.19691
+pid=9060225 muB=0.312131
+pid=13334 muB=0.319964
+newpid of pion = 0
+newpid of proton = 16
+newpid of -13334 = 318
+density[211]=0.0291411
+density[111]=0.029589
+density[-211]=0.0291411
+density[321]=0.00604495
+density[-321]=0.00604495
+density[311]=0.00592188
+density[-311]=0.00592188
+density[221]=0.00455092
+density[213]=0.00383182
+density[113]=0.00383182
+density[-213]=0.00383182
+density[223]=0.00368411
+density[323]=0.00194103
+density[-323]=0.00194103
+density[313]=0.0018904
+density[-313]=0.0018904
+density[2212]=0.000978648
+density[2112]=0.000971039
+density[331]=0.000435379
+density[9010221]=0.00039451
+density[9000211]=0.000369984
+density[9000111]=0.000369984
+density[-9000211]=0.000369984
+density[333]=0.000898511
+density[3122]=0.000331545
+density[10223]=0.000354899
+density[3222]=0.000209619
+density[3212]=0.000205376
+density[3112]=0.000199254
+density[10213]=0.00024448
+density[10113]=0.00024448
+density[-10213]=0.00024448
+density[20213]=0.000243713
+density[20113]=0.000243713
+density[-20213]=0.000243713
+density[2224]=0.000320868
+density[2214]=0.000320868
+density[2114]=0.000320868
+density[1114]=0.000320868
+density[10323]=0.0001859
+density[-10323]=0.0001859
+density[10313]=0.0001859
+density[-10313]=0.0001859
+density[225]=0.00030517
+density[20223]=0.000175843
+density[100221]=5.42603e-05
+density[100211]=5.22371e-05
+density[100111]=5.22371e-05
+density[-100211]=5.22371e-05
+density[3322]=9.50944e-05
+density[3312]=9.12625e-05
+density[215]=0.000232567
+density[115]=0.000232567
+density[-215]=0.000232567
+density[9000213]=9.66404e-05
+density[9000113]=9.66404e-05
+density[-9000213]=9.66404e-05
+density[3224]=0.000123374
+density[3214]=0.000122667
+density[3114]=0.000119953
+density[10221]=2.76317e-05
+density[20323]=8.18408e-05
+density[-20323]=8.18408e-05
+density[20313]=8.18408e-05
+density[-20313]=8.18408e-05
+density[13122]=5.30099e-05
+density[100323]=7.57865e-05
+density[-100323]=7.57865e-05
+density[100313]=7.57865e-05
+density[-100313]=7.57865e-05
+density[9020221]=2.58682e-05
+density[10321]=2.5588e-05
+density[-10321]=2.5588e-05
+density[10311]=2.5588e-05
+density[-10311]=2.5588e-05
+density[100223]=7.33962e-05
+density[20333]=7.00392e-05
+density[325]=0.000117257
+density[-325]=0.000117257
+density[315]=0.000112251
+density[-315]=0.000112251
+density[12212]=4.27611e-05
+density[12112]=4.27611e-05
+density[100213]=5.46172e-05
+density[100113]=5.46172e-05
+density[-100213]=5.46172e-05
+density[10211]=1.71805e-05
+density[10111]=1.71805e-05
+density[-10211]=1.71805e-05
+density[100331]=1.69605e-05
+density[9030221]=1.38859e-05
+density[3124]=5.12322e-05
+density[2124]=5.10668e-05
+density[1214]=5.10668e-05
+density[335]=6.18025e-05
+density[3324]=4.7313e-05
+density[3314]=4.63429e-05
+density[22212]=2.31715e-05
+density[22112]=2.31715e-05
+density[32224]=3.0391e-05
+density[32214]=3.0391e-05
+density[32114]=3.0391e-05
+density[31114]=3.0391e-05
+density[23122]=1.51955e-05
+density[10225]=3.40084e-05
+density[2222]=1.24981e-05
+density[2122]=1.24981e-05
+density[1212]=1.24981e-05
+density[1112]=1.24981e-05
+density[9010213]=1.61342e-05
+density[9010113]=1.61342e-05
+density[-9010213]=1.61342e-05
+density[32212]=1.06165e-05
+density[32112]=1.06165e-05
+density[13222]=1.02753e-05
+density[13212]=1.02753e-05
+density[13112]=1.02753e-05
+density[30223]=1.44377e-05
+density[227]=3.43552e-05
+density[33122]=9.62508e-06
+density[13224]=1.92502e-05
+density[13214]=1.92502e-05
+density[13114]=1.92502e-05
+density[10215]=2.3688e-05
+density[10115]=2.3688e-05
+density[-10215]=2.3688e-05
+density[3334]=1.89467e-05
+density[2216]=2.79463e-05
+density[2116]=2.79463e-05
+density[100333]=1.35235e-05
+density[12216]=2.61762e-05
+density[12116]=2.61762e-05
+density[217]=2.97886e-05
+density[117]=2.97886e-05
+density[-217]=2.97886e-05
+density[13124]=1.68888e-05
+density[13322]=8.4444e-06
+density[13312]=8.4444e-06
+density[22124]=1.5818e-05
+density[21214]=1.5818e-05
+density[12224]=1.5818e-05
+density[12214]=1.5818e-05
+density[12114]=1.5818e-05
+density[11114]=1.5818e-05
+density[42212]=7.40727e-06
+density[42112]=7.40727e-06
+density[10331]=3.58418e-06
+density[30323]=1.06124e-05
+density[-30323]=1.06124e-05
+density[30313]=1.06124e-05
+density[-30313]=1.06124e-05
+density[30213]=1.04056e-05
+density[30113]=1.04056e-05
+density[-30213]=1.04056e-05
+density[32124]=1.38741e-05
+density[31214]=1.38741e-05
+density[23222]=5.69663e-06
+density[23212]=5.69663e-06
+density[23112]=5.69663e-06
+density[10325]=1.22421e-05
+density[-10325]=1.22421e-05
+density[10315]=1.22421e-05
+density[-10315]=1.22421e-05
+density[3226]=1.44984e-05
+density[3216]=1.44984e-05
+density[3116]=1.44984e-05
+density[327]=1.68039e-05
+density[-327]=1.68039e-05
+density[317]=1.68039e-05
+density[-317]=1.68039e-05
+density[43122]=4.09896e-06
+density[53122]=3.83737e-06
+density[9010211]=1.89354e-06
+density[9010111]=1.89354e-06
+density[-9010211]=1.89354e-06
+density[20325]=9.2211e-06
+density[-20325]=9.2211e-06
+density[20315]=9.2211e-06
+density[-20315]=9.2211e-06
+density[3126]=1.0777e-05
+density[13324]=7.04381e-06
+density[13314]=7.04381e-06
+density[13126]=1.00885e-05
+density[337]=1.00437e-05
+density[23124]=4.52236e-06
+density[2226]=6.78353e-06
+density[2126]=6.78353e-06
+density[1216]=6.78353e-06
+density[1116]=6.78353e-06
+density[22222]=1.98041e-06
+density[22122]=1.98041e-06
+density[21212]=1.98041e-06
+density[21112]=1.98041e-06
+density[13226]=5.74739e-06
+density[13216]=5.74739e-06
+density[13116]=5.74739e-06
+density[22224]=3.70656e-06
+density[22214]=3.70656e-06
+density[22114]=3.70656e-06
+density[21114]=3.70656e-06
+density[2228]=6.93703e-06
+density[2218]=6.93703e-06
+density[2118]=6.93703e-06
+density[1118]=6.93703e-06
+density[23224]=3.24564e-06
+density[23214]=3.24564e-06
+density[23114]=3.24564e-06
+density[9050225]=3.9245e-06
+density[23324]=3.03699e-06
+density[23314]=3.03699e-06
+density[12226]=4.26249e-06
+density[12126]=4.26249e-06
+density[11216]=4.26249e-06
+density[11116]=4.26249e-06
+density[9060225]=2.52941e-06
+density[13334]=4.02472e-07
+density[-2212]=0.000978648
+density[-2112]=0.000971039
+density[-3122]=0.000331545
+density[-3222]=0.000209619
+density[-3212]=0.000205376
+density[-3112]=0.000199254
+density[-2224]=0.000320868
+density[-2214]=0.000320868
+density[-2114]=0.000320868
+density[-1114]=0.000320868
+density[-3322]=9.50944e-05
+density[-3312]=9.12625e-05
+density[-3224]=0.000123374
+density[-3214]=0.000122667
+density[-3114]=0.000119953
+density[-13122]=5.30099e-05
+density[-12212]=4.27611e-05
+density[-12112]=4.27611e-05
+density[-3124]=5.12322e-05
+density[-2124]=5.10668e-05
+density[-1214]=5.10668e-05
+density[-3324]=4.7313e-05
+density[-3314]=4.63429e-05
+density[-22212]=2.31715e-05
+density[-22112]=2.31715e-05
+density[-32224]=3.0391e-05
+density[-32214]=3.0391e-05
+density[-32114]=3.0391e-05
+density[-31114]=3.0391e-05
+density[-23122]=1.51955e-05
+density[-2222]=1.24981e-05
+density[-2122]=1.24981e-05
+density[-1212]=1.24981e-05
+density[-1112]=1.24981e-05
+density[-32212]=1.06165e-05
+density[-32112]=1.06165e-05
+density[-13222]=1.02753e-05
+density[-13212]=1.02753e-05
+density[-13112]=1.02753e-05
+density[-33122]=9.62508e-06
+density[-13224]=1.92502e-05
+density[-13214]=1.92502e-05
+density[-13114]=1.92502e-05
+density[-3334]=1.89467e-05
+density[-2216]=2.79463e-05
+density[-2116]=2.79463e-05
+density[-12216]=2.61762e-05
+density[-12116]=2.61762e-05
+density[-13124]=1.68888e-05
+density[-13322]=8.4444e-06
+density[-13312]=8.4444e-06
+density[-22124]=1.5818e-05
+density[-21214]=1.5818e-05
+density[-12224]=1.5818e-05
+density[-12214]=1.5818e-05
+density[-12114]=1.5818e-05
+density[-11114]=1.5818e-05
+density[-42212]=7.40727e-06
+density[-42112]=7.40727e-06
+density[-32124]=1.38741e-05
+density[-31214]=1.38741e-05
+density[-23222]=5.69663e-06
+density[-23212]=5.69663e-06
+density[-23112]=5.69663e-06
+density[-3226]=1.44984e-05
+density[-3216]=1.44984e-05
+density[-3116]=1.44984e-05
+density[-43122]=4.09896e-06
+density[-53122]=3.83737e-06
+density[-3126]=1.0777e-05
+density[-13324]=7.04381e-06
+density[-13314]=7.04381e-06
+density[-13126]=1.00885e-05
+density[-23124]=4.52236e-06
+density[-2226]=6.78353e-06
+density[-2126]=6.78353e-06
+density[-1216]=6.78353e-06
+density[-1116]=6.78353e-06
+density[-22222]=1.98041e-06
+density[-22122]=1.98041e-06
+density[-21212]=1.98041e-06
+density[-21112]=1.98041e-06
+density[-13226]=5.74739e-06
+density[-13216]=5.74739e-06
+density[-13116]=5.74739e-06
+density[-22224]=3.70656e-06
+density[-22214]=3.70656e-06
+density[-22114]=3.70656e-06
+density[-21114]=3.70656e-06
+density[-2228]=6.93703e-06
+density[-2218]=6.93703e-06
+density[-2118]=6.93703e-06
+density[-1118]=6.93703e-06
+density[-23224]=3.24564e-06
+density[-23214]=3.24564e-06
+density[-23114]=3.24564e-06
+density[-23324]=3.03699e-06
+density[-23314]=3.03699e-06
+density[-12226]=4.26249e-06
+density[-12126]=4.26249e-06
+density[-11216]=4.26249e-06
+density[-11116]=4.26249e-06
+density[-13334]=4.02472e-07
+pion after reso over before ratio=1.78639
+initialize finished!
+event 0 finished
+event 1 finished
+event 2 finished
+event 3 finished
+event 4 finished
+event 5 finished
+event 6 finished
+event 7 finished
+event 8 finished
+event 9 finished
+event 10 finished
+event 11 finished
+event 12 finished
+event 13 finished
+event 14 finished
+event 15 finished
+event 16 finished
+event 17 finished
+event 18 finished
+event 19 finished
+event 20 finished
+event 21 finished
+event 22 finished
+event 23 finished
+event 24 finished
+event 25 finished
+event 26 finished
+event 27 finished
+event 28 finished
+event 29 finished
+event 30 finished
+event 31 finished
+event 32 finished
+event 33 finished
+event 34 finished
+event 35 finished
+event 36 finished
+event 37 finished
+event 38 finished
+event 39 finished
+event 40 finished
+event 41 finished
+event 42 finished
+event 43 finished
+event 44 finished
+event 45 finished
+event 46 finished
+event 47 finished
+event 48 finished
+event 49 finished
+event 50 finished
+event 51 finished
+event 52 finished
+event 53 finished
+event 54 finished
+event 55 finished
+event 56 finished
+event 57 finished
+event 58 finished
+event 59 finished
+event 60 finished
+event 61 finished
+event 62 finished
+event 63 finished
+event 64 finished
+event 65 finished
+event 66 finished
+event 67 finished
+event 68 finished
+event 69 finished
+event 70 finished
+event 71 finished
+event 72 finished
+event 73 finished
+event 74 finished
+event 75 finished
+event 76 finished
+event 77 finished
+event 78 finished
+event 79 finished
+event 80 finished
+event 81 finished
+event 82 finished
+event 83 finished
+event 84 finished
+event 85 finished
+event 86 finished
+event 87 finished
+event 88 finished
+event 89 finished
+event 90 finished
+event 91 finished
+event 92 finished
+event 93 finished
+event 94 finished
+event 95 finished
+event 96 finished
+event 97 finished
+event 98 finished
+event 99 finished
+event 100 finished
+event 101 finished
+event 102 finished
+event 103 finished
+event 104 finished
+event 105 finished
+event 106 finished
+event 107 finished
+event 108 finished
+event 109 finished
+event 110 finished
+event 111 finished
+event 112 finished
+event 113 finished
+event 114 finished
+event 115 finished
+event 116 finished
+event 117 finished
+event 118 finished
+event 119 finished
+event 120 finished
+event 121 finished
+event 122 finished
+event 123 finished
+event 124 finished
+event 125 finished
+event 126 finished
+event 127 finished
+event 128 finished
+event 129 finished
+event 130 finished
+event 131 finished
+event 132 finished
+event 133 finished
+event 134 finished
+event 135 finished
+event 136 finished
+event 137 finished
+event 138 finished
+event 139 finished
+event 140 finished
+event 141 finished
+event 142 finished
+event 143 finished
+event 144 finished
+event 145 finished
+event 146 finished
+event 147 finished
+event 148 finished
+event 149 finished
+event 150 finished
+event 151 finished
+event 152 finished
+event 153 finished
+event 154 finished
+event 155 finished
+event 156 finished
+event 157 finished
+event 158 finished
+event 159 finished
+event 160 finished
+event 161 finished
+event 162 finished
+event 163 finished
+event 164 finished
+event 165 finished
+event 166 finished
+event 167 finished
+event 168 finished
+event 169 finished
+event 170 finished
+event 171 finished
+event 172 finished
+event 173 finished
+event 174 finished
+event 175 finished
+event 176 finished
+event 177 finished
+event 178 finished
+event 179 finished
+event 180 finished
+event 181 finished
+event 182 finished
+event 183 finished
+event 184 finished
+event 185 finished
+event 186 finished
+event 187 finished
+event 188 finished
+event 189 finished
+event 190 finished
+event 191 finished
+event 192 finished
+event 193 finished
+event 194 finished
+event 195 finished
+event 196 finished
+event 197 finished
+event 198 finished
+event 199 finished
+event 200 finished
+event 201 finished
+event 202 finished
+event 203 finished
+event 204 finished
+event 205 finished
+event 206 finished
+event 207 finished
+event 208 finished
+event 209 finished
+event 210 finished
+event 211 finished
+event 212 finished
+event 213 finished
+event 214 finished
+event 215 finished
+event 216 finished
+event 217 finished
+event 218 finished
+event 219 finished
+event 220 finished
+event 221 finished
+event 222 finished
+event 223 finished
+event 224 finished
+event 225 finished
+event 226 finished
+event 227 finished
+event 228 finished
+event 229 finished
+event 230 finished
+event 231 finished
+event 232 finished
+event 233 finished
+event 234 finished
+event 235 finished
+event 236 finished
+event 237 finished
+event 238 finished
+event 239 finished
+event 240 finished
+event 241 finished
+event 242 finished
+event 243 finished
+event 244 finished
+event 245 finished
+event 246 finished
+event 247 finished
+event 248 finished
+event 249 finished
+event 250 finished
+event 251 finished
+event 252 finished
+event 253 finished
+event 254 finished
+event 255 finished
+event 256 finished
+event 257 finished
+event 258 finished
+event 259 finished
+event 260 finished
+event 261 finished
+event 262 finished
+event 263 finished
+event 264 finished
+event 265 finished
+event 266 finished
+event 267 finished
+event 268 finished
+event 269 finished
+event 270 finished
+event 271 finished
+event 272 finished
+event 273 finished
+event 274 finished
+event 275 finished
+event 276 finished
+event 277 finished
+event 278 finished
+event 279 finished
+event 280 finished
+event 281 finished
+event 282 finished
+event 283 finished
+event 284 finished
+event 285 finished
+event 286 finished
+event 287 finished
+event 288 finished
+event 289 finished
+event 290 finished
+event 291 finished
+event 292 finished
+event 293 finished
+event 294 finished
+event 295 finished
+event 296 finished
+event 297 finished
+event 298 finished
+event 299 finished
+event 300 finished
+event 301 finished
+event 302 finished
+event 303 finished
+event 304 finished
+event 305 finished
+event 306 finished
+event 307 finished
+event 308 finished
+event 309 finished
+event 310 finished
+event 311 finished
+event 312 finished
+event 313 finished
+event 314 finished
+event 315 finished
+event 316 finished
+event 317 finished
+event 318 finished
+event 319 finished
+event 320 finished
+event 321 finished
+event 322 finished
+event 323 finished
+event 324 finished
+event 325 finished
+event 326 finished
+event 327 finished
+event 328 finished
+event 329 finished
+event 330 finished
+event 331 finished
+event 332 finished
+event 333 finished
+event 334 finished
+event 335 finished
+event 336 finished
+event 337 finished
+event 338 finished
+event 339 finished
+event 340 finished
+event 341 finished
+event 342 finished
+event 343 finished
+event 344 finished
+event 345 finished
+event 346 finished
+event 347 finished
+event 348 finished
+event 349 finished
+event 350 finished
+event 351 finished
+event 352 finished
+event 353 finished
+event 354 finished
+event 355 finished
+event 356 finished
+event 357 finished
+event 358 finished
+event 359 finished
+event 360 finished
+event 361 finished
+event 362 finished
+event 363 finished
+event 364 finished
+event 365 finished
+event 366 finished
+event 367 finished
+event 368 finished
+event 369 finished
+event 370 finished
+event 371 finished
+event 372 finished
+event 373 finished
+event 374 finished
+event 375 finished
+event 376 finished
+event 377 finished
+event 378 finished
+event 379 finished
+event 380 finished
+event 381 finished
+event 382 finished
+event 383 finished
+event 384 finished
+event 385 finished
+event 386 finished
+event 387 finished
+event 388 finished
+event 389 finished
+event 390 finished
+event 391 finished
+event 392 finished
+event 393 finished
+event 394 finished
+event 395 finished
+event 396 finished
+event 397 finished
+event 398 finished
+event 399 finished
+event 400 finished
+event 401 finished
+event 402 finished
+event 403 finished
+event 404 finished
+event 405 finished
+event 406 finished
+event 407 finished
+event 408 finished
+event 409 finished
+event 410 finished
+event 411 finished
+event 412 finished
+event 413 finished
+event 414 finished
+event 415 finished
+event 416 finished
+event 417 finished
+event 418 finished
+event 419 finished
+event 420 finished
+event 421 finished
+event 422 finished
+event 423 finished
+event 424 finished
+event 425 finished
+event 426 finished
+event 427 finished
+event 428 finished
+event 429 finished
+event 430 finished
+event 431 finished
+event 432 finished
+event 433 finished
+event 434 finished
+event 435 finished
+event 436 finished
+event 437 finished
+event 438 finished
+event 439 finished
+event 440 finished
+event 441 finished
+event 442 finished
+event 443 finished
+event 444 finished
+event 445 finished
+event 446 finished
+event 447 finished
+event 448 finished
+event 449 finished
+event 450 finished
+event 451 finished
+event 452 finished
+event 453 finished
+event 454 finished
+event 455 finished
+event 456 finished
+event 457 finished
+event 458 finished
+event 459 finished
+event 460 finished
+event 461 finished
+event 462 finished
+event 463 finished
+event 464 finished
+event 465 finished
+event 466 finished
+event 467 finished
+event 468 finished
+event 469 finished
+event 470 finished
+event 471 finished
+event 472 finished
+event 473 finished
+event 474 finished
+event 475 finished
+event 476 finished
+event 477 finished
+event 478 finished
+event 479 finished
+event 480 finished
+event 481 finished
+event 482 finished
+event 483 finished
+event 484 finished
+event 485 finished
+event 486 finished
+event 487 finished
+event 488 finished
+event 489 finished
+event 490 finished
+event 491 finished
+event 492 finished
+event 493 finished
+event 494 finished
+event 495 finished
+event 496 finished
+event 497 finished
+event 498 finished
+event 499 finished
+event 500 finished
+event 501 finished
+event 502 finished
+event 503 finished
+event 504 finished
+event 505 finished
+event 506 finished
+event 507 finished
+event 508 finished
+event 509 finished
+event 510 finished
+event 511 finished
+event 512 finished
+event 513 finished
+event 514 finished
+event 515 finished
+event 516 finished
+event 517 finished
+event 518 finished
+event 519 finished
+event 520 finished
+event 521 finished
+event 522 finished
+event 523 finished
+event 524 finished
+event 525 finished
+event 526 finished
+event 527 finished
+event 528 finished
+event 529 finished
+event 530 finished
+event 531 finished
+event 532 finished
+event 533 finished
+event 534 finished
+event 535 finished
+event 536 finished
+event 537 finished
+event 538 finished
+event 539 finished
+event 540 finished
+event 541 finished
+event 542 finished
+event 543 finished
+event 544 finished
+event 545 finished
+event 546 finished
+event 547 finished
+event 548 finished
+event 549 finished
+event 550 finished
+event 551 finished
+event 552 finished
+event 553 finished
+event 554 finished
+event 555 finished
+event 556 finished
+event 557 finished
+event 558 finished
+event 559 finished
+event 560 finished
+event 561 finished
+event 562 finished
+event 563 finished
+event 564 finished
+event 565 finished
+event 566 finished
+event 567 finished
+event 568 finished
+event 569 finished
+event 570 finished
+event 571 finished
+event 572 finished
+event 573 finished
+event 574 finished
+event 575 finished
+event 576 finished
+event 577 finished
+event 578 finished
+event 579 finished
+event 580 finished
+event 581 finished
+event 582 finished
+event 583 finished
+event 584 finished
+event 585 finished
+event 586 finished
+event 587 finished
+event 588 finished
+event 589 finished
+event 590 finished
+event 591 finished
+event 592 finished
+event 593 finished
+event 594 finished
+event 595 finished
+event 596 finished
+event 597 finished
+event 598 finished
+event 599 finished
+event 600 finished
+event 601 finished
+event 602 finished
+event 603 finished
+event 604 finished
+event 605 finished
+event 606 finished
+event 607 finished
+event 608 finished
+event 609 finished
+event 610 finished
+event 611 finished
+event 612 finished
+event 613 finished
+event 614 finished
+event 615 finished
+event 616 finished
+event 617 finished
+event 618 finished
+event 619 finished
+event 620 finished
+event 621 finished
+event 622 finished
+event 623 finished
+event 624 finished
+event 625 finished
+event 626 finished
+event 627 finished
+event 628 finished
+event 629 finished
+event 630 finished
+event 631 finished
+event 632 finished
+event 633 finished
+event 634 finished
+event 635 finished
+event 636 finished
+event 637 finished
+event 638 finished
+event 639 finished
+event 640 finished
+event 641 finished
+event 642 finished
+event 643 finished
+event 644 finished
+event 645 finished
+event 646 finished
+event 647 finished
+event 648 finished
+event 649 finished
+event 650 finished
+event 651 finished
+event 652 finished
+event 653 finished
+event 654 finished
+event 655 finished
+event 656 finished
+event 657 finished
+event 658 finished
+event 659 finished
+event 660 finished
+event 661 finished
+event 662 finished
+event 663 finished
+event 664 finished
+event 665 finished
+event 666 finished
+event 667 finished
+event 668 finished
+event 669 finished
+event 670 finished
+event 671 finished
+event 672 finished
+event 673 finished
+event 674 finished
+event 675 finished
+event 676 finished
+event 677 finished
+event 678 finished
+event 679 finished
+event 680 finished
+event 681 finished
+event 682 finished
+event 683 finished
+event 684 finished
+event 685 finished
+event 686 finished
+event 687 finished
+event 688 finished
+event 689 finished
+event 690 finished
+event 691 finished
+event 692 finished
+event 693 finished
+event 694 finished
+event 695 finished
+event 696 finished
+event 697 finished
+event 698 finished
+event 699 finished
+event 700 finished
+event 701 finished
+event 702 finished
+event 703 finished
+event 704 finished
+event 705 finished
+event 706 finished
+event 707 finished
+event 708 finished
+event 709 finished
+event 710 finished
+event 711 finished
+event 712 finished
+event 713 finished
+event 714 finished
+event 715 finished
+event 716 finished
+event 717 finished
+event 718 finished
+event 719 finished
+event 720 finished
+event 721 finished
+event 722 finished
+event 723 finished
+event 724 finished
+event 725 finished
+event 726 finished
+event 727 finished
+event 728 finished
+event 729 finished
+event 730 finished
+event 731 finished
+event 732 finished
+event 733 finished
+event 734 finished
+event 735 finished
+event 736 finished
+event 737 finished
+event 738 finished
+event 739 finished
+event 740 finished
+event 741 finished
+event 742 finished
+event 743 finished
+event 744 finished
+event 745 finished
+event 746 finished
+event 747 finished
+event 748 finished
+event 749 finished
+event 750 finished
+event 751 finished
+event 752 finished
+event 753 finished
+event 754 finished
+event 755 finished
+event 756 finished
+event 757 finished
+event 758 finished
+event 759 finished
+event 760 finished
+event 761 finished
+event 762 finished
+event 763 finished
+event 764 finished
+event 765 finished
+event 766 finished
+event 767 finished
+event 768 finished
+event 769 finished
+event 770 finished
+event 771 finished
+event 772 finished
+event 773 finished
+event 774 finished
+event 775 finished
+event 776 finished
+event 777 finished
+event 778 finished
+event 779 finished
+event 780 finished
+event 781 finished
+event 782 finished
+event 783 finished
+event 784 finished
+event 785 finished
+event 786 finished
+event 787 finished
+event 788 finished
+event 789 finished
+event 790 finished
+event 791 finished
+event 792 finished
+event 793 finished
+event 794 finished
+event 795 finished
+event 796 finished
+event 797 finished
+event 798 finished
+event 799 finished
+event 800 finished
+event 801 finished
+event 802 finished
+event 803 finished
+event 804 finished
+event 805 finished
+event 806 finished
+event 807 finished
+event 808 finished
+event 809 finished
+event 810 finished
+event 811 finished
+event 812 finished
+event 813 finished
+event 814 finished
+event 815 finished
+event 816 finished
+event 817 finished
+event 818 finished
+event 819 finished
+event 820 finished
+event 821 finished
+event 822 finished
+event 823 finished
+event 824 finished
+event 825 finished
+event 826 finished
+event 827 finished
+event 828 finished
+event 829 finished
+event 830 finished
+event 831 finished
+event 832 finished
+event 833 finished
+event 834 finished
+event 835 finished
+event 836 finished
+event 837 finished
+event 838 finished
+event 839 finished
+event 840 finished
+event 841 finished
+event 842 finished
+event 843 finished
+event 844 finished
+event 845 finished
+event 846 finished
+event 847 finished
+event 848 finished
+event 849 finished
+event 850 finished
+event 851 finished
+event 852 finished
+event 853 finished
+event 854 finished
+event 855 finished
+event 856 finished
+event 857 finished
+event 858 finished
+event 859 finished
+event 860 finished
+event 861 finished
+event 862 finished
+event 863 finished
+event 864 finished
+event 865 finished
+event 866 finished
+event 867 finished
+event 868 finished
+event 869 finished
+event 870 finished
+event 871 finished
+event 872 finished
+event 873 finished
+event 874 finished
+event 875 finished
+event 876 finished
+event 877 finished
+event 878 finished
+event 879 finished
+event 880 finished
+event 881 finished
+event 882 finished
+event 883 finished
+event 884 finished
+event 885 finished
+event 886 finished
+event 887 finished
+event 888 finished
+event 889 finished
+event 890 finished
+event 891 finished
+event 892 finished
+event 893 finished
+event 894 finished
+event 895 finished
+event 896 finished
+event 897 finished
+event 898 finished
+event 899 finished
+event 900 finished
+event 901 finished
+event 902 finished
+event 903 finished
+event 904 finished
+event 905 finished
+event 906 finished
+event 907 finished
+event 908 finished
+event 909 finished
+event 910 finished
+event 911 finished
+event 912 finished
+event 913 finished
+event 914 finished
+event 915 finished
+event 916 finished
+event 917 finished
+event 918 finished
+event 919 finished
+event 920 finished
+event 921 finished
+event 922 finished
+event 923 finished
+event 924 finished
+event 925 finished
+event 926 finished
+event 927 finished
+event 928 finished
+event 929 finished
+event 930 finished
+event 931 finished
+event 932 finished
+event 933 finished
+event 934 finished
+event 935 finished
+event 936 finished
+event 937 finished
+event 938 finished
+event 939 finished
+event 940 finished
+event 941 finished
+event 942 finished
+event 943 finished
+event 944 finished
+event 945 finished
+event 946 finished
+event 947 finished
+event 948 finished
+event 949 finished
+event 950 finished
+event 951 finished
+event 952 finished
+event 953 finished
+event 954 finished
+event 955 finished
+event 956 finished
+event 957 finished
+event 958 finished
+event 959 finished
+event 960 finished
+event 961 finished
+event 962 finished
+event 963 finished
+event 964 finished
+event 965 finished
+event 966 finished
+event 967 finished
+event 968 finished
+event 969 finished
+event 970 finished
+event 971 finished
+event 972 finished
+event 973 finished
+event 974 finished
+event 975 finished
+event 976 finished
+event 977 finished
+event 978 finished
+event 979 finished
+event 980 finished
+event 981 finished
+event 982 finished
+event 983 finished
+event 984 finished
+event 985 finished
+event 986 finished
+event 987 finished
+event 988 finished
+event 989 finished
+event 990 finished
+event 991 finished
+event 992 finished
+event 993 finished
+event 994 finished
+event 995 finished
+event 996 finished
+event 997 finished
+event 998 finished
+event 999 finished
+ntot for pion+ from sample=829.15
+ntot for pion+ from udotsigma=474.635
+ntot for pion+ from hirano=467.482

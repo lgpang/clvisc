@@ -29,12 +29,12 @@ std::ostream &operator<<(std::ostream &out, const Line &l) {
   return out;
 }
 
-auto ran = Random::uniform_dist<float>(0.0, 1.0);
+auto ran = Random::uniform_dist<double>(0.0, 1.0);
 /** contrustructor for AdaptiveRejectionSampler
  * param: func distribution function f_(x)
  */
 AdaptiveRejectionSampler::AdaptiveRejectionSampler(
-    std::function<float(float)> func, float xmin, float xmax):
+    std::function<double(double)> func, double xmin, double xmax):
     f_(func), xmin_(xmin), xmax_(xmax) {
   // const auto &log = logger<LogArea::Sampling>();
   /** judge if f_(xmin_)<FLT_MIN or f_(xmax_)<FLT_MIN,
@@ -43,10 +43,10 @@ AdaptiveRejectionSampler::AdaptiveRejectionSampler(
   int nloop = 1;
 
   {
-    /** disable float traps here since probability can goes to
+    /** disable double traps here since probability can goes to
      * really small as we expected; we need to judge it and
      * shrink the range (xmin, xmax) to get ride of it */
-    // DisablefloatTraps guard(FE_DIVBYZERO | FE_INVALID);
+    // DisabledoubleTraps guard(FE_DIVBYZERO | FE_INVALID);
 
 
     //std::cout << "f_(xmin_) = " << f_(xmin_) << std::endl;
@@ -55,7 +55,7 @@ AdaptiveRejectionSampler::AdaptiveRejectionSampler(
       xmin_ += nloop*really_small;
       nloop *= 2;
       // log.debug() << "xmin_ is changed to " << xmin_ << std::endl;
-      //std::cout << "xmin_ is changed to " << xmin_ << std::endl;
+      // std::cout << "xmin_ is changed to " << xmin_ << std::endl;
 
       if ( xmin_ > xmax_ ) {
         // log.fatal() << "xmin_ > xmax_ " << std::endl;
@@ -69,16 +69,16 @@ AdaptiveRejectionSampler::AdaptiveRejectionSampler(
       xmax_ -= nloop*really_small;
       nloop *= 2;
       // log.debug() << "xmax_ is changed to " << xmax_ << std::endl;
-      //std::cout << "xmax_ is changed to " << xmax_ << std::endl;
+      std::cout << "xmax_ is changed to " << xmax_ << std::endl;
       if ( xmin_ > xmax_ ) {
         // log.fatal() << "xmax_ < xmin_ " << std::endl;
         throw std::runtime_error(
             "Error: xmin_ > xmax_ in ARS during shrinking range");
       }
     }
-  }  // only disable underflow float traps inside the brackets
+  }  // only disable underflow double traps inside the brackets
 
-  float dx = (xmax_ - xmin_)/static_cast<float>(init_npoint_-1);
+  double dx = (xmax_ - xmin_)/static_cast<double>(init_npoint_-1);
 
   Point p;
   for ( int i=0; i < init_npoint_; i++ ) {
@@ -136,7 +136,7 @@ inline Point AdaptiveRejectionSampler::create_inter(Line l0, Line l2) {
       std::cerr << "two parallel scants dont interact" << std::endl;
   }
 
-  float x, y, expy;
+  double x, y, expy;
   x = (l2.b-l0.b)/(l0.m-l2.m);
   y = l0.b+l0.m*x;
   expy = std::exp(y);
@@ -208,8 +208,9 @@ void AdaptiveRejectionSampler::update_area() {
   int j = 0;
 
   // Aj: The area under the jth piece exponential function
-  float Aj;
+  double Aj;
 
+  int loops = 0;
   for (; it0 != std::prev(inters_.end(), 1); it0++, it1++) {
     // (left) intersection--->(right) point
     if ( std::abs(upper(j).m) > really_small ) {
@@ -232,6 +233,11 @@ void AdaptiveRejectionSampler::update_area() {
     areas_.push_back(Aj);
     upper_bounds_.push_back({*it1, *std::next(it0, 1), upper(j)});
     j++;
+
+    loops++;
+    if (loops > 100000) {
+        std::cerr << "update too many times; it0 may go wild" << std::endl;
+    }
   }
   discrete_distribution_.reset_weights(areas_);
 }
@@ -349,10 +355,10 @@ inline int AdaptiveRejectionSampler::sample_j() {
 }
 
 /** sampler x in range [xj, xj+1) */
-inline float AdaptiveRejectionSampler::sample_x(int j) {
-  float r = Random::canonical<float>();
-  float m = upper_bounds_.at(j).piecewise_linear_line.m;
-  float x;
+inline double AdaptiveRejectionSampler::sample_x(int j) {
+  double r = Random::canonical<double>();
+  double m = upper_bounds_.at(j).piecewise_linear_line.m;
+  double x;
   // m != 0, sample from piecewise exponential distribution
   if ( std::abs(m) > really_small ) {
     x = std::log(r*std::exp(m*upper_bounds_.at(j).right_point.x)+
@@ -375,16 +381,16 @@ inline float AdaptiveRejectionSampler::sample_x(int j) {
 
 
 /** if squeezing_test==true, do not need rejection_test (time save) */
-inline bool AdaptiveRejectionSampler::squeezing_test(const float x,
-                                            const int j, const float rand) {
+inline bool AdaptiveRejectionSampler::squeezing_test(const double x,
+                                            const int j, const double rand) {
   return rand <= std::exp(lower(j).eval(x) -
                           upper_bounds_.at(j).piecewise_linear_line.eval(x));
 }
 
 /** if squeezing_test==false, do rejection_test
  * if rejection_test=true, keep the sampling*/
-inline bool AdaptiveRejectionSampler::rejection_test(const float x,
-                                            const int j, const float rand) {
+inline bool AdaptiveRejectionSampler::rejection_test(const double x,
+                                            const int j, const double rand) {
   assert(j < upper_bounds_.size());
   return rand*std::exp(upper_bounds_.at(j).piecewise_linear_line.eval(x))
       <= f_(x);
@@ -392,21 +398,21 @@ inline bool AdaptiveRejectionSampler::rejection_test(const float x,
 
 
 /** get one x from distribution function f_(x)*/
-float AdaptiveRejectionSampler::get_one_sample() {
+double AdaptiveRejectionSampler::get_one_sample() {
   // const auto & log = logger<LogArea::Sampling>();
 
   int rejections = 0;
-  float x;
+  double x;
   while ( true ) {
     int j = sample_j();
     x = sample_x(j);
-    float rand = Random::canonical<float>();
+    double rand = Random::canonical<double>();
     if ( squeezing_test(x, j, rand) ) {
       return x;
     } else if ( rejection_test(x, j, rand) ) {
       return x;
     }else {
-      if ( rejections < max_refine_loops_ ) {
+      if ( total_refine_loops_ < 1000 ) {
         Point rej;
         rej.x = x;
         rej.expy = f_(x);
@@ -417,8 +423,9 @@ float AdaptiveRejectionSampler::get_one_sample() {
             std::cerr << "Out of range:" << oor.what() << std::endl;
             throw std::runtime_error("Error: Out of range error in ARS");
         }
-        rejections++;
+        total_refine_loops_++;
       }
+      rejections++;
       //std::cout << "don't do adaptive_update to test memory leak \n";
     }
 

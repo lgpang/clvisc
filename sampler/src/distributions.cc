@@ -15,6 +15,7 @@
 
 #include "include/constants.h"
 #include "include/random.h"
+#include "include/integrate.h"
 
 namespace Smash {
 
@@ -147,4 +148,5 @@ double sample_momenta1(const double temperature, const double mass) {
     }
     return momentum_radial;
 }
+
 }  // namespace Smash

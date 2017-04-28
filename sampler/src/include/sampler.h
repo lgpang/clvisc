@@ -23,43 +23,9 @@
 #include "ars.h"
 #include "fourvector.h"
 #include "forwarddeclarations.h"
+#include "particletype.h"
 
 namespace Smash {
-
-typedef struct {
-    int  pidR;
-    int  num_of_daughters;
-    int  daughters[5];
-    double branch_ratio;
-}DecayChannel;
-
-
-typedef struct {
-    // pid=211 for pion+, 321 for kaon+
-    int pdgcode;
-    std::string name;
-    double mass;
-    double width;
-    double gspin;
-    int baryon;
-    int strange;
-    int charm;
-    int bottom;
-    int gisospin;
-    int charge;
-    int decays;
-    int stable;
-    int  antibaryon_spec_exists;
-    // baryon chemical potential
-    double mu_B;
-
-    std::vector<DecayChannel> decay_channels;
-
-    // discrete distribution to draw decay channel
-    Random::discrete_dist<double> draw_decay;
-} ParticleType;
-
-
 /// Sampled particle information
 typedef struct {
     int pdgcode;
