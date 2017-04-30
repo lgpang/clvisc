@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t220
+#: name: Table 220
+#: description: pion Integrated v3 as a function of centrality percentile:.
+
+#: data_file: Table220.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.3 < pT < 6.0 (GeV/c)
+#: Particle,pion
+'centrality percentile','Integrated v3','stat +','stat -','sys +','sys -'
+2.5,0.0206176,0.000416173,-0.000416173,-0.0010252,0.0010252
+7.5,0.0240402,0.000462267,-0.000462267,-0.000876147,0.000876147
+15.0,0.0268592,0.000508739,-0.000508739,-0.000893382,0.000893382
+25.0,0.0300359,0.000563232,-0.000563232,-0.000779699,0.000779699
+35.0,0.0316461,0.000591534,-0.000591534,-0.000660962,0.000660962
+45.0,0.0314814,0.000595325,-0.000595325,-0.000634531,0.000634531
+

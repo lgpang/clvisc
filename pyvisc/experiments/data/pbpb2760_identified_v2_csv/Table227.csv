@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t227
+#: name: Table 227
+#: description: kaon Integrated v5 as a function of centrality percentile:.
+
+#: data_file: Table227.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.3 < pT < 4.0 (GeV/c)
+#: Particle,kaon
+'centrality percentile','Integrated v5','stat +','stat -','sys +','sys -'
+2.5,0.00199413,0.00037342,-0.00037342,-0.00172521,0.00172521
+7.5,0.00232687,0.00039825,-0.00039825,-0.0024555,0.0024555
+15.0,0.00287789,0.000534303,-0.000534303,-0.0019214,0.0019214
+25.0,0.00383265,0.000695751,-0.000695751,-0.00168964,0.00168964
+35.0,0.0026436,0.000946619,-0.000946619,-0.00155275,0.00155275
+45.0,-0.00011521,0.00143534,-0.00143534,-0.000918741,0.000918741
+

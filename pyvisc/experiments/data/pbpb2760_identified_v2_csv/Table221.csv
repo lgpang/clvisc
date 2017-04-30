@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t221
+#: name: Table 221
+#: description: kaon Integrated v3 as a function of centrality percentile:.
+
+#: data_file: Table221.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.3 < pT < 4.0 (GeV/c)
+#: Particle,kaon
+'centrality percentile','Integrated v3','stat +','stat -','sys +','sys -'
+2.5,0.0202044,0.000492864,-0.000492864,-0.000639246,0.000639246
+7.5,0.0232559,0.000554779,-0.000554779,-0.000464563,0.000464563
+15.0,0.0261899,0.000617599,-0.000617599,-0.000656171,0.000656171
+25.0,0.029721,0.000696305,-0.000696305,-0.000643236,0.000643236
+35.0,0.0311833,0.000745329,-0.000745329,-0.000704709,0.000704709
+45.0,0.0314911,0.000806073,-0.000806073,-0.000522142,0.000522142
+

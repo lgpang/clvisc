@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t219
+#: name: Table 219
+#: description: proton Integrated v2 as a function of centrality percentile:.
+
+#: data_file: Table219.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.4 < pT < 6.0 (GeV/c)
+#: Particle,proton
+'centrality percentile','Integrated v2','stat +','stat -','sys +','sys -'
+2.5,0.0248508,0.000501777,-0.000501777,-0.000585121,0.000585121
+7.5,0.043356,0.000847946,-0.000847946,-0.000867226,0.000867226
+15.0,0.063956,0.00125418,-0.00125418,-0.000554679,0.000554679
+25.0,0.0876149,0.00178007,-0.00178007,-0.00157116,0.00157116
+35.0,0.102544,0.00208331,-0.00208331,-0.000922049,0.000922049
+45.0,0.109217,0.00221681,-0.00221681,-0.00101378,0.00101378
+

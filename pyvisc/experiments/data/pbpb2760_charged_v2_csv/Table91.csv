@@ -1,0 +1,27 @@
+#: table_doi: 10.17182/hepdata.58994.v1/t91
+#: name: Table 91
+#: description: Eccentricity-scaled V2 as a function of the transverse charged-particle density normalised by the transverse overlap area (S).
+
+#: data_file: Table91.yaml
+#: keyword reactions: PB PB --> CHARGED X
+#: keyword observables: V2
+#: keyword phrases: Inclusive | Angular Correlation
+#: keyword cmenergies: 2760.0
+#: PT [GeV],0.0-3.0
+#: RE,PB PB --> CHARGED X
+#: ABS(ETARAP),< 0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+'(1/S)*D(N)/DETARAP [FM**-2]','V2(C=EP)/EPSILON','stat +','stat -','sys +','sys -'
+54.5,0.2879,0.0148,-0.0148,0.0109,-0.0109
+48.6,0.3202,0.0164,-0.0164,0.0132,-0.0132
+44.5,0.3082,0.0143,-0.0143,0.0136,-0.0136
+40.3,0.2905,0.0134,-0.0134,0.0125,-0.0125
+37.0,0.2738,0.0119,-0.0119,0.0102,-0.0102
+33.7,0.2589,0.0114,-0.0114,0.0098,-0.0098
+29.9,0.2456,0.0108,-0.0108,0.0083,-0.0083
+26.9,0.2298,0.0104,-0.0104,0.0067,-0.0067
+21.8,0.20883,0.00952,-0.00952,0.00534,-0.00534
+15.8,0.17616,0.00834,-0.00834,0.00303,-0.00303
+10.7,0.14089,0.00672,-0.00672,0.00288,-0.00288
+7.36,0.10273,0.00524,-0.00524,0.00261,-0.00261
+

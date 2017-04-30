@@ -1,0 +1,14 @@
+#: table_doi: 10.17182/hepdata.58994.v1/t89
+#: name: Table 89
+#: description: Integrated V2 value extrapolated to PT=0 for the 20-30%  centrality range using the event-plane method. Error is combined statistical and systematic.
+
+#: data_file: Table89.yaml
+#: keyword reactions: PB PB --> CHARGED X
+#: keyword observables: V2
+#: keyword phrases: Inclusive | Angular Correlation
+#: keyword cmenergies: 2760.0
+#: RE,PB PB --> CHARGED X
+#: CENTRALITY [pct],20.0-60.0
+'SQRT(S)/NUCLEON [GEV]','V2(C=EP)','error +','error -'
+2760.0,0.06725,0.0026,-0.0026
+

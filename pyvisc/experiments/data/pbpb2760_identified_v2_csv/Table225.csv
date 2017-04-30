@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t225
+#: name: Table 225
+#: description: proton Integrated v4 as a function of centrality percentile:.
+
+#: data_file: Table225.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.4 < pT < 6.0 (GeV/c)
+#: Particle,proton
+'centrality percentile','Integrated v4','stat +','stat -','sys +','sys -'
+2.5,0.012391,0.00035096,-0.00035096,-0.000344069,0.000344069
+7.5,0.0147092,0.000395681,-0.000395681,-0.000362969,0.000362969
+15.0,0.0157258,0.0004907,-0.0004907,-0.000348781,0.000348781
+25.0,0.0195454,0.000656206,-0.000656206,-0.000735315,0.000735315
+35.0,0.0183006,0.000801401,-0.000801401,-0.000639639,0.000639639
+45.0,0.0202583,0.00114038,-0.00114038,-0.00168526,0.00168526
+

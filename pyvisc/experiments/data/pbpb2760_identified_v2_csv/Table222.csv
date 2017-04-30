@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t222
+#: name: Table 222
+#: description: proton Integrated v3 as a function of centrality percentile:.
+
+#: data_file: Table222.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.4 < pT < 6.0 (GeV/c)
+#: Particle,proton
+'centrality percentile','Integrated v3','stat +','stat -','sys +','sys -'
+2.5,0.0227389,0.000485561,-0.000485561,-0.000603844,0.000603844
+7.5,0.0269144,0.000565709,-0.000565709,-0.000724037,0.000724037
+15.0,0.0301962,0.0006496,-0.0006496,-0.000506418,0.000506418
+25.0,0.0352834,0.00079496,-0.00079496,-0.000619106,0.000619106
+35.0,0.0379939,0.000891633,-0.000891633,-0.000783855,0.000783855
+45.0,0.0381917,0.00101275,-0.00101275,-0.00135382,0.00135382
+

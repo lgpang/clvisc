@@ -1,0 +1,19 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t228
+#: name: Table 228
+#: description: proton Integrated v5 as a function of centrality percentile:.
+
+#: data_file: Table228.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.4 < pT < 6.0 (GeV/c)
+#: Particle,proton
+'centrality percentile','Integrated v5','stat +','stat -','sys +','sys -'
+2.5,0.00420692,0.000515666,-0.000515666,-0.000561846,0.000561846
+7.5,0.00546715,0.000566937,-0.000566937,-0.000415269,0.000415269
+15.0,0.00877006,0.000820628,-0.000820628,-0.00178804,0.00178804
+25.0,0.00918803,0.00109103,-0.00109103,-0.000827072,0.000827072
+35.0,0.00845279,0.0014771,-0.0014771,-0.00108208,0.00108208
+

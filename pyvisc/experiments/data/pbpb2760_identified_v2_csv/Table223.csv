@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t223
+#: name: Table 223
+#: description: pion Integrated v4 as a function of centrality percentile:.
+
+#: data_file: Table223.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.3 < pT < 6.0 (GeV/c)
+#: Particle,pion
+'centrality percentile','Integrated v4','stat +','stat -','sys +','sys -'
+2.5,0.00804862,0.000193796,-0.000193796,-0.00195833,0.00195833
+7.5,0.00959795,0.000210006,-0.000210006,-0.0017119,0.0017119
+15.0,0.0107559,0.00022924,-0.00022924,-0.00176681,0.00176681
+25.0,0.0131289,0.000268854,-0.000268854,-0.00171506,0.00171506
+35.0,0.0138642,0.000294942,-0.000294942,-0.00162808,0.00162808
+45.0,0.0142044,0.000327253,-0.000327253,-0.00126483,0.00126483
+

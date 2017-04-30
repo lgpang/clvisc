@@ -1,0 +1,2019 @@
+{
+  "associated_files": [], 
+  "description": "$\\rm dN_{ch}/d\\eta$ versus $\\eta$ for different centralities. Errors are systematic as statistical errors are negligible.\n", 
+  "doi": "10.17182/hepdata.68753.v1/t1", 
+  "headers": [
+    {
+      "colspan": 1, 
+      "name": "ETARAP"
+    }, 
+    {
+      "colspan": 4, 
+      "name": "DN(chgd)/DETARAP"
+    }
+  ], 
+  "keywords": {
+    "cmenergies": [
+      "2760.0"
+    ], 
+    "observables": [
+      "DN/DETARAP"
+    ], 
+    "phrases": [
+      "Inclusive", 
+      "Single Differential Distribution"
+    ], 
+    "reactions": [
+      "PB PB --> CHARGED X"
+    ]
+  }, 
+  "name": "Table 1", 
+  "qualifier_order": [
+    "CENTRALITY", 
+    "RE", 
+    "SQRT(S)/NUCLEON"
+  ], 
+  "qualifiers": {
+    "CENTRALITY": [
+      {
+        "colspan": 1, 
+        "group": 0, 
+        "type": "CENTRALITY", 
+        "value": "0.0-5.0 pct"
+      }, 
+      {
+        "colspan": 1, 
+        "group": 1, 
+        "type": "CENTRALITY", 
+        "value": "5.0-10.0 pct"
+      }, 
+      {
+        "colspan": 1, 
+        "group": 2, 
+        "type": "CENTRALITY", 
+        "value": "10.0-20.0 pct"
+      }, 
+      {
+        "colspan": 1, 
+        "group": 3, 
+        "type": "CENTRALITY", 
+        "value": "20.0-30.0 pct"
+      }
+    ], 
+    "RE": [
+      {
+        "colspan": 4, 
+        "group": 0, 
+        "type": "RE", 
+        "value": "PB PB --> CHARGED X"
+      }
+    ], 
+    "SQRT(S)/NUCLEON": [
+      {
+        "colspan": 4, 
+        "group": 0, 
+        "type": "SQRT(S)/NUCLEON", 
+        "value": "2760.0 GeV"
+      }
+    ]
+  }, 
+  "review": {
+    "messages": false, 
+    "review_flag": "todo"
+  }, 
+  "values": [
+    {
+      "x": [
+        {
+          "high": -4.75, 
+          "low": -5.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 888.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 1, 
+          "value": 744.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 29.0
+            }
+          ], 
+          "group": 2, 
+          "value": 559.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 21.0
+            }
+          ], 
+          "group": 3, 
+          "value": 389.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -4.5, 
+          "low": -4.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 41.0
+            }
+          ], 
+          "group": 0, 
+          "value": 974.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 1, 
+          "value": 807.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 31.0
+            }
+          ], 
+          "group": 2, 
+          "value": 615.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 22.0
+            }
+          ], 
+          "group": 3, 
+          "value": 429.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -4.25, 
+          "low": -4.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 44.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1046.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 1, 
+          "value": 861.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 2, 
+          "value": 656.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 3, 
+          "value": 459.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -4.0, 
+          "low": -4.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1128.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 1, 
+          "value": 929.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 33.0
+            }
+          ], 
+          "group": 2, 
+          "value": 705.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 25.0
+            }
+          ], 
+          "group": 3, 
+          "value": 491.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -3.75, 
+          "low": -4.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 50.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1209.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 43.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1001.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 36.0
+            }
+          ], 
+          "group": 2, 
+          "value": 754.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 27.0
+            }
+          ], 
+          "group": 3, 
+          "value": 526.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -3.5, 
+          "low": -3.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 54.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1304.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1072.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 2, 
+          "value": 812.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 30.0
+            }
+          ], 
+          "group": 3, 
+          "value": 563.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -3.25, 
+          "low": -3.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 57.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1388.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 49.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1144.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 42.0
+            }
+          ], 
+          "group": 2, 
+          "value": 862.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 31.0
+            }
+          ], 
+          "group": 3, 
+          "value": 596.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -3.0, 
+          "low": -3.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 59.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1449.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 51.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1196.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 43.0
+            }
+          ], 
+          "group": 2, 
+          "value": 899.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 3, 
+          "value": 619.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -2.75, 
+          "low": -3.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 58.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1504.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 51.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1243.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 44.0
+            }
+          ], 
+          "group": 2, 
+          "value": 928.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 3, 
+          "value": 641.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -2.5, 
+          "low": -2.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 61.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1578.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 52.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1298.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 45.0
+            }
+          ], 
+          "group": 2, 
+          "value": 969.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 3, 
+          "value": 669.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -2.25, 
+          "low": -2.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 62.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1627.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 54.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1333.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 45.0
+            }
+          ], 
+          "group": 2, 
+          "value": 998.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 33.0
+            }
+          ], 
+          "group": 3, 
+          "value": 683.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -2.0, 
+          "low": -2.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 62.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1674.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 54.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1361.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 44.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1022.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 3, 
+          "value": 700.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -1.75, 
+          "low": -2.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 66.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1709.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 58.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1393.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1048.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 3, 
+          "value": 716.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -1.5, 
+          "low": -1.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 64.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1736.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 56.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1422.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 47.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1062.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 36.0
+            }
+          ], 
+          "group": 3, 
+          "value": 725.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -1.25, 
+          "low": -1.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 65.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1739.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 56.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1418.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 47.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1064.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 3, 
+          "value": 724.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -1.0, 
+          "low": -1.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 68.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1699.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 58.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1380.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1026.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 3, 
+          "value": 701.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -0.75, 
+          "low": -1.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1674.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1362.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 28.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1014.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 19.0
+            }
+          ], 
+          "group": 3, 
+          "value": 692.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -0.5, 
+          "low": -0.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 40.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1658.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1338.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1006.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 16.0
+            }
+          ], 
+          "group": 3, 
+          "value": 682.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": -0.25, 
+          "low": -0.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1627.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1330.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 2, 
+          "value": 991.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 16.0
+            }
+          ], 
+          "group": 3, 
+          "value": 673.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 0.0, 
+          "low": -0.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1615.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1318.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 2, 
+          "value": 982.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 16.0
+            }
+          ], 
+          "group": 3, 
+          "value": 666.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 0.25, 
+          "low": 0.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1615.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1318.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 2, 
+          "value": 982.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 16.0
+            }
+          ], 
+          "group": 3, 
+          "value": 666.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 0.5, 
+          "low": 0.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1627.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1330.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 2, 
+          "value": 991.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 16.0
+            }
+          ], 
+          "group": 3, 
+          "value": 673.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 0.75, 
+          "low": 0.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 40.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1658.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1338.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1006.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 16.0
+            }
+          ], 
+          "group": 3, 
+          "value": 682.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 1.0, 
+          "low": 0.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1674.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1362.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 28.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1014.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 19.0
+            }
+          ], 
+          "group": 3, 
+          "value": 692.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 1.25, 
+          "low": 1.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 68.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1699.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 58.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1380.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1026.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 3, 
+          "value": 701.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 1.5, 
+          "low": 1.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 65.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1739.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 56.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1418.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 47.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1064.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 3, 
+          "value": 724.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 1.75, 
+          "low": 1.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 64.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1736.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 56.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1422.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 47.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1062.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 36.0
+            }
+          ], 
+          "group": 3, 
+          "value": 725.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 2.0, 
+          "low": 1.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 66.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1709.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 58.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1393.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1048.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 3, 
+          "value": 716.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 2.25, 
+          "low": 2.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 62.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1674.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 54.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1361.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 44.0
+            }
+          ], 
+          "group": 2, 
+          "value": 1022.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 3, 
+          "value": 700.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 2.5, 
+          "low": 2.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 62.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1627.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 54.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1333.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 45.0
+            }
+          ], 
+          "group": 2, 
+          "value": 998.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 33.0
+            }
+          ], 
+          "group": 3, 
+          "value": 683.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 2.75, 
+          "low": 2.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 61.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1578.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 52.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1298.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 45.0
+            }
+          ], 
+          "group": 2, 
+          "value": 969.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 3, 
+          "value": 669.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 3.0, 
+          "low": 2.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 58.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1504.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 51.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1243.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 44.0
+            }
+          ], 
+          "group": 2, 
+          "value": 928.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 3, 
+          "value": 641.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 3.25, 
+          "low": 3.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 59.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1449.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 51.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1196.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 43.0
+            }
+          ], 
+          "group": 2, 
+          "value": 899.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 3, 
+          "value": 619.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 3.5, 
+          "low": 3.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 57.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1388.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 49.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1144.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 42.0
+            }
+          ], 
+          "group": 2, 
+          "value": 862.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 31.0
+            }
+          ], 
+          "group": 3, 
+          "value": 596.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 3.75, 
+          "low": 3.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 54.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1304.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1072.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 2, 
+          "value": 812.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 30.0
+            }
+          ], 
+          "group": 3, 
+          "value": 563.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 4.0, 
+          "low": 3.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 50.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1209.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 43.0
+            }
+          ], 
+          "group": 1, 
+          "value": 1001.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 36.0
+            }
+          ], 
+          "group": 2, 
+          "value": 754.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 27.0
+            }
+          ], 
+          "group": 3, 
+          "value": 526.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 4.25, 
+          "low": 4.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 46.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1128.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 1, 
+          "value": 929.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 33.0
+            }
+          ], 
+          "group": 2, 
+          "value": 705.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 25.0
+            }
+          ], 
+          "group": 3, 
+          "value": 491.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 4.5, 
+          "low": 4.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 44.0
+            }
+          ], 
+          "group": 0, 
+          "value": 1046.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 1, 
+          "value": 861.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 32.0
+            }
+          ], 
+          "group": 2, 
+          "value": 656.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 24.0
+            }
+          ], 
+          "group": 3, 
+          "value": 459.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 4.75, 
+          "low": 4.5
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 41.0
+            }
+          ], 
+          "group": 0, 
+          "value": 974.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 1, 
+          "value": 807.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 31.0
+            }
+          ], 
+          "group": 2, 
+          "value": 615.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 22.0
+            }
+          ], 
+          "group": 3, 
+          "value": 429.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 5.0, 
+          "low": 4.75
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 888.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 34.0
+            }
+          ], 
+          "group": 1, 
+          "value": 744.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 29.0
+            }
+          ], 
+          "group": 2, 
+          "value": 559.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 21.0
+            }
+          ], 
+          "group": 3, 
+          "value": 389.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 5.25, 
+          "low": 5.0
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 42.0
+            }
+          ], 
+          "group": 0, 
+          "value": 770.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 1, 
+          "value": 651.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 37.0
+            }
+          ], 
+          "group": 2, 
+          "value": 491.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 26.0
+            }
+          ], 
+          "group": 3, 
+          "value": 343.0
+        }
+      ]
+    }, 
+    {
+      "x": [
+        {
+          "high": 5.5, 
+          "low": 5.25
+        }
+      ], 
+      "y": [
+        {
+          "errors": [
+            {
+              "symerror": 39.0
+            }
+          ], 
+          "group": 0, 
+          "value": 667.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 35.0
+            }
+          ], 
+          "group": 1, 
+          "value": 577.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 29.0
+            }
+          ], 
+          "group": 2, 
+          "value": 451.0
+        }, 
+        {
+          "errors": [
+            {
+              "symerror": 22.0
+            }
+          ], 
+          "group": 3, 
+          "value": 313.0
+        }
+      ]
+    }
+  ], 
+  "x_count": 1
+}

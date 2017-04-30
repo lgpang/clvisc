@@ -1,0 +1,20 @@
+#: table_doi: 10.17182/hepdata.74447.v1/t218
+#: name: Table 218
+#: description: kaon Integrated v2 as a function of centrality percentile:.
+
+#: data_file: Table218.yaml
+#: keyword reactions: Pb Pb --> CHARGED X
+#: keyword phrases: Inclusive
+#: keyword cmenergies: 2760.0
+#: ABS(ETA(RF=CMS)),<0.8
+#: SQRT(S)/NUCLEON [GeV],2760.0
+#: Range,0.3 < pT < 4.0 (GeV/c)
+#: Particle,kaon
+'centrality percentile','Integrated v2','stat +','stat -','sys +','sys -'
+2.5,0.0266288,0.000607993,-0.000607993,-0.00064033,0.00064033
+7.5,0.0424988,0.000948725,-0.000948725,-0.000582537,0.000582537
+15.0,0.0605449,0.00132862,-0.00132862,-0.000603344,0.000603344
+25.0,0.0815244,0.00176736,-0.00176736,-0.000608846,0.000608846
+35.0,0.0941682,0.00203268,-0.00203268,-0.000681073,0.000681073
+45.0,0.0988954,0.00217047,-0.00217047,-0.000775086,0.000775086
+
