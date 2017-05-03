@@ -6,83 +6,87 @@
 from subprocess import call
 import pandas as pd
 import os
+import numpy as np
 
 __cwd__, __cwf__ = os.path.split(__file__)
 
 class Collision(object):
-    def __init__(self, centrality_file):
+    def __init__(self, config):
+        self.config = config
+        centrality_file = os.path.join(__cwd__, config['centrality_file'])
         self.info = pd.read_csv(centrality_file)
 
     def get_smin_smax(self, cent='0_6'):
         '''get min/max initial total entropy for one
         centrality class, stored in auau200.csv or ...'''
-        self.info.set_index(['cent'])
-        dat = self.info.loc[self.info['cent'] == cent]
-        smin = dat['entropy_low'].values[0]
-        smax = dat['entropy_high'].values[0]
+        clow, chigh = cent.split('_')
+        smin = self.entropy_bound(cent_bound = float(chigh))
+        smax = self.entropy_bound(cent_bound = float(clow))
         return smin, smax
 
-class AuAu200(object):
-    def __init__(self, cent, grid_max=15.0, grid_step=0.1):
-        self.cross_section = 4.23
-        self.projectile = 'Au'
-        self.target = 'Au'
-        self.grid_max = grid_max
-        self.grid_step = grid_step
-        centrality_file = os.path.join(__cwd__, 'auau200_cent.csv')
-        coll = Collision(centrality_file)
-        self.smin, self.smax = coll.get_smin_smax(cent)
+    def entropy_bound(self, cent_bound=5):
+        '''get entropy value for one specific centrality bound'''
+        self.info.set_index(['cent'])
+        cents = self.info['cent']
+        entropy = self.info['entropy']
+        return np.interp(cent_bound, cents, entropy)
 
-    def create_ini(self, output_path):
-        call(['trento', self.projectile, self.target, '1',
+    def create_ini(self, cent, output_path,
+                   grid_max=15.0, grid_step=0.1, num_of_events=1,
+                   one_shot_ini=False):
+        smin, smax = self.get_smin_smax(cent)
+        call(['trento', self.config['projectile'],
+              self.config['target'],
+              '%s'%num_of_events,
               '-o', output_path,
-              '-x', '%s'%self.cross_section,
-              '--s-min', '%s'%self.smin,
-              '--s-max', '%s'%self.smax,
-              '--grid-max', '%s'%self.grid_max,
-              '--grid-step', '%s'%self.grid_step])
+              '-x', '%s'%self.config['cross_section'],
+              '--s-min', '%s'%smin,
+              '--s-max', '%s'%smax,
+              '--grid-max', '%s'%grid_max,
+              '--grid-step', '%s'%grid_step])
 
-class PbPb2760(object):
-    def __init__(self, cent, grid_max=15.0, grid_step=0.1):
-        self.cross_section = 6.4
-        self.projectile = 'Pb'
-        self.target = 'Pb'
-        self.grid_max = grid_max
-        self.grid_step = grid_step
-        centrality_file = os.path.join(__cwd__, 'pbpb2760_cent.csv')
-        coll = Collision(centrality_file)
-        self.smin, self.smax = coll.get_smin_smax(cent)
-
-    def create_ini(self, output_path):
-        call(['trento', self.projectile, self.target, '1',
-              '-o', output_path,
-              '-x', '%s'%self.cross_section,
-              '--s-min', '%s'%self.smin,
-              '--s-max', '%s'%self.smax,
-              '--grid-max', '%s'%self.grid_max,
-              '--grid-step', '%s'%self.grid_step])
-
-class PbPb5020(object):
-    def __init__(self, cent, grid_max=15.0, grid_step=0.1):
-        self.cross_section = 7.0
-        self.projectile = 'Pb'
-        self.target = 'Pb'
-        self.grid_max = grid_max
-        self.grid_step = grid_step
-        centrality_file = os.path.join(__cwd__, 'pbpb5020_cent.csv')
-        coll = Collision(centrality_file)
-        self.smin, self.smax = coll.get_smin_smax(cent)
-
-    def create_ini(self, output_path):
-        call(['trento', self.projectile, self.target, '1',
-              '-o', output_path,
-              '-x', '%s'%self.cross_section,
-              '--s-min', '%s'%self.smin,
-              '--s-max', '%s'%self.smax,
-              '--grid-max', '%s'%self.grid_max,
-              '--grid-step', '%s'%self.grid_step])
+        if one_shot_ini:
+            ngrid = int(2 * grid_max / grid_step)
+            sxy = np.zeros((ngrid, ngrid), dtype=np.float32)
+            events = os.listdir(output_path)
+            num_of_events = len(events)
+            for event in events:
+                dat = np.loadtxt(os.path.join(output_path, event)).reshape(ngrid, ngrid)
+                sxy += dat / float(num_of_events)
+            np.savetxt(os.path.join(output_path, "one_shot_ini.dat"), sxy, header=cent)
 
 
+class AuAu200(Collision):
+    def __init__(self):
+        config = {'projectile':'Au',
+                  'target':'Au',
+                  'cross_section':4.23,
+                  'centrality_file':'auau200_cent.csv'}
+        super(AuAu200, self).__init__(config)
+
+       
+
+class PbPb2760(Collision):
+    def __init__(self):
+        config = {'projectile':'Pb',
+                  'target':'Pb',
+                  'cross_section':6.4,
+                  'centrality_file':'pbpb2760_cent.csv'}
+        super(PbPb2760, self).__init__(config)
+
+       
+
+class PbPb5020(Collision):
+    def __init__(self):
+        config = {'projectile':'Pb',
+                  'target':'Pb',
+                  'cross_section':7.0,
+                  'centrality_file':'pbpb5020_cent.csv'}
+        super(PbPb5020, self).__init__(config)
+
+ 
 if __name__=='__main__':
-    auau200 = AuAu200('0_6', grid_max=15.0, grid_step=0.1)
-    auau200.create_ini('./dat')
+    auau200 = AuAu200()
+    #auau200.create_ini('0_6', './dat', num_of_events=100, one_shot_ini=True)
+    print auau200.get_smin_smax('0_6')
+    print auau200.get_smin_smax('6_15')
