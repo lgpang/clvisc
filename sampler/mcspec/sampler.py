@@ -9,6 +9,7 @@ import sympy as sym
 import pandas as pd
 from common_plotting import smash_style
 import os
+from subprocess import call, check_output
 
 def get_dNdY(fpath, dat, pid=211, nsampling=2000, kind='Y'):
     rapidity_col = 4
@@ -63,23 +64,22 @@ def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y', rapidity_window=1.
 
 def plot(fpath, particle_lists, nsampling):
     Y0, dNdY_charged = get_dNdY(fpath, particle_lists, pid='charged', nsampling=nsampling, kind='Eta')
-    Y0, dNdY_pion = get_dNdY(fpath, particle_lists, pid=211, nsampling=nsampling, kind='Eta')
-    Y0, dNdY_kaon = get_dNdY(fpath, particle_lists, pid=321, nsampling=nsampling, kind='Eta')
-    Y0, dNdY_proton = get_dNdY(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Eta')
+    #Y0, dNdY_pion = get_dNdY(fpath, particle_lists, pid=211, nsampling=nsampling, kind='Eta')
+    #Y0, dNdY_kaon = get_dNdY(fpath, particle_lists, pid=321, nsampling=nsampling, kind='Eta')
+    #Y0, dNdY_proton = get_dNdY(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Eta')
 
-    get_ptspec(fpath, particle_lists, pid=211,  nsampling=nsampling, kind='Y', rapidity_window=1.6)
-    get_ptspec(fpath, particle_lists, pid=321,  nsampling=nsampling, kind='Y', rapidity_window=1.6)
-    get_ptspec(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', rapidity_window=1.6)
+    get_ptspec(fpath, particle_lists, pid=211,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
+    get_ptspec(fpath, particle_lists, pid=321,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
+    get_ptspec(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', rapidity_window=1.0)
     get_ptspec(fpath, particle_lists, pid='charged', nsampling=nsampling,  kind='Eta', rapidity_window=1.6)
 
 
 
 def main(fpath, viscous_on, force_decay, nsampling):
-    from subprocess import call, check_output
     cwd = os.getcwd()
     os.chdir('../build')
-    call(['cmake', '..'])
-    call(['make'])
+    #call(['cmake', '..'])
+    #call(['make'])
 
     ns_str = '%s'%nsampling
     cmd = ['./main', fpath, viscous_on, force_decay, ns_str]
@@ -124,6 +124,10 @@ if __name__ == '__main__':
     viscous_on = sys.argv[2]
     force_decay = sys.argv[3]
     nsampling = int(sys.argv[4])
+
+    fsrc = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/PyVisc/sampler/mcspec/pdg05.dat"
+    call(['cp', fsrc, fpath])
+
     main(fpath, viscous_on, force_decay, nsampling=nsampling)
 
 

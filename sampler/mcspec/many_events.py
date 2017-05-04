@@ -5,23 +5,28 @@
 
 from sampler import main
 import time
+from multiprocessing import Pool
+from subprocess import call
 
-if __name__=='__main__':
+
+def f(eid):
     t1 = time.time()
-    for eid in range(0, 200):
-        #fpath = "/lustre/nyx/hyihp/lpang/new_polarization/pbpb2p76_results/cent0_5/etas0p0/event%s/"%eid
-        #fpath = "/lustre/nyx/hyihp/lpang/new_polarization/pbpb2p76_results/cent20_30/etas0p16/event%s/"%eid
-        fpath = "/lustre/nyx/hyihp/lpang/new_polarization/pbpb2p76_results/cent0_5/etas0p16/event%s/"%eid
-        try:
-            viscous_on = 'true'
-            force_decay = 'true'
-            main(fpath, viscous_on, force_decay, nsampling=100)
-            print(eid, 'finished')
-        except:
-            print(eid, ' hydro not finished')
+    fpath = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/6_15/event%s/"%eid
+    fsrc = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/PyVisc/sampler/mcspec/pdg05.dat"
+    call(['cp', fsrc, fpath])
+    try:
+        viscous_on = 'true'
+        force_decay = 'true'
+        main(fpath, viscous_on, force_decay, nsampling=1000)
+        print(eid, 'finished')
+    except:
+        print(eid, ' hydro not finished')
 
     t2 = time.time()
 
-    print('it takes ', t2 - t1, 's for 200 events')
+    print('it takes ', t2 - t1, 's for 100 events')
 
 
+if __name__ == '__main__':
+    p = Pool(12)
+    p.map(f, range(100))

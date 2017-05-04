@@ -75,7 +75,7 @@ Sampler::Sampler(const std::string & fpath,
 
     read_chemical_potential(fpath);
 
-    read_pdg_table();
+    read_pdg_table(fpath);
 
     get_equilibrium_properties();
 
@@ -142,6 +142,7 @@ void Sampler::read_hypersurface(const std::string & fpath) {
     double ds0, ds1, ds2, ds3, vx, vy, vetas, t, x, y, z, etas;
 
     int line_number = 0;
+    int fail_frz_element = 0;
     for ( const Line & line : hyper_surface_elements ) {
         VolumnElement vi;
         std::istringstream lineinput(line.text);
@@ -153,10 +154,12 @@ void Sampler::read_hypersurface(const std::string & fpath) {
         //std::istringstream coordinates(str_txyz);
         //coordinates >> t >> x >> y >> z;
         if ( lineinput.fail() ) {
+            fail_frz_element ++;
             throw LoadFailure(build_error_string(
                         "While loading freeze out hypersurface:\n"
                         "Failed to convert the input string to the "
                         "expected volume element.", line));
+
         } else {
             vi.dsigma = FourVector(ds0, ds1, ds2, ds3);
             vi.velocity = ThreeVector(vx, vy, vetas);
@@ -250,8 +253,10 @@ void Sampler::read_pimn_on_sf(const std::string & fpath) {
     }
 }
 
-void Sampler::read_pdg_table() {
-    std::ifstream fin("pdg05.dat");
+void Sampler::read_pdg_table(const std::string & fpath) {
+    std::stringstream pdg_path;
+    pdg_path << fpath << "/pdg05.dat";
+    std::ifstream fin(pdg_path.str());
 
     if( fin.is_open() ){
         while(fin.good()){

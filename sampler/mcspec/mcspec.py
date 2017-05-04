@@ -308,11 +308,10 @@ if __name__=='__main__':
 
     import sys
 
-    fpath = '/lustre/nyx/hyihp/lpang/trento_ini/bin/pbpb2p76/20_30/n2/mean'
+    #fpath = '/lustre/nyx/hyihp/lpang/trento_ini/bin/pbpb2p76/20_30/n2/mean'
+    fpath = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760/20_30/event1/'
 
     if len(sys.argv) == 2:
         fpath = sys.argv[1]
 
     calc_vn(fpath, over_sampling=5000, make_plot=True)
-
-

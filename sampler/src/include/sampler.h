@@ -119,7 +119,7 @@ class Sampler {
     void read_chemical_potential(const std::string & muB_directory);
 
     /** Read particle data table pdg05.txt */
-    void read_pdg_table();
+    void read_pdg_table(const std::string & fpath);
 
     /** Calculate equilibrium density and initialize
      * adaptive rejection sampler for each species*/
