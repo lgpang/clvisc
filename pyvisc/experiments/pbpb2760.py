@@ -80,6 +80,7 @@ class dNdPt(object):
         url = "https://hepdata.net/record/ins1377750?format=json"
         info = HepData(url).json_data
         self.json = {}
+        #### pion = pion+ + pion-, kaon = kaon+ + kaon-, proton = p+ + p-
         self.json['pion'] = HepData(info['data_tables'][0]['data']['json']).json_data
         self.json['kaon'] = HepData(info['data_tables'][1]['data']['json']).json_data
         self.json['proton'] = HepData(info['data_tables'][2]['data']['json']).json_data
@@ -146,6 +147,13 @@ class dNdPt(object):
 
         self.data[particle_type]['rapidity_type'] = self.__rapidity_type(js)
         self.data[particle_type]['rapidity_range'] = self.__rapidity_range(js)
+
+    def get(self, hadron='pion', cent='0-5'):
+        pt = self.data[hadron]['x']
+        spec = self.data[hadron]['y'][cent]
+        yerr = self.data[hadron]['yerr'][cent]
+        yerr_low = yerr_high = yerr
+        return pt, spec, yerr_low, yerr_high
 
     def plot_cent(self, particle_type='pion'):
         import matplotlib.pyplot as plt
