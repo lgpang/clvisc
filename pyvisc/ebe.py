@@ -33,21 +33,13 @@ def from_sd_to_ed(entropy, eos):
     return f_ed(entropy)
 
 
-def auau_collisions(fpath, cent='0_5', etaos=0.12, gpu_id=0):
+def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot=False):
     ''' Run event_by_event hydro, with initial condition 
     from smearing on the particle list'''
 
     fout = fpath
     if not os.path.exists(fout):
         os.mkdir(fout)
-
-    # for auau
-    #cfg.Eta_gw = 1.0
-    #cfg.Eta_flat = 1.5
-    # for pbpb
-    cfg.Eta_gw = 1.8
-    cfg.Eta_flat = 2.0
-
 
     cfg.NX = 200
     cfg.NY = 200
@@ -66,7 +58,8 @@ def auau_collisions(fpath, cent='0_5', etaos=0.12, gpu_id=0):
     cfg.TAU0 = 0.6
     cfg.fPathOut = fout
 
-    cfg.TFRZ = 0.137
+    #cfg.TFRZ = 0.137
+    cfg.TFRZ = 0.100
 
     cfg.ETAOS_XMIN = 0.154
 
@@ -76,36 +69,41 @@ def auau_collisions(fpath, cent='0_5', etaos=0.12, gpu_id=0):
 
     cfg.save_to_hdf5 = True
 
-    comments = 'au+au IP-Glasma'
+    # for auau
+    if system == 'auau200':
+        cfg.Eta_gw = 1.3
+        cfg.Eta_flat = 1.5
+        comments = 'au+au IP-Glasma'
+        collision = AuAu200()
+        scale_factor = 57.0
+    # for pbpb
+    else:
+        cfg.Eta_gw = 1.8
+        cfg.Eta_flat = 2.0
+        comments = 'pb+pb IP-Glasma'
+        if system == 'pbpb2760':
+            collision = PbPb2760()
+            scale_factor = 128.0
+        elif system == 'pbpb5020':
+            collision = PbPb5020()
+            scale_factor = 151.0
 
-    #s = get_entropy_dist(cent_min, cent_max, ecc_bin, harmonic_order)
     grid_max = cfg.NX/2 * cfg.DX
-    #auau200 = AuAu200('0_6', grid_max, cfg.DX)
-
-    pbpb2760 = PbPb2760()
 
     fini = os.path.join(fout, 'trento_ini/')
 
     if os.path.exists(fini):
         call(['rm', '-r', fini])
 
-    pbpb2760.create_ini(cent, fini, num_of_events=1, grid_max=grid_max, grid_step=cfg.DX, one_shot_ini=False)
-
-    #s = np.loadtxt(os.path.join(fini, 'one_shot_ini.dat'))
-    s = np.loadtxt(os.path.join(fini, '0.dat'))
-
+    collision.create_ini(cent, fini, num_of_events=1,
+                         grid_max=grid_max, grid_step=cfg.DX,
+                         one_shot_ini=oneshot)
+    if oneshot:
+        s = np.loadtxt(os.path.join(fini, 'one_shot_ini.dat'))
+    else:
+        s = np.loadtxt(os.path.join(fini, '0.dat'))
     smax = s.max()
-    ### dNdEta(eta=0) = 1800
-    #scale_factor = 400.0
-
-    #scale_factor = 3.5 / (cfg.DX * cfg.DY)
-
-    #### works for IEOS=1, etaos=0.12, Tfrz=0.136, 230/1.6328
-
-    scale_factor = 220.0/1.6328
-
     s_scale = s * scale_factor
-
     t0 = time()
 
     visc = CLVisc(cfg, gpu_id=gpu_id)
@@ -155,14 +153,14 @@ def auau_collisions(fpath, cent='0_5', etaos=0.12, gpu_id=0):
     after_reso = '0'
     call(['python', '../spec/main.py', fpath, after_reso])
 
-def main(cent='0_5', gpu_id=0, jobs_per_gpu=25):
+def main(cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
     path = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/%s'%cent
     fpath_out = os.path.abspath(path)
     for i in xrange(gpu_id*jobs_per_gpu, (gpu_id+1)*jobs_per_gpu):
         fout = os.path.join(fpath_out, 'event%s'%i)
         if not os.path.exists(fout):
             os.makedirs(fout)
-        auau_collisions(fout, cent)
+        ebehydro(fout, cent, system = system)
 
 
 if __name__ == '__main__':
