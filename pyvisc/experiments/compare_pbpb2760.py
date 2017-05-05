@@ -39,12 +39,11 @@ def cmp_dndeta(path_to_results=''):
     plt.savefig('pbpb2760_dndeta.pdf')
     plt.show()
 
-def cmp_ptspec(path_to_results=''):
+def cmp_ptspec(path_to_results='', cent = ['0-5', '5-10', '10-20']):
     from pbpb2760 import dNdPt
     exp = dNdPt()
-    cent = ['0-5', '5-10', '10-20']
-    for c in cent:
-        if c == '0-5':
+    for i, c in enumerate(cent):
+        if i == 0:
             label0 = r'$ALICE$'
             label1 = r'$CLVisc$'
         else:
@@ -55,7 +54,7 @@ def cmp_ptspec(path_to_results=''):
         path = os.path.join(path_to_results, c.replace('-', '_'))
         dndpt = ebe_mean(path, kind='dndpt', hadron='pion', rap='Y')
         print c, dndpt
-        plt.semilogy(dndpt[:, 0], 1.6*dndpt[:, 1], label=label1)
+        plt.semilogy(dndpt[:, 0], dndpt[:, 1], label=label1)
     plt.xlim(0, 3)
     plt.ylim(1.0E-2, 1.0E4)
     plt.xlabel(r'$p_T\ [GeV]$')

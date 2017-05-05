@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     spec.ReadHyperSF(hypsfDataFile.str());
 
     std::stringstream chemical_potential_datafile;
-    chemical_potential_datafile<<pathin<<"/ChemForReso.dat";
+    chemical_potential_datafile<<pathin<<"/chemical_potential.dat";
     spec.ReadMuB(chemical_potential_datafile.str());
 
     // ReadParticles must be after ReadMuB()

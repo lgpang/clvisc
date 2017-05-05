@@ -131,7 +131,7 @@ class ChemicalPotential(object):
                 i = i + ndecays + 1
                 pids.append(pid)
     
-        save_fname = os.path.join(save_path, "ChemForReso.dat")
+        save_fname = os.path.join(save_path, "chemical_potential.dat")
         with open(save_fname, "w") as fout:
             for pid in pids:
                 if not set_to_zero:
@@ -155,7 +155,7 @@ def create_table(Tfrz = 0.137, output_path='.', eos_type='PCE165'):
 
     chem.get_chemical_potential_for_resonance(output_path)
 
-    save_fname = os.path.join(output_path, "ChemForReso.dat")
+    save_fname = os.path.join(output_path, "chemical_potential.dat")
 
     cwd, cwf = os.path.split(__file__)
 

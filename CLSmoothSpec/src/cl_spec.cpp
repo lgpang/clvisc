@@ -264,11 +264,9 @@ void Spec::ReadParticles(char * particle_data_table)
             //if(nump1)p.stable=1;
             if(p.width < 1.0E-8)p.stable=1;
             particles.push_back(p);
-
         }
         fin.close();
-    }
-    else{
+    } else{
         std::cerr<<"#Failed to open pdg data table\n";
         exit(0);
     }
@@ -778,8 +776,7 @@ void Spec::getDecayInfo( cl_int pid, cl_int nbody, \
                                 AddReso( pidAR, j, k, branch, mass, resoNum , h_norm3);
                             }
                         }
-                    }
-                    else{
+                    } else{
                         if( (abs(dec.numpart) == nbody) && ( newpid[dec.part[k]]==pid ) ){
                             AddReso( pidR, j, k, branch, mass, resoNum , h_norm3);
                         }
