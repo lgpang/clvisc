@@ -10,7 +10,7 @@ from glob import glob
 import pyopencl as cl
 import matplotlib.pyplot as plt
 import h5py
-from ini.trento import AuAu200, PbPb2760
+from ini.trento import AuAu200, PbPb2760, PbPb5020
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 import os, sys
@@ -170,4 +170,4 @@ if __name__ == '__main__':
         cent = sys.argv[1]
         gpu_id = int(sys.argv[2])
         jobs_per_gpu = int(sys.argv[3])
-        main(cent, gpu_id=gpu_id, jobs_per_gpu=jobs_per_gpu)
+        main(cent, gpu_id=gpu_id, jobs_per_gpu=jobs_per_gpu, system='pbpb5020')
