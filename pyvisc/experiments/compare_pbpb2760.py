@@ -11,10 +11,9 @@ from common_plotting import smash_style
 from helper import ebe_mean
 
 
-def cmp_dndeta(path_to_results=''):
+def cmp_dndeta(path_to_results='', cent = ['0-5', '5-10', '10-20', '20-30']):
     from pbpb2760 import dNdEta
     exp = dNdEta()
-    cent = ['0-5', '5-10', '10-20', '20-30']
     xpos = [-0.5, -1.0, -1, -1]
     for i, c in enumerate(cent):
         if c == '0-5':
@@ -39,7 +38,7 @@ def cmp_dndeta(path_to_results=''):
     plt.savefig('pbpb2760_dndeta.pdf')
     plt.show()
 
-def cmp_ptspec(path_to_results='', cent = ['0-5', '5-10', '10-20']):
+def cmp_ptspec(path_to_results='', cent = ['0-5', '5-10', '10-20'], hadron='pion'):
     from pbpb2760 import dNdPt
     exp = dNdPt()
     for i, c in enumerate(cent):
@@ -49,28 +48,42 @@ def cmp_ptspec(path_to_results='', cent = ['0-5', '5-10', '10-20']):
         else:
             label0, label1 = None, None
 
-        x, y, yerr0, yerr1 = exp.get('pion', c)
-        plt.errorbar(x, y, yerr=(yerr0, yerr1), label=label0)
+        shift = 5**(-i)
+        x, y, yerr0, yerr1 = exp.get(hadron, c)
+
+        plt.errorbar(x, y*shift, yerr=(yerr0*shift, yerr1*shift), label=label0, fmt='o', color='r')
         path = os.path.join(path_to_results, c.replace('-', '_'))
-        dndpt = ebe_mean(path, kind='dndpt', hadron='pion', rap='Y')
-        print c, dndpt
-        plt.semilogy(dndpt[:, 0], dndpt[:, 1], label=label1)
+        dndpt = ebe_mean(path, kind='dndpt', hadron=hadron, rap='Y')
+        plt.semilogy(dndpt[:, 0], 2*dndpt[:, 1]*shift, label=label1, color='k')
+        ytxt, theta = 1.3, -20
+        if hadron == 'kaon':
+            ytxt, theta = 1.8, -12
+        elif hadron == 'proton':
+            ytxt, theta = 2.0, -5
+        plt.text(x[5], ytxt*y[5]*shift, r'$%s$'%c, rotation=theta, size=25)
+        plt.text(x[15], ytxt*y[15]*shift, r'$\times 5^{%s}$'%(-i), rotation=theta, size=25)
+
     plt.xlim(0, 3)
-    plt.ylim(1.0E-2, 1.0E4)
+    plt.ylim(1.0E-7, 1.0E4)
     plt.xlabel(r'$p_T\ [GeV]$')
-    plt.ylabel(r'$(1/2\pi)d^2 N_{\pi^+}/dYp_Tdp_T\ [GeV]^{-2}$')
+    plt.ylabel(r'$(1/2\pi)d^2 N/dYp_Tdp_T\ [GeV]^{-2}$')
     smash_style.set(line_styles=False)
     plt.legend(loc='best')
     plt.tight_layout()
 
-    plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV$', fontsize=30)
-    plt.savefig('pbpb2760_ptspec.pdf')
+    if hadron == 'pion':
+        plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV,\ \pi^++\pi^-$', fontsize=30)
+    elif hadron == 'kaon':
+        plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV,\ K^++K^-$', fontsize=30)
+    elif hadron == 'proton':
+        plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV,\ p+\bar{p}$', fontsize=30)
+    plt.savefig('pbpb2760_ptspec_%s.pdf'%hadron)
     plt.show()
 
-def cmp_v2_pion(path_to_results):
+def cmp_v2_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_fig=True):
     from pbpb2760 import V2
     exp = V2()
-    cent = ['0-5', '5-10', '10-20', '20-30']
+    
     for c in cent:
         if c == '0-5':
             label0 = r'$ALICE$'
@@ -79,7 +92,6 @@ def cmp_v2_pion(path_to_results):
             label0, label1 = None, None
         pt, vn, yerr0, yerr1 = exp.get_ptdiff('pion', c)
         plt.errorbar(pt, vn, yerr=(yerr0, yerr1), label=label0, color='r')
-
         path = os.path.join(path_to_results, c.replace('-', '_'))
         vn_clvisc = ebe_mean(path, kind='vn', hadron='pion')
         plt.plot(vn_clvisc[:, 0], vn_clvisc[:, 2], label = label1, color = 'k')
@@ -153,9 +165,19 @@ def ptspec_identify(path, cent='0_5', data_src=1):
 
 
 if __name__=='__main__':
-    path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/"
-    #cmp_dndeta(path)
-    #cmp_ptspec(path)
-    ptspec_identify(path, cent='0_5')
-    #ptspec_identify(path, cent='5_10')
+    '''dndeta is not sensitive to Tfrz
+    pt_spectra fit best with Tfrz=100 MeV; while v2 fits best with Tfrz=137 MeV'''
+    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz100/"
+    #cmp_dndeta(path, cent=['0-5', '5-10', '10-20', '20-30'])
+    #cmp_ptspec(path, cent=['0-5', '5-10', '10-20', '20-40', '40-60', '60-80'], hadron='pion')
+    #cmp_ptspec(path, cent=['0-5', '5-10', '10-20', '20-40', '40-60', '60-80'], hadron='kaon')
+    #cmp_ptspec(path, cent=['0-5', '5-10', '10-20', '20-40', '40-60', '60-80'], hadron='proton')
+    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz137/"
     #cmp_v2_pion(path)
+    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz137/"
+    #cmp_v2_pion(path)
+
+
+    path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/pbpb2p76_results_ampt/"
+    #cmp_dndeta(path, cent=['0-5'])
+    cmp_v2_pion(path, cent=['0-5'], save_fig=False)
