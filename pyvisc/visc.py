@@ -17,9 +17,11 @@ from ideal import CLIdeal
 
 
 class CLVisc(object):
-    '''The pyopencl version for 3+1D visc hydro dynamic simulation'''
-    def __init__(self, configs, gpu_id=0):
-        self.ideal = CLIdeal(configs, gpu_id)
+    '''The pyopencl version for 3+1D visc hydro dynamic simulation
+    one can use handcrafted eos by replacing eos=None with
+    handcrafted_eos = EosCraft(kind='eosq_modify') or paramterized eos'''
+    def __init__(self, configs, handcrafted_eos=None, gpu_id=0):
+        self.ideal = CLIdeal(configs, handcrafted_eos, gpu_id)
         self.cfg = configs
         self.ctx = self.ideal.ctx
         self.queue = self.ideal.queue
@@ -115,6 +117,10 @@ class CLVisc(object):
         with open(os.path.join(self.cwd, 'kernel', 'kernel_vorticity.cl'), 'r') as f:
             src = f.read()
             self.kernel_vorticity = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
+
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_jet_eloss.cl'), 'r') as f:
+            src = f.read()
+            self.kernel_jet_eloss = cl.Program(self.ctx, src).build(options=' '.join(self.compile_options))
             
     def IS_initialize(self):
         '''initialize pi^{mu nu} tensor'''
@@ -187,7 +193,7 @@ class CLVisc(object):
 
 
 
-    def visc_stepUpdate(self, step):
+    def visc_stepUpdate(self, step, jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0}):
         ''' Do step update in kernel with KT algorithm for visc evolution
             Args:
                 gpu_ev_old: self.d_ev[1] for the 1st step,
@@ -198,26 +204,36 @@ class CLVisc(object):
         # input: gpu_ev_old, tau, size, along_axis
         # output: self.d_Src
         NX, NY, NZ, BSZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ, self.cfg.BSZ
+        tau = self.ideal.tau
         self.kernel_visc.kt_src_christoffel(self.queue, (NX*NY*NZ, ), None,
                          self.ideal.d_Src, self.ideal.d_ev[step],
                          self.d_pi[step], self.eos_table,
-                         self.ideal.tau, np.int32(step)
+                         tau, np.int32(step)
                          ).wait()
 
         self.kernel_visc.kt_src_alongx(self.queue, (BSZ, NY, NZ), (BSZ, 1, 1),
                 self.ideal.d_Src, self.ideal.d_ev[step],
                 self.d_pi[step], self.eos_table,
-                self.ideal.tau).wait()
+                tau).wait()
 
         self.kernel_visc.kt_src_alongy(self.queue, (NX, BSZ, NZ), (1, BSZ, 1),
                 self.ideal.d_Src, self.ideal.d_ev[step],
                 self.d_pi[step], self.eos_table,
-                self.ideal.tau).wait()
+                tau).wait()
 
         self.kernel_visc.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
                 self.ideal.d_Src, self.ideal.d_ev[step],
                 self.d_pi[step], self.eos_table,
-                self.ideal.tau).wait()
+                tau).wait()
+
+        if jet_eloss_src['switch_on'] == True:
+            jet_start_pos_index = jet_eloss_src['start_pos_index']
+            jet_start_angle = jet_eloss_src['direction']
+            self.kernel_jet_eloss.jet_eloss_src(self.queue, (NX, NY, NZ), None,
+                                self.ideal.d_Src, self.ideal.d_ev[step], tau,
+                                self.cfg.real(jet_start_angle),
+                                np.int32(jet_start_pos_index), self.eos_table).wait()
+
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
@@ -384,16 +400,18 @@ class CLVisc(object):
 
     #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=False,
-               plot_bulk=True, save_pi=True, force_run_to_maxloop = False,
-               save_vorticity=False):
+               plot_bulk=True, save_pi=True, force_run_to_maxloop = False, save_vorticity=False,
+               jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0.0}):
         '''The main loop of hydrodynamic evolution
         default parameters: save_hypersf, don't save bulk info
-        store bulk info by switch on plot_bulk'''
+        store bulk info by switch on plot_bulk;
+        Args:
+            jet_eloss_src: one dictionary stores the jet eloss information '''
         # if etaos<1.0E-6, use ideal hydrodynamics which is much faster
         if self.cfg.ETAOS_YMIN < 1.0E-6 and self.cfg.ETAOS_LEFT_SLOP < 1.0E-6 \
            and self.cfg.ETAOS_RIGHT_SLOP < 1.0E-6 and not save_vorticity:
             self.ideal.evolve(max_loops, save_hypersf, save_bulk,
-                    plot_bulk, force_run_to_maxloop)
+                    plot_bulk, force_run_to_maxloop, jet_eloss_src)
 
             self.save_pimn_sf(set_to_zero=True)
             return
@@ -449,7 +467,8 @@ class CLVisc(object):
             # update pi[1] with d_ev[0] and d_ev[2]_visc*
 
             self.IS_stepUpdate(step=2)
-            self.visc_stepUpdate(step=2)
+
+            self.visc_stepUpdate(step=2, jet_eloss_src=jet_eloss_src)
             self.update_udiff(self.ideal.d_ev[0], self.ideal.d_ev[1])
 
             # add the thermal vorticity calculation here

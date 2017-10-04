@@ -27,7 +27,7 @@ def get_device_info(devices):
 
 class CLIdeal(object):
     '''The pyopencl version for 3+1D ideal hydro dynamic simulation'''
-    def __init__(self, configs, gpu_id=0):
+    def __init__(self, configs, handcrafted_eos=None, gpu_id=0):
         '''Params:
         :param configs: hydrodynamic configurations, from configs import cfg
         :param gpu_id: use which gpu for the calculation if there are many per node
@@ -54,16 +54,21 @@ class CLIdeal(object):
         # set eos, create eos table for interpolation
         # self.eos_table must be before __loadAndBuildCLPrg() to pass
         # table information to definitions
-        self.eos = Eos(self.cfg.IEOS)
+        if handcrafted_eos is None:
+            self.eos = Eos(self.cfg.IEOS)
+        else:
+            self.eos = handcrafted_eos
 
         # the default muB on hypersf is 0, unless IEOS=1, 'PCE165'
         chemical_potential_on_hypersf(self.cfg.TFRZ, path,
                                       eos_type='ZeroChemcialPotential')
 
-        if self.cfg.IEOS == 1:
+        if handcrafted_eos is not None:
+            self.eos_table = self.eos.create_table(self.ctx,
+                    self.compile_options)
+        elif self.cfg.IEOS == 1:
             self.eos_table = self.eos.create_table(self.ctx,
                     self.compile_options, nrow=100, ncol=1555)
-
             chemical_potential_on_hypersf(self.cfg.TFRZ, path,
                                           eos_type='PCE165')
         elif self.cfg.IEOS == 4:
@@ -162,6 +167,11 @@ class CLIdeal(object):
             self.kernel_reduction = cl.Program(self.ctx, src_maxEd).build(
                                                  options=' '.join(self.compile_options))
 
+        with open(os.path.join(self.cwd, 'kernel', 'kernel_jet_eloss.cl'), 'r') as f:
+            src = f.read()
+            self.kernel_jet_eloss = cl.Program(self.ctx, src).build(
+                                    options=' '.join(self.compile_options))
+
         hypersf_defines = list(self.compile_options)
         hypersf_defines.append('-D {key}={value}'.format(key='nxskip', value=self.cfg.nxskip))
         hypersf_defines.append('-D {key}={value}'.format(key='nyskip', value=self.cfg.nyskip))
@@ -171,7 +181,7 @@ class CLIdeal(object):
             src_hypersf = f.read()
             self.kernel_hypersf = cl.Program(self.ctx, src_hypersf).build(
                                              options=' '.join(hypersf_defines))
-
+ 
     @classmethod
     def roundUp(cls, value, multiple):
         '''This function rounds one integer up to the nearest multiple of another integer,
@@ -183,7 +193,7 @@ class CLIdeal(object):
         return value
 
     #@profile
-    def stepUpdate(self, step):
+    def stepUpdate(self, step, jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0}):
         ''' Do step update in kernel with KT algorithm 
             Args:
                 gpu_ev_old: self.d_ev[1] for the 1st step,
@@ -210,6 +220,15 @@ class CLIdeal(object):
         self.kernel_ideal.kt_src_alongz(self.queue, (NX, NY, BSZ), (1, 1, BSZ),
                 self.d_Src, self.d_ev[step], self.eos_table,
                 self.tau).wait()
+
+        # update src term with external jet_eloss_src
+        if jet_eloss_src['switch_on'] == True:
+            mf = cl.mem_flags
+            jet_start_pos_index = jet_eloss_src['start_pos_index']
+            jet_start_angle = jet_eloss_src['direction']
+            self.kernel_jet_eloss.jet_eloss_src(self.queue, (NX, NY, NZ), None,
+                    self.d_Src, self.d_ev[step], self.tau, self.cfg.real(jet_start_angle), 
+                    np.int32(jet_start_pos_index), self.eos_table).wait()
 
         # if step=1, T0m' = T0m + d_Src*dt, update d_ev[2]
         # if step=2, T0m = T0m + 0.5*dt*d_Src, update d_ev[1]
@@ -286,7 +305,8 @@ class CLIdeal(object):
         self.tau = self.cfg.real(self.cfg.TAU0 + (loop+1)*self.cfg.DT)
 
     def evolve(self, max_loops=2000, save_hypersf=True, save_bulk=True,
-            plot_bulk=True, to_maxloop=False):
+            plot_bulk=True, to_maxloop=False,
+            jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0.0}):
         '''The main loop of hydrodynamic evolution '''
         for n in range(max_loops):
             t0 = time()
@@ -306,7 +326,7 @@ class CLIdeal(object):
             self.stepUpdate(step=1)
             # update tau=tau+dtau for the 2nd step in RungeKutta
             self.update_time(loop=n)
-            self.stepUpdate(step=2)
+            self.stepUpdate(step=2, jet_eloss_src=jet_eloss_src)
             t1 = time()
             print('one step: {dtime}'.format(dtime = t1-t0 ))
 
@@ -350,6 +370,7 @@ def main():
     write_config(cfg)
 
     ideal = CLIdeal(cfg)
+
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.compile_options,
                   ideal.d_ev[1])
