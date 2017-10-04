@@ -4,9 +4,25 @@
 #pragma OPENCL EXTENSION cl_khr_fp64: enable
 
 #define ACU ((real)1.0E-12f)
+
+#define PTN1 20
+#define PTN2 20
+
 //{{{ quadruature integral nodes
 __constant    double    gaulep8[] = {   0.9602898564,   0.7966664774, 0.5255324099, 0.1834346424    };
 __constant    double    gaulew8[] = {   0.1012285362,   0.2223810344, 0.3137066458, 0.3626837833    };
+__constant	double	gaulep20[] = {
+		0.993128599185094,	0.963971927277913,
+		0.912234428251325,	0.839116971822218,
+		0.746331906460150,	0.636053680726515,
+		0.510867001950827,	0.373706088715419,
+		0.227785851141645,	0.076526521133497	};
+__constant double gaulew20[] = {
+		0.017614007139152,	0.040601429800386,
+		0.062672048334109,	0.083276741576704,
+		0.101930119817240,	0.118194531961518,
+		0.131688638449176,	0.142096109318382,
+		0.149172986472603,	0.152753387130725	};
 
 __constant   double p12[] = {	0.9815606342,	0.9041172563, 0.7699026741,	0.5873179542, 0.3678314989,	0.1252334085	};
 __constant   double w12[] = {	0.0471753363,	0.1069393259, 0.1600783285,	0.2031674267, 0.2334925365,	0.2491470458	};
@@ -146,9 +162,8 @@ double Edndp3( real * yr, real * ptr, real * phir, int pidR, __global real * d_S
 
         val = (val>2.0E-307)?val:2.0E-307;
 
-    }
-    else{
-        val = 2.0E-307;
+    } else{
+        val = 0.0f;
     }
 
     return  val;
@@ -249,6 +264,8 @@ real dnpir2N (real phi, real costh, real w2, real y, real pt, real phi1, real m1
        result = 0.0;
     }
 
+    if (result < 0.0 ) result = 0.0;
+
     return result;
 }
 
@@ -264,10 +281,16 @@ real dnpir1N (real costh, real w2, real y, real pt, real phi, real m1, real m2, 
     real xdiff = 0.5 * ( xhi - xlo );
     real s = 0.0;
 
-//    #pragma unroll 4
-    for( int ix=0; ix<4; ix ++ )
-        s += gaulew8[ ix ] * ( dnpir2N( xoffs + xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
-                dnpir2N( xoffs - xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+    if (PTN2 == 20) {
+        for( int ix=0; ix<10; ix ++ )
+            s += gaulew20[ ix ] * ( dnpir2N( xoffs + xdiff*gaulep20[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+                    dnpir2N( xoffs - xdiff*gaulep20[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+    
+    } else if (PTN2 == 8) {
+        for( int ix=0; ix<4; ix ++ )
+            s += gaulew8[ ix ] * ( dnpir2N( xoffs + xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+                    dnpir2N( xoffs - xdiff*gaulep8[ix], costh, w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+    }
 
     return s * xdiff;
 }
@@ -287,9 +310,16 @@ real dn2ptN ( real w2, real y, real pt, real phi, real m1, real m2, real mr, int
     real s = 0.0;
 
 //    #pragma unroll 4
-    for( int ix=0; ix<4; ix ++ )
-        s += gaulew8[ ix ] * ( dnpir1N( xoffs + xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
-                dnpir1N( xoffs - xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+    if (PTN1 == 20) {
+        for( int ix=0; ix<10; ix ++ ) {
+             s += gaulew20[ix] * (dnpir1N( xoffs + xdiff*gaulep20[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+                    dnpir1N( xoffs - xdiff*gaulep20[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ));
+        }
+    } else if (PTN1 == 8) {
+        for( int ix=0; ix<4; ix ++ )
+            s += gaulew8[ ix ] * ( dnpir1N( xoffs + xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) + \
+                    dnpir1N( xoffs - xdiff*gaulep8[ix], w2, y, pt, phi, m1, m2, mr, reso_num, d_Spec ) );
+    }
 
     return s * xdiff;
 }
@@ -371,12 +401,13 @@ real Edndp3_3bodyN( real y, real pt, real phi, real m1, real m2, real m3, real m
 
 
 /** \breif use unroll to expand for loop */
-//    #pragma unroll 4
-    for( int ix=0; ix<6; ix ++ ){
-        s += w12[ ix ] * ( dn3ptN( xoffs + xdiff*p12[ix], y, pt, phi, m1, m2, m3, mr, reso_num, d_Spec ) + \
-                dn3ptN( xoffs - xdiff*p12[ix],  y, pt, phi, m1, m2, m3, mr, reso_num, d_Spec ) );
+    for( int ix=0; ix<10; ix ++ ){
+        s += gaulew20[ ix ] * ( dn3ptN(xoffs + xdiff*gaulep20[ix], y, pt, phi, m1, m2, m3, mr, reso_num, d_Spec) + \
+                dn3ptN(xoffs - xdiff*gaulep20[ix],  y, pt, phi, m1, m2, m3, mr, reso_num, d_Spec));
     }
-    return 2.0 * norm3 * (s * xdiff) / mr;
+    real res3 = 2.0 * norm3 * (s * xdiff) / mr;
+    if (res3 < 0.0f) res3 = 0.0f;
+    return res3;
 }
 
 
