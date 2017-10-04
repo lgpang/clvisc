@@ -5,7 +5,8 @@
 
 from subprocess import call
 
-def submit(cent='0_5', jobs_per_gpu=25, ini='trento'):
+def submit(collision_system='pbpb2p76', cent='0_5', etaos=0.16,
+           jobs_per_gpu=25, ini='ampt', eos_type=1):
     jobs = '''#!/bin/bash                                                                                           
 #SBATCH --gres=gpu:4                                                                                  
 #SBATCH --constraint=hawaii                                                                           
@@ -18,7 +19,7 @@ def submit(cent='0_5', jobs_per_gpu=25, ini='trento'):
 #SBATCH --mem-per-cpu=4096                                                                           
 #SBATCH --mail-type=ALL                                                                               
 #SBATCH --partition=lcsc
-#SBATCH --time=24:00:00                                                                               
+#SBATCH --time=48:00:00                                                                               
 
 echo "Start time: $date"
 
@@ -31,14 +32,14 @@ export TMPDIR="/lustre/nyx/hyihp/lpang/tmp/"
 
 #modify the cache.py in anaconda/pyopencl and set the cache_dir = TMPDIR
 
-python ebe_{ini}.py '{cent}' 0 {jobs_per_gpu} &
-python ebe_{ini}.py '{cent}' 1 {jobs_per_gpu} &
-python ebe_{ini}.py '{cent}' 2 {jobs_per_gpu} &
-python ebe_{ini}.py '{cent}' 3 {jobs_per_gpu} &
+python ebe_{ini}.py '{system}' '{cent}' {etaos} 0 0 50  {eos_type}&
+python ebe_{ini}.py '{system}' '{cent}' {etaos} 1 50 100 {eos_type}&
+python ebe_{ini}.py '{system}' '{cent}' {etaos} 2 100 150 {eos_type}&
+python ebe_{ini}.py '{system}' '{cent}' {etaos} 3 150 200 {eos_type}&
 
 wait
 echo "End time: $date"
-'''.format(cent=cent, ini=ini,jobs_per_gpu=jobs_per_gpu)
+'''.format(system=collision_system, cent=cent, ini=ini, eos_type=eos_type, etaos=etaos)
 
     job_name = "gsi_cent%s_%s.sh"%(cent, ini)
     with open(job_name, 'w') as fout:
@@ -46,6 +47,8 @@ echo "End time: $date"
     call(['sbatch', job_name])
     call(['mv', job_name, 'jobs/'])
 
+# comparing the grid size dependence of the hypersf cube
+# etaos_ymin = 0.08 for both ampt runs, not 0.2
 
 if __name__=='__main__':
     submit(cent='0_5')
