@@ -9,12 +9,19 @@ from scipy.interpolate import interp1d
 from scipy.interpolate import InterpolatedUnivariateSpline
 from scipy.optimize import curve_fit
 
+def minmod(a, b):
+    if a>0 and b>0:
+        return min(a, b)
+    elif a<0 and b<0:
+        return max(a, b)
+    else:
+        return 0
+
 class Eos(object):
     '''create eos table for hydrodynamic simulation;
     the (ed, pr, T, s) is stored in image2d buffer
     for fast linear interpolation'''
     def __init__(self, IEOS=0):
-        # information of the eos table
         if IEOS == 0:
             self.ideal_gas()
         elif IEOS == 1:
@@ -75,14 +82,19 @@ class Eos(object):
         self.f_S = InterpolatedUnivariateSpline(self.ed, self.s, k=order, ext=0)
         # calc the speed of sound square
         self.cs2 = np.gradient(self.pr, self.ed_step)
+        # remove high gradient in dp/de function
+        for i, cs2_ in enumerate(self.cs2):
+            if abs(cs2_) > 0.34:
+                a = self.cs2[i-1]
+                b = cs2_
+                c = self.cs2[i+1]
+                self.cs2[i] = minmod(a, minmod(b, c))
         mask = self.ed >= 30.
         ed_mask = self.ed[mask]
         cs2_mask = self.cs2[mask]
         def exp_func(x, a, b, c):
-            #return a * np.exp(-b * x) + c
-            #return a * np.exp(-b * x) + c + d * x
+            '''fit cs2 at ed >30 with a smooth curve'''
             return a / (np.exp(b/x) + c)
-
         popt, pcov = curve_fit(exp_func, ed_mask, cs2_mask)
         self.cs2[mask] = exp_func(ed_mask, *popt)
 
