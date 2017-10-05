@@ -51,6 +51,8 @@ anaconda2/lib/python2.7/site-packages/pyopencl-2016.2-py2.7-linux-x86_64.egg/pyo
     python ebe_trento.py pbpb2760 20_30 0 100
     python ebe_trento.py pbpb5020 30_40 0 100
 
+6. If there is error : No module named 'mako', one can install Mako using
+    pip install --user Mako
 
 ==The BSZ dependence==
 For ideal hydrodynamics, with lattice 385*385*115, per step running time is:
