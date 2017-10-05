@@ -1,8 +1,6 @@
 import matplotlib
 import matplotlib.pyplot as plt
 
-import ConfigParser
-
 import argparse
 
 from itertools import cycle
