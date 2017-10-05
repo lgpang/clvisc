@@ -91,7 +91,7 @@ def main(fpath, viscous_on, force_decay, nsampling):
         from StringIO import StringIO as fstring
     except ImportError:
         # used in python 3.*
-        from io import StringIO as fstring
+        from io import BytesIO as fstring
 
     #particle_lists = np.genfromtxt(fstring(proc))
 
