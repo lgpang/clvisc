@@ -1,10 +1,25 @@
 ==Installation==
-1. OpenCL
+1. Install OpenCL
+   (1) For MacBook Pro, OpenCL is supported by default, skip this step.
+   (2) For Linux using Nvidia GPU, install CUDA -- Shipped with OpenCL. url: https://developer.nvidia.com/cuda-downloads
+   (3) For Linux using AMD GPU, install AMD APP SDK from http://developer.amd.com/amd-accelerated-parallel-processing-app-sdk/
+   (4) For super cluster with GPUs, ask the IT-help people for the OpenCL/Cuda support.
 
 2. Download and install the latest Anaconda from https://www.continuum.io/downloads
   
-3. PyOpenCL
+3. Install PyOpenCL
    `conda install -c conda-forge pyopencl`
+
+4. Install cmake
+   (1) For MacBook, 
+	Run in Terminal app:
+	    `ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null`
+	and press *enter/return* key. Wait for the command to finish.
+	Run:
+	    `brew install cmake`
+	Done! You can now use cmake.
+    (2) For Linux, search on google
+
 
 4. Modify cache_dir in cache.py if the cluster does not have /tmp directory
 
