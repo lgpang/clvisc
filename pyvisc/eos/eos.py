@@ -158,7 +158,7 @@ class Eos(object):
         add some information to compile_options for EOS table'''
         import pyopencl as cl
         fmt = cl.ImageFormat(cl.channel_order.RGBA, cl.channel_type.FLOAT)
-        src = np.array(zip(self.cs2, self.pr, self.T, self.s),
+        src = np.array(list(zip(self.cs2, self.pr, self.T, self.s)),
                  dtype=np.float32).reshape(nrow, ncol, 4)
 
         eos_table = cl.image_from_array(ctx, src, 4)

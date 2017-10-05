@@ -488,7 +488,7 @@ class CLVisc(object):
 def main():
     '''set default platform and device in opencl'''
     #os.environ[ 'PYOPENCL_CTX' ] = '0:0'
-    print >>sys.stdout, 'start ...'
+    print('start ...', file=sys.stdout)
     t0 = time()
     from config import cfg, write_config
     cfg.NX = 385
@@ -534,7 +534,7 @@ def main():
 
     write_config(cfg)
 
-    visc = CLVisc(cfg, gpu_id=2)
+    visc = CLVisc(cfg, gpu_id=0)
 
     visc.optical_glauber_ini()
     #visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
@@ -543,7 +543,7 @@ def main():
             force_run_to_maxloop=False, save_vorticity=False)
 
     t1 = time()
-    print >>sys.stdout, 'finished. Total time: {dtime}'.format(dtime = t1-t0)
+    print('finished. Total time: {dtime}'.format(dtime = t1-t0), file=sys.stdout)
 
     from subprocess import call
     call(['python', './spec.py', cfg.fPathOut])

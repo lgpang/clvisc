@@ -3,6 +3,8 @@
 #email: lgpang@qq.com
 #createTime: Fr 08 Apr 2016 12:10:21 CEST
 
+from __future__ import print_function
+
 import numpy as np
 from math import floor
 import logging
@@ -135,9 +137,9 @@ class ChemicalPotential(object):
         with open(save_fname, "w") as fout:
             for pid in pids:
                 if not set_to_zero:
-                    print >> fout, pid, mu_for_all[pid]
+                    print(pid, mu_for_all[pid], file=fout)
                 else:
-                    print >> fout, pid, 0.0
+                    print(pid, 0.0, file=fout)
     
  
 
@@ -168,4 +170,4 @@ def create_table(Tfrz = 0.137, output_path='.', eos_type='PCE165'):
 if __name__ == '__main__':
     #create_table(Tfrz=0.137, output_path='.', eos_type='EOSQ')
     chem = ChemicalPotential(0.22, version='PCE165')
-    print chem.get_chemical_potential_for_stable(0.22)
+    print(chem.get_chemical_potential_for_stable(0.22))

@@ -38,7 +38,7 @@ __kernel void jet_eloss_src(
     real sigma_y = 0.3;
     real sigma_z = 0.3;
 
-    real norm = 1.0 / (pow(sqrt(2.0*M_PI), 3.0) * sigma_x * sigma_y * sigma_z * tau);
+    real norm = 1.0 / (pow(sqrt(2.0f*M_PI_F), 3.0f) * sigma_x * sigma_y * sigma_z * tau);
 
     coef *= norm * exp(-(x - position.s0)*(x - position.s0)/(2 * sigma_x * sigma_x)
                            -(y - position.s1)*(y - position.s1)/(2 * sigma_y * sigma_y)
