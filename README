@@ -35,6 +35,21 @@ anaconda2/lib/python2.7/site-packages/pyopencl-2016.2-py2.7-linux-x86_64.egg/pyo
 330         #            ".".join(str(i) for i in sys.version_info),))                  
 331         cache_dir = '/lustre/nyx/hyihp/lpang/tmp/'                                  
 
+5. Event-by-event hydro using trento initial condition
+   (1) Install trento
+    cd 3rdparty/trento_with_participant_plane/
+    mkdir build
+    cd build
+    cmake ..
+    make
+    make install
+
+    (2) In PyVisc/pyvisc/ run
+    #python ebe_trento.py collision_sys centrality gpu_id num_of_events
+     
+    python ebe_trento.py auau200 0_5 0 100
+    python ebe_trento.py pbpb2760 20_30 0 100
+    python ebe_trento.py pbpb5020 30_40 0 100
 
 
 ==The BSZ dependence==
