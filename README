@@ -10,6 +10,11 @@
 3. Install PyOpenCL
    `conda install -c conda-forge pyopencl`
 
+   Till now you can run ideal.py and viscous.py in pyvisc/ directory to run one ideal and one viscous hydro event,
+   the hydrodynamic evolution will produce and print the evolution history and freeze out hyper-surface in result/
+   directory. In order to calculate smooth particle spectra or sample hadrons from hyper-surface, one needs to 
+   additionally install *cmake* and *gsl*.
+   
 4. Install cmake
    (1) For MacBook, 
 	Run in Terminal app:
@@ -20,21 +25,10 @@
 	Done! You can now use cmake.
     (2) For Linux, search on google
 
+5. Install gsl library
+    (1) For MacBook, `brew install gsl`
+    (2) For Linux, search on google
 
-4. Modify cache_dir in cache.py if the cluster does not have /tmp directory
-
-        anaconda2/lib/python2.7/site-packages/pyopencl-2016.2-py2.7-linux-x86_64.egg/pyopencl/cache.py
-        
-        322 def _create_built_program_from_source_cached(ctx, src, options_bytes,
-        323         devices, cache_dir, include_path):
-        324     from os.path import join                                                        
-        325 
-        326     if cache_dir is None:
-        327         import appdirs                                                              
-        328         #cache_dir = join(appdirs.user_cache_dir("pyopencl", "pyopencl"),           
-        329         #        "pyopencl-compiler-cache-v2-py%s" % (                              
-        330         #            ".".join(str(i) for i in sys.version_info),))                  
-        331         cache_dir = '/lustre/nyx/hyihp/lpang/tmp/'                                  
 
 5. Event-by-event hydro using trento initial condition
    (1) Install trento
@@ -54,6 +48,22 @@
 
 6. If there is error : No module named 'mako', one can install Mako using
     pip install --user Mako
+
+4. Modify cache_dir in cache.py if the cluster does not have /tmp directory
+
+        anaconda2/lib/python2.7/site-packages/pyopencl-2016.2-py2.7-linux-x86_64.egg/pyopencl/cache.py
+        
+        322 def _create_built_program_from_source_cached(ctx, src, options_bytes,
+        323         devices, cache_dir, include_path):
+        324     from os.path import join                                                        
+        325 
+        326     if cache_dir is None:
+        327         import appdirs                                                              
+        328         #cache_dir = join(appdirs.user_cache_dir("pyopencl", "pyopencl"),           
+        329         #        "pyopencl-compiler-cache-v2-py%s" % (                              
+        330         #            ".".join(str(i) for i in sys.version_info),))                  
+        331         cache_dir = '/lustre/nyx/hyihp/lpang/tmp/'                                  
+
 
 ==The BSZ dependence==
 For ideal hydrodynamics, with lattice 385*385*115, per step running time is:
