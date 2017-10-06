@@ -342,34 +342,34 @@ def main():
     #import pandas as pd
     print('start ...')
     cfg.IEOS = 1
-    cfg.NX = 385
-    cfg.NY = 385
+    cfg.NX = 201
+    cfg.NY = 201
     cfg.NZ = 105
-    cfg.DX = 0.08
-    cfg.DY = 0.08
-    cfg.DZ = 0.15
-    cfg.DT = 0.01
-    cfg.ntskip = 20
-    cfg.nxskip = 3
-    cfg.nyskip = 3
-    cfg.nzskip = 1
+    cfg.DX = 0.16
+    cfg.DY = 0.16
+    cfg.DZ = 0.16
+    cfg.DT = 0.02
+    cfg.ntskip = 16
+    cfg.nxskip = 2
+    cfg.nyskip = 2
+    cfg.nzskip = 2
     cfg.Eta_gw = 0.4
-    cfg.ImpactParameter = 10.0
+    cfg.ImpactParameter = 2.4
     cfg.ETAOS = 0.0
     cfg.TFRZ = 0.137
 
     cfg.Edmax = 55
     cfg.TAU0 = 0.4
 
-    cfg.fPathOut = '../results/ideal_for_christian_check/'
+    cfg.fPathOut = '../results/ideal_vs_bjorn_check/'
 
-    cfg.save_to_hdf5 = False
+    cfg.save_to_hdf5 = True
 
     cfg.BSZ = 64
 
     write_config(cfg)
 
-    ideal = CLIdeal(cfg)
+    ideal = CLIdeal(cfg, gpu_id=1)
 
     from glauber import Glauber
     ini = Glauber(cfg, ideal.ctx, ideal.queue, ideal.compile_options,
@@ -377,14 +377,22 @@ def main():
 
     t0 = time()
     #ini.save_nbinary(ideal.ctx, ideal.queue, cfg)
-    #ideal.evolve(max_loops=2000, save_bulk=True)
-    ideal.evolve(max_loops=2000, save_bulk=False)
+    ideal.evolve(max_loops=2000, save_bulk=True)
     t1 = time()
     print('finished. Total time for hydro evolution: {dtime}'.format(dtime = t1-t0 ))
+    print('Events are written in %s'%cfg.fPathOut)
 
     from subprocess import call
-    call(['python', './spec.py', cfg.fPathOut])
 
-
+    # calc the smooth particle spectra
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "false", "--reso_decay", "true", 
+      '--mode', 'smooth'])
+ 
+    # get particle spectra from MC sampling and force decay
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "false", "--reso_decay", "true", "--nsampling", "2000",
+      '--mode', 'mc'])
+ 
 if __name__ == '__main__':
     main()
