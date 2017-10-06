@@ -181,9 +181,9 @@ if __name__ == '__main__':
 
     for n in range(0, 4):
         #plt.plot(ed[n*1001:(n+1)*1002], pr[n*1001:(n+1)*1002], 'bo')
-        print ed[n*1001:(n+1)*1001]
+        print(ed[n*1001:(n+1)*1001])
 
     #plt.show()
 
     a = 2.0E3
-    print np.log10(a)
+    print(np.log10(a))

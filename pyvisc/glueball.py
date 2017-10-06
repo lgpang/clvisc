@@ -149,7 +149,7 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
 
     ideal = CLIdeal(cfg, gpu_id=1)
     edv = np.zeros((ideal.size, 4), ideal.cfg.real)
-    print edv.shape
+    print(edv.shape)
     edv[:, 0] = ed.T.flatten()
     ideal.load_ini(edv)
 

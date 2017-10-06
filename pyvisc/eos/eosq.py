@@ -114,7 +114,7 @@ if __name__=='__main__':
     import matplotlib.pyplot as plt
     #for i in range(100):
     #    print('T=', T[i], ' ed=', f_ed(T[i]))
-    print f_T(0.142)
+    print(f_T(0.142))
     #plt.plot(ed[:200000], s[:200000])
     #plt.plot(ed, T)
     #plt.plot(eos.ed, eos.pr)

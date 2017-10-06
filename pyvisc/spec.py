@@ -8,7 +8,7 @@ from subprocess import call
 import os, sys
 
 if len(sys.argv) != 2:
-    print 'usage:python spec.py directory'
+    print('usage:python spec.py directory')
     exit()
 
 path = os.path.abspath(sys.argv[1])

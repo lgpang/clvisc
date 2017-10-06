@@ -50,7 +50,6 @@ def read_p4x4(cent='30_35', idx=0,
         nw = grp[cent][:, 2]
         nparton = grp[cent][:, 3]
         key = 'event%s'%event_id[idx]
-        #print key, nw[0], nparton[0]
         p4x4 = f[key]
         return p4x4[...], event_id[idx], impact[idx], nw[idx], nparton[idx]
 
@@ -180,7 +179,7 @@ if __name__ == '__main__':
             event_by_event(fpath_out, cent, idx, etaos=etaos, system=collision_system,
                        fname_ini=fname_ini, gpu_id=gpuid, IEOS=IEOS)
         except:
-                print "Unexpected error:", sys.exc_info()[0]
+                print("Unexpected error:", sys.exc_info()[0])
 
         cwd = os.getcwd()
         os.chdir('../sampler/mcspec/')
