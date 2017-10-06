@@ -18,7 +18,6 @@ set ( CMAKE_USE_RELATIVE_PATH "true")
 set ( CMAKE_EXECUTABLE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/ )
 set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/ )
 
-# 1D Block size used for 3D hydro, 4 halo cells ( i=0,1,BSZ-2,BSZ-1 )
 set ( BSZ 256 )   
 
 set ( DUMPDATA_FROM_GPU "true" )
@@ -38,28 +37,32 @@ configure_file (
    ${PROJECT_SOURCE_DIR}/inc/Config.h
 )
 
-#set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../FindOpenCL/")
-# 
-#find_package( OpenCL REQUIRED )
-# 
-# 
-#if( OPENCL_HAS_CPP_BINDINGS )
-#    message( "OpenCL has CPP bindings. Full include is: " ${OPENCL_INCLUDE_DIRS} )
-#else( OPENCL_HAS_CPP_BINDINGS )
-#    message( "No OpenCL CPP bindings found" )
-#endif( OPENCL_HAS_CPP_BINDINGS )
-# 
-#include_directories( ${OPENCL_INCLUDE_DIRS} )
-
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../FindOpenCL/")
+ 
+find_package( OpenCL REQUIRED )
+ 
 include_directories( "/usr/local/include/" )
 link_directories( "/usr/local/lib" )
 
-include_directories( "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include")
-link_directories("/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/lib/x86_64")
+if( OPENCL_FOUND )
+    if( OPENCL_HAS_CPP_BINDINGS )
+        message( "OpenCL has CPP bindings. Full include is: " ${OPENCL_INCLUDE_DIRS} )
+    else( OPENCL_HAS_CPP_BINDINGS )
+        message( "No OpenCL CPP bindings found" )
+    endif( OPENCL_HAS_CPP_BINDINGS )
+    include_directories( ${OPENCL_INCLUDE_DIRS} )
+else( OPENCL_FOUND )
+    #### specific for GSI green cube
+    if( EXISTS "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include" )
+        include_directories( "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include")
+        link_directories("/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/lib/x86_64")
+        set ( EXTRA_LIBS ${EXTRA_LIBS} OpenCL)
+    else( EXISTS "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include" )
+        message( "Please setup OpenCL environment" )
+    endif( EXISTS "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include" )
+endif( OPENCL_FOUND )
 
-
-#set ( EXTRA_LIBS ${EXTRA_LIBS} ${OPENCL_LIBRARIES} )
-set ( EXTRA_LIBS ${EXTRA_LIBS} OpenCL)
+set ( EXTRA_LIBS ${EXTRA_LIBS} ${OPENCL_LIBRARIES} )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
@@ -68,7 +71,5 @@ include_directories( ${PROJECT_SOURCE_DIR}/inc )
 #include_directories( ${PROJECT_SOURCE_DIR}/../ReadConfig/inc )
 #LINK_DIRECTORIES( ${PROJECT_SOURCE_DIR}/../ReadConfig/lib )
 
-
 add_executable ( spec ${SRC_LIST} )
 target_link_libraries ( spec ${EXTRA_LIBS} )
-
