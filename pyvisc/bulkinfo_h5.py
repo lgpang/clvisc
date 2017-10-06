@@ -215,8 +215,8 @@ class BulkInfo(object):
         path_out = os.path.abspath(self.cfg.fPathOut)
 
         np.savetxt(path_out + '/avg.dat',
-                   np.array(zip(self.time, self.eccp_vs_tau, self.edcent,
-                            self.entropy, self.energy, self.vr)),
+                   np.array(list(zip(self.time, self.eccp_vs_tau, self.edcent,
+                            self.entropy, self.energy, self.vr))),
                    header='tau, eccp, ed(0,0,0), stotal, Etotal, <vr>')
 
         self.f_hdf5.create_dataset('coord/tau', data = self.time)

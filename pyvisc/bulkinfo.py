@@ -318,23 +318,23 @@ class BulkInfo(object):
             np.savetxt(path_out+'/T_xz%d.dat'%idx, self.eos.f_T(exz))
 
         np.savetxt(path_out + '/eccp.dat',
-                   np.array(zip(self.time, ecc2)), header='tau  eccp')
+                   np.array(list(zip(self.time, ecc2))), header='tau  eccp')
 
         if viscous_on:
             np.savetxt(path_out + '/eccp_visc.dat',
-                   np.array(zip(self.time, ecc2_visc)), header='tau  eccp_visc')
+                   np.array(list(zip(self.time, ecc2_visc))), header='tau  eccp_visc')
 
 
         np.savetxt(path_out + '/Tmax.dat',
-                   np.array(zip(self.time, self.eos.f_T(self.edmax))),
+                   np.array(list(zip(self.time, self.eos.f_T(self.edmax)))),
                    header='tau, Tmax')
 
         np.savetxt(path_out + '/edmax.dat',
-                   np.array(zip(self.time, self.edmax)),
+                   np.array(list(zip(self.time, self.edmax))),
                    header='tau, edmax')
 
         np.savetxt(path_out + '/vr.dat',
-                   np.array(zip(self.time, vr)), header='tau <vr>')
+                   np.array(list(zip(self.time, vr))), header='tau <vr>')
 
         np.savetxt(path_out + '/entropy.dat',
-                   np.array(zip(self.time, entropy)), header='tau  entropy')
+                   np.array(list(zip(self.time, entropy))), header='tau  entropy')
