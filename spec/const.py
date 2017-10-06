@@ -68,8 +68,8 @@ PT = INVP * gala15x
 
 # used as azimuthal angle
 PHI = np.zeros( NPHI )
-PHI[0:NPHI/2] = np.pi*(1.0-gaulep48)
-PHI[NPHI-1:NPHI/2-1:-1] = np.pi*(1.0+gaulep48)
+PHI[0:NPHI//2] = np.pi*(1.0-gaulep48)
+PHI[NPHI-1:NPHI//2-1:-1] = np.pi*(1.0+gaulep48)
 
 print("Y=", Y)
 
@@ -83,8 +83,8 @@ def pt_integral(spec_along_pt):
 
 def phi_integral(spec_along_phi):
     '''1D integration along azimuthal angle'''
-    return np.pi*((spec_along_phi[0:NPHI/2] + 
-        spec_along_phi[NPHI-1:NPHI/2-1:-1])*gaulew48).sum()
+    return np.pi*((spec_along_phi[0:NPHI//2] + 
+        spec_along_phi[NPHI-1:NPHI//2-1:-1])*gaulew48).sum()
 
 def rapidity_integral(spec_along_y, ylo=-0.5, yhi=0.5):
     '''1D integration along rapidity/pseudo-rapidity 
