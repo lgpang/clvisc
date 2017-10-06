@@ -1,8 +1,8 @@
 /*
  *
  *    Copyright (c) 2013-2015
- *      SMASH Team
- *
+ *      SMASH Team 
+ *      By LongGang Pang
  *    GNU General Public License (GPLv3 or later)
  *
  */
@@ -453,13 +453,13 @@ namespace {
             densities_.push_back(density);
 
             // initialize the adaptive rejection sampler for each species
-            Rejection::AdaptiveRejectionSampler juttner([&](double x) {
-                    return x*x*juttner_distribution_func(x, particle_type.mass, \
-                        freezeout_temperature_, baryon_chemical_potential, \
-                        baryon_meson_factor); \
-                    }, 0.0, 15.0);
+            //Rejection::AdaptiveRejectionSampler juttner([&](double x) {
+            //        return x*x*juttner_distribution_func(x, particle_type.mass, \
+            //            freezeout_temperature_, baryon_chemical_potential, \
+            //            baryon_meson_factor); \
+            //        }, 0.0, 15.0);
 
-            particle_dist_.emplace_back(std::move(juttner));
+            //particle_dist_.emplace_back(std::move(juttner));
         }
     }
 
@@ -559,32 +559,20 @@ namespace {
                         double baryon_chemical_potential = list_hadrons_.at(nid).mu_B;
                         double fermion_boson_factor;
 
-                        double regulation = 1.0;
-
                         if ( list_hadrons_.at(nid).baryon ) {
                             fermion_boson_factor = 1.0;
                             f0 = juttner_distribution_func(pmag, mass, \
                                         freezeout_temperature_, baryon_chemical_potential,
                                         fermion_boson_factor);
-
-                            if ( f0 > 1.0 ) {
-                                std::clog << "(F) After f0=" << f0 << "  > 1.0" << std::endl;
-                            }
-
-                            weight_visc *= (1.0 + regulation * (1.0 - f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
-                            weight_visc /= (1.0+regulation * p0_star*p0_star*ele.pimn_max*one_over_2TsqrEplusP_);
-
+                            weight_visc *= (1.0 + (1.0 - f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
+                            weight_visc /= (1.0 + (1.0 - f0)*p0_star*p0_star*ele.pimn_max*one_over_2TsqrEplusP_);
                         } else {
                             fermion_boson_factor = -1.0;
                             f0 = juttner_distribution_func(pmag, mass, \
                                         freezeout_temperature_, baryon_chemical_potential,
                                         fermion_boson_factor);
-
-                            if ( f0 > 1.1 ) {
-                                std::clog << "(B) f0=" << f0 << "  > 1.0" << std::endl;
-                            }
-                            weight_visc *= (1.0 + regulation * (1.0 + f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
-                            weight_visc /= (1.0+ regulation *2.1*p0_star*p0_star*
+                            weight_visc *= (1.0 + (1.0 + f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
+                            weight_visc /= (1.0 + (1.0 + f0)*p0_star*p0_star*
                                     ele.pimn_max*one_over_2TsqrEplusP_);
                         }
                     }
