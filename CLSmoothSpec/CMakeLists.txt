@@ -22,7 +22,7 @@ set ( BSZ 256 )
 
 set ( DUMPDATA_FROM_GPU "true" )
 
-set ( SWITCH_OFF_DECAY "true" )
+set ( SWITCH_OFF_DECAY "false" )
 
 option ( USE_DEVICE_GPU "Use GPU parallel" on )
 option ( USE_SINGLE_PRECISION "Use float instead of double" on )
@@ -51,18 +51,11 @@ if( OPENCL_FOUND )
         message( "No OpenCL CPP bindings found" )
     endif( OPENCL_HAS_CPP_BINDINGS )
     include_directories( ${OPENCL_INCLUDE_DIRS} )
+    set ( EXTRA_LIBS ${EXTRA_LIBS} ${OPENCL_LIBRARIES} )
 else( OPENCL_FOUND )
     #### specific for GSI green cube
-    if( EXISTS "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include" )
-        include_directories( "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include")
-        link_directories("/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/lib/x86_64")
-        set ( EXTRA_LIBS ${EXTRA_LIBS} OpenCL)
-    else( EXISTS "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include" )
-        message( "Please setup OpenCL environment" )
-    endif( EXISTS "/lustre/nyx/lcsc/opt/AMD-APP-SDK-2.9.1/include" )
+    message( "CMake did not find OpenCL, set by hand" )
 endif( OPENCL_FOUND )
-
-set ( EXTRA_LIBS ${EXTRA_LIBS} ${OPENCL_LIBRARIES} )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
