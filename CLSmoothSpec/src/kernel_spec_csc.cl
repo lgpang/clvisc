@@ -26,7 +26,7 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     real gspin = HadronInfo.s1;
     real fermi_boson = HadronInfo.s2;
     real muB = HadronInfo.s3;
-    real dof = gspin / pown(2.0*M_PI_F, 3);
+    real dof = gspin / pown(2.0f*M_PI_F, 3);
 
 #ifdef VISCOUS_ON
     real pimn[10];
