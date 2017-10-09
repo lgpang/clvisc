@@ -328,9 +328,9 @@ class V5(Vn):
 
 if __name__ == '__main__':
     #dndpt.plot_identify('60-80')
-    #print dndpt.data['pion']['rapidity_range']
+    #print(dndpt.data['pion']['rapidity_range'])
     dndeta = dNdEta()
-    print dndeta.y['0-5']
+    print(dndeta.y['0-5'])
     dndpt = dNdPt()
     #dndeta.plot()
     v2 = V2()
