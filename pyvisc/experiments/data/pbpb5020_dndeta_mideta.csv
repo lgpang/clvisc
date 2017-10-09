@@ -1,0 +1,24 @@
+#: table_doi: 10.17182/hepdata.73052.v1/t2
+#: name: Table 2
+#: description: The $\mathrm{d}N_\mathrm{ch}/\mathrm{d}\eta$  values measured in $|\eta|$ < 0.5 for eleven centrality classes.
+#: data_file: Table2.yaml
+#: keyword reactions: PB PB --> CHARGED X
+#: keyword observables: DN/DETARAP
+#: keyword phrases: Inclusive | Single Differential Distribution
+#: keyword cmenergies: 5020.0
+#: RE,,,PB PB --> CHARGED X
+#: $|\eta|$,,,< 0.5
+#: SQRT(S) [GeV],,,5020.0
+cent_mid,cent_low,cent_high,dndeta_mid,stat+,stat-,sys+,sys-
+1.25,0,2.5,2035.43,1.08,-1.08,52.43,-52.43
+3.75,2.5,5,1850.15,1.19,-1.19,55.23,-55.23
+6.25,5,7.5,1666.32,1.12,-1.12,47.89,-47.89
+8.75,7.5,10,1505.11,1.07,-1.07,43.71,-43.71
+15.0,10,20,1180.48,0.46,-0.46,31.18,-31.18
+25.0,20,30,786.45,0.36,-0.36,20.44,-20.44
+35.0,30,40,511.66,0.28,-0.28,15.2,-15.2
+45.0,40,50,318.15,0.22,-0.22,12.27,-12.27
+55.0,50,60,183.33,0.16,-0.16,8.07,-8.07
+65.0,60,70,96.27,0.12,-0.12,5.81,-5.81
+75.0,70,80,44.89,0.08,-0.08,3.44,-3.44
+
