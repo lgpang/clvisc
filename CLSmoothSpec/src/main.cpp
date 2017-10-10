@@ -5,64 +5,36 @@
 /////////////////////////////////////////////////
 int main(int argc, char** argv)
 {
-    ///////////// Read Particles from particle data table //////////
-    //
-    Spec spec;
-    
     std::string pathin;
-    cl_real Tfrz = 0.137;
-    if ( argc == 2 ) {
+    int VISCOUS_ON = 0;
+    int DECAY_ON = 1;
+    int GPU_ID = 0;
+    if (argc == 5) {
         pathin = std::string(argv[1]);
+        if (argv[2] == "true" || argv[2] == "True" || argv[2] == "1") {
+            VISCOUS_ON = 1;
+        }
+        if (argv[3] == "false" || argv[3] == "False" || argv[3] == "0") {
+            DECAY_ON = 0;
+        }
+        GPU_ID = atoi(argv[4]);
+    } else {
+        std::cerr << "Usage: ./spec hypersf_directory viscous_on decay_on gpu_id" << std::endl;
+        std::cerr << "Example: ./spec /home/name/results/event0 true true 0" << std::endl;
     }
 
-    std::stringstream hypsfDataFile;
-    std::stringstream pathout;
-    pathout<<pathin;
-    hypsfDataFile<<pathin<<"/hypersf.dat";
-    // hypsfDataFile stores comments in the first row, Tfrz in the second row
-    // dS^{0} dS^{1} dS^{2} dS^{3} vx vy veta eta_s for all other rows
-    spec.ReadHyperSF(hypsfDataFile.str());
-
-    std::stringstream chemical_potential_datafile;
-    chemical_potential_datafile<<pathin<<"/chemical_potential.dat";
-    spec.ReadMuB(chemical_potential_datafile.str());
-
-    // ReadParticles must be after ReadMuB()
-    char particleDataTable[256] = "../Resource/pdg05.dat";
-    spec.ReadParticles( particleDataTable );
-    std::cout<<"stable particle: \n";
-    for( int i=0; i<spec.particles.size(); i++ ){
-        if( spec.particles.at(i).stable == true ) std::cout<<spec.particles.at(i).monval<<' ';
-    }
-    std::cout<<'\n';
-
-#ifdef VISCOUS_ON
-    // pisfDataFile stores comments in the first row, 1.0/(2.0*T^2(e+P)) in the second row
-    // pi^{00} 01 02 03 11 12 13 22 23 33 on the freeze out hyper surface for other rows
-    std::stringstream pisfDataFile;
-    pisfDataFile<<pathin<<"/pimnsf.dat";
-    spec.ReadPimnSF(pisfDataFile.str());
-#endif
-
-    spec.SetPathOut( pathout.str() );
-
-    //////////// Sample particles from SF //////////////////////////
-    //spec.SetTfrz( Tfrz );
-
-    bool switch_off_decay = SWITCH_OFF_DECAY;
-
+    Spec spec(pathin, VISCOUS_ON, DECAY_ON, GPU_ID);
+ 
     std::cout << "begin to calc spec" << std::endl;
-    spec.CalcSpec(switch_off_decay);
+    spec.CalcSpec();
 
     //spec.ReadSpec();
 
-    if ( !switch_off_decay ) {
+    if (DECAY_ON) {
       spec.ResoDecay();
     }
 
     spec.testResults();
-
-    ///////////  Conect to UrQMD /////////////////////////////////
 
     return 0;
 }

@@ -1,5 +1,6 @@
 #include <cl_spec.h>
 #include <cmath>
+#include <cstring>
 
 #define NBlocks 64
 
@@ -38,10 +39,41 @@ cl_real excutionTime( cl::Event & event )
     return ( tend - tstart ) * 1.0E-9 ;
 }
 
+Spec::Spec(const std::string & pathin, int viscous_on, int decay_on, int gpu_id){
+    DataPath = pathin;
+    viscous_on_ = viscous_on;
+    decay_on_ = decay_on;
+    gpu_id_ = gpu_id;
 
-Spec::Spec()
-{
-    DataPath = "../results/";
+    std::stringstream hypsfDataFile;
+    std::stringstream pathout;
+    pathout<<pathin;
+    hypsfDataFile<<pathin<<"/hypersf.dat";
+    // hypsfDataFile stores comments in the first row, Tfrz in the second row
+    // dS^{0} dS^{1} dS^{2} dS^{3} vx vy veta eta_s for all other rows
+    ReadHyperSF(hypsfDataFile.str());
+
+    std::stringstream chemical_potential_datafile;
+    chemical_potential_datafile<<pathin<<"/chemical_potential.dat";
+    ReadMuB(chemical_potential_datafile.str());
+
+    // ReadParticles must be after ReadMuB()
+    char particleDataTable[256] = "../Resource/pdg05.dat";
+    ReadParticles( particleDataTable );
+    std::cout<<"stable particle: \n";
+    for( int i=0; i<particles.size(); i++ ){
+        if(particles.at(i).stable == true) std::cout<<particles.at(i).monval<<' ';
+    }
+    std::cout<<'\n';
+
+    if (viscous_on_) {
+        // pisfDataFile stores comments in the first row, 1.0/(2.0*T^2(e+P)) in the second row
+        // pi^{00} 01 02 03 11 12 13 22 23 33 on the freeze out hyper surface for other rows
+        std::stringstream pisfDataFile;
+        pisfDataFile<<pathin<<"/pimnsf.dat";
+        ReadPimnSF(pisfDataFile.str());
+    }
+    SetPathOut(pathout.str());
 }
 
 
@@ -99,7 +131,7 @@ void Spec::BuildPrograms( int i, const char * compile_options )
             programs.at(i).build(devices, compile_options);
         }
         catch(cl::Error & err){
-            std::cerr<<err.what()<<"("<<err.err()<<")\n"<< programs.at(i).getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]);
+            std::cerr<<err.what()<<"("<<err.err()<<")\n"<< programs.at(i).getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[gpu_id_]);
         }
     }
 
@@ -248,10 +280,6 @@ void Spec::ReadParticles(char * particle_data_table)
 
             p.antibaryon_spec_exists = 0;
 
-            if(particle_data_table == "../Resource/resoweak.dat"){
-                fin>>buff>>buff>>buff; 
-            }//Not used in s95p-v1/pdg05.dat
-
             if( fin.eof() ) break;
             CDecay dec;
 
@@ -280,7 +308,7 @@ void Spec::ReadParticles(char * particle_data_table)
         cl_real chem = muB[ particles[i].monval ];
         h_HadronInfo.push_back( (cl_real4){particles[i].mass, particles[i].gspin, particles[i].baryon?1.0f:-1.0f, chem} );
 
-        if( particles[i].baryon ){
+        if (particles[i].baryon) {
             antiB.monval = -particles[i].monval;
             antiB.name   = "A";
             antiB.name.append(particles[i].name);
@@ -344,10 +372,10 @@ void Spec::initializeCL()
 
         // Define compile-time constants, compute domains and types.
         std::stringstream compile_options;
-        std::string dev_vendor = devices[0].getInfo<CL_DEVICE_VENDOR>();
-        std::cout<<"#dev_vendor="<<dev_vendor<<std::endl;
+        std::string dev_vendor = devices[gpu_id_].getInfo<CL_DEVICE_VENDOR>();
+        std::cout<<"#using device="<<dev_vendor<<std::endl;
 
-        int LenVector = devices[0].getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>();
+        int LenVector = devices[gpu_id_].getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>();
         std::cout<<"#preferred vector width float ="<< LenVector << std::endl;
 
         compile_options << "-I../src"<<" ";
@@ -370,14 +398,12 @@ void Spec::initializeCL()
         compile_options << "-D YHI="<<YHI<<" "; 
         compile_options << "-D INVSLOPE="<<INVSLOPE<<" ";   
         compile_options << "-D Tfrz="<<Tfrz<<" ";     
-#ifdef VISCOUS_ON        
-        compile_options << "-D VISCOUS_ON" << " ";
-        compile_options << "-D TCOEFF=" << one_over_2TsqrEplusP << " ";
-        std::cout << "TFRZ=" << Tfrz << " TCOEFF=" << one_over_2TsqrEplusP << std::endl;
-#endif
-        queue = cl::CommandQueue( context, devices[0], CL_QUEUE_PROFILING_ENABLE );
-        //queue = cl::CommandQueue( context, devices[1], CL_QUEUE_PROFILING_ENABLE );
-        //std::cout<<"Vendor="<<dev_vendor<<'\n';
+        if (viscous_on_) {
+            compile_options << "-D VISCOUS_ON" << " ";
+            compile_options << "-D TCOEFF=" << one_over_2TsqrEplusP << " ";
+            std::cout << "TFRZ=" << Tfrz << " TCOEFF=" << one_over_2TsqrEplusP << std::endl;
+        }
+        queue = cl::CommandQueue( context, devices[1], CL_QUEUE_PROFILING_ENABLE );
 
 #ifdef  LOEWE_CSC
         AddProgram( "../src/kernel_spec_csc.cl" );
@@ -406,9 +432,9 @@ void Spec::initializeCL()
 
         d_SF = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, SizeSF*sizeof(cl_real8), h_SF.data()); //global memory
 
-#ifdef  VISCOUS_ON
-        d_pi = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 10*SizeSF*sizeof(cl_real), h_pi.data()); //global memory
-#endif
+        if (!h_pi.empty()) {
+            d_pi = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 10*SizeSF*sizeof(cl_real), h_pi.data()); //global memory
+        }
 
         d_HadronInfo = cl::Buffer( context, CL_MEM_READ_ONLY  | CL_MEM_COPY_HOST_PTR, SizePID*sizeof(cl_real4) , h_HadronInfo.data()); //constant memory
 
@@ -486,7 +512,7 @@ namespace {
 } // end unnamed namespace
 
 /** Calc thermal spec for all the hadrons */
-void Spec::CalcSpec(bool switch_off_decay)
+void Spec::CalcSpec()
 {
     try {
         /** store spec in Y,Pt,Phi */
@@ -509,35 +535,35 @@ void Spec::CalcSpec(bool switch_off_decay)
         for(int pid=0; pid!=SizePID; pid++){
             cl_int monval = particles[pid].monval;
 
-            // if switch_off_decay, only calc direct spec for pi, K, proton
-            if ( switch_off_decay ) {
+            // if not decay_on, only calc direct spec for pi, K, proton
+            if (! decay_on_) {
                 if ( !(monval == 211 || monval == 321 || monval == 2212
                             || monval == 999) ) continue;
                 // 999 is D0
             }
 
             if ( ! particles[pid].antibaryon_spec_exists ) {
-#ifdef VISCOUS_ON
-                kernel_subspec.setArg( 0, d_SF );
-                kernel_subspec.setArg( 1, d_pi );
-                kernel_subspec.setArg( 2, d_SubSpec );
-                kernel_subspec.setArg( 3, d_HadronInfo );
-                kernel_subspec.setArg( 4, d_Y );
-                kernel_subspec.setArg( 5, d_Pt );
-                kernel_subspec.setArg( 6, d_CPhi );
-                kernel_subspec.setArg( 7, d_SPhi );
-                kernel_subspec.setArg( 8, pid );
-#else
+                if (viscous_on_)  {
+                    kernel_subspec.setArg( 0, d_SF );
+                    kernel_subspec.setArg( 1, d_pi );
+                    kernel_subspec.setArg( 2, d_SubSpec );
+                    kernel_subspec.setArg( 3, d_HadronInfo );
+                    kernel_subspec.setArg( 4, d_Y );
+                    kernel_subspec.setArg( 5, d_Pt );
+                    kernel_subspec.setArg( 6, d_CPhi );
+                    kernel_subspec.setArg( 7, d_SPhi );
+                    kernel_subspec.setArg( 8, pid );
+                } else {
 
-                kernel_subspec.setArg( 0, d_SF );
-                kernel_subspec.setArg( 1, d_SubSpec );
-                kernel_subspec.setArg( 2, d_HadronInfo );
-                kernel_subspec.setArg( 3, d_Y );
-                kernel_subspec.setArg( 4, d_Pt );
-                kernel_subspec.setArg( 5, d_CPhi );
-                kernel_subspec.setArg( 6, d_SPhi );
-                kernel_subspec.setArg( 7, pid );
-#endif
+                    kernel_subspec.setArg( 0, d_SF );
+                    kernel_subspec.setArg( 1, d_SubSpec );
+                    kernel_subspec.setArg( 2, d_HadronInfo );
+                    kernel_subspec.setArg( 3, d_Y );
+                    kernel_subspec.setArg( 4, d_Pt );
+                    kernel_subspec.setArg( 5, d_CPhi );
+                    kernel_subspec.setArg( 6, d_SPhi );
+                    kernel_subspec.setArg( 7, pid );
+                }
                 /** Because AMD GPUs can not use big array in private memory.
                  * The dNdYPtdPtdPhi[41*15*48] in the kernel are replaced by
                  * dNdYPtdPtdPhi[48] with only phi values stored privately
@@ -547,11 +573,11 @@ void Spec::CalcSpec(bool switch_off_decay)
                 for(int id_Y_Pt_Phi=0; id_Y_Pt_Phi<NY*NPT; id_Y_Pt_Phi++){
                     cl::Event event;
 
-#ifdef VISCOUS_ON
-                    kernel_subspec.setArg(9, id_Y_Pt_Phi);
-#else
-                    kernel_subspec.setArg(8, id_Y_Pt_Phi);
-#endif
+                   if (viscous_on_) {
+                        kernel_subspec.setArg(9, id_Y_Pt_Phi);
+                   } else {
+                        kernel_subspec.setArg(8, id_Y_Pt_Phi);
+                   }
                     queue.enqueueNDRangeKernel(kernel_subspec, cl::NullRange, \
                             globalSize, localSize, NULL, &event);
                     event.wait();
@@ -571,9 +597,9 @@ void Spec::CalcSpec(bool switch_off_decay)
 
 
                 std::cout<<"#hadron mass:"<<h_HadronInfo.at(pid).s[0]<<std::endl;
-                std::cout<<"#hadron gspin:"<<h_HadronInfo.at(pid).s[1]<<std::endl;
-                std::cout<<"#hadron fb:"<<h_HadronInfo.at(pid).s[2]<<std::endl;
-                std::cout<<"#hadron resizePtRange:"<<h_HadronInfo.at(pid).s[3]<<std::endl;
+                std::cout<<"#hadron 2*spin+1:"<<h_HadronInfo.at(pid).s[1]<<std::endl;
+                std::cout<<"#sign for fermin/boson:"<<h_HadronInfo.at(pid).s[2]<<std::endl;
+                std::cout<<"#effective chemical potential:"<<h_HadronInfo.at(pid).s[3]<<std::endl;
 
                 cl::Event event1;
                 queue.enqueueNDRangeKernel(kernel_spec, cl::NullRange, \
@@ -618,8 +644,7 @@ void Spec::CalcSpec(bool switch_off_decay)
                 WriteSpec(fname, dNdEtaPtdPtdPhi);
             }
         }
-    }
-    catch(cl::Error &err){          
+    } catch(cl::Error &err){          
         std::cerr<<"Error:"<<err.what()<<"("<<err.err()<<")\n";
     }
 }
@@ -662,7 +687,6 @@ void Spec::AddReso(cl_int pidR, cl_int j, cl_int k, \
         std::vector<cl_real> & branch, std::vector<cl_real4> & mass , \
         std::vector<cl_int>  & resoNum,std::vector<cl_real > & h_norm3)
 {
-
     cl_int4 m = (cl_int4) {   
         newpid[decay.at(j).part[0]],  
             newpid[decay.at(j).part[1]], 

@@ -384,15 +384,15 @@ def main():
 
     from subprocess import call
 
-    # calc the smooth particle spectra
-    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
-      '--viscous_on', "false", "--reso_decay", "true", 
-      '--mode', 'smooth'])
- 
     # get particle spectra from MC sampling and force decay
     call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
       '--viscous_on', "false", "--reso_decay", "true", "--nsampling", "2000",
       '--mode', 'mc'])
+
+     # calc the smooth particle spectra
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "false", "--reso_decay", "true", 
+      '--mode', 'smooth'])
  
 if __name__ == '__main__':
     main()

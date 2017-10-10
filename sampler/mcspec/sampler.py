@@ -124,8 +124,7 @@ if __name__ == '__main__':
     viscous_on = sys.argv[2]
     force_decay = sys.argv[3]
     nsampling = int(sys.argv[4])
-
-    fsrc = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/PyVisc/sampler/mcspec/pdg05.dat"
+    fsrc = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pdg05.dat")
     call(['cp', fsrc, fpath])
 
     main(fpath, viscous_on, force_decay, nsampling=nsampling)

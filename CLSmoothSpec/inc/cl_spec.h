@@ -82,6 +82,12 @@ struct CParticle{
 class Spec
 {
     private:
+    std::string  DataPath;
+
+    int viscous_on_;
+    int decay_on_;
+    int gpu_id_;
+
 	cl::Context context;
 	std::vector<cl::Device> devices;
 	std::vector<cl::Program> programs;
@@ -164,11 +170,12 @@ class Spec
 
 	std::stringstream str_buff; /*! buff for all the parton information at each time step */
 
-	Spec();
+	Spec(const std::string & pathin, int viscous_on, int decay_on,
+         int gpu_id);
 
 	~Spec();
 
-	void ReadMuB(  const std::string & muB_datafile );        
+	void ReadMuB(const std::string & muB_datafile);        
 
 	void ReadHyperSF(const std::string & sf_datafile);
 
@@ -176,16 +183,15 @@ class Spec
 
     void ReadParticles( char * particle_data_table);
 
-    std::string  DataPath;
 
-    void SetPathOut( const std::string & path );
+    void SetPathOut(const std::string & path);
 
     /*! \breif Set freeze out temperature */
-    void SetTfrz( const cl_real & Tfrz );
+    void SetTfrz(const cl_real & Tfrz);
 
     void InitGrid(const cl_int & Nrapidity, const cl_real& Ylo, const cl_real & Yhi);
 
-    void CalcSpec(bool switch_off_decay);   /*!< Calc dNdYPtdPtdPhi for each particle */
+    void CalcSpec();   /*!< Calc dNdYPtdPtdPhi for each particle */
 
     void ReadSpec();              /*!< Read dNdYPtdPtdPhi for each particle */
 

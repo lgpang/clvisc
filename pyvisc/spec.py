@@ -14,6 +14,7 @@ parser.add_argument("--viscous_on", default='true', help="with non-quilibrium co
 parser.add_argument("--reso_decay", default='true', help="true to switch_on resonance decay")
 parser.add_argument("--nsampling", default='2000', help="number of over-sampling from one hyper-surface")
 parser.add_argument("--mode", default='smooth', help="options:[smooth, mc]")
+parser.add_argument("--gpu_id", default='0', help="for smooth spectra, one can choose gpu for parallel running")
 
 cfg = parser.parse_args()
 
@@ -28,14 +29,9 @@ if cfg.mode == 'smooth':
         os.makedirs(dir_smooth_spec)
     os.chdir(dir_smooth_spec)
 
-    if cfg.viscous_on == 'true':
-        os.system('cmake -D VISCOUS_ON=ON ..')
-    else:
-        os.system('cmake -D VISCOUS_ON=OFF ..')
     os.system('make')
-    call(['./spec', event_dir])
+    call(['./spec', event_dir, cfg.viscous_on, cfg.reso_decay, cfg.gpu_id])
     os.chdir(src_dir)
-
     if cfg.reso_decay == 'true':
         call(['python', '../spec/main.py', event_dir, '1'])
     else:

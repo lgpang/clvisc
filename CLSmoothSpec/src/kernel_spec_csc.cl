@@ -53,8 +53,8 @@ __kernel void get_sub_dNdYPtdPtdPhi(
         }
 #endif        
         real4 umu = (real4)(1.0f, SF.s4, SF.s5, SF.s6) * \
-            1.0/sqrt(max((real)1.0E-15, \
-            (real)(1.0-SF.s4*SF.s4 - SF.s5*SF.s5 - SF.s6*SF.s6)));
+            1.0f/sqrt(max((real)1.0E-15f, \
+            (real)(1.0f-SF.s4*SF.s4 - SF.s5*SF.s5 - SF.s6*SF.s6)));
         
         real4 dsigma = SF.s0123;
         
@@ -62,7 +62,7 @@ __kernel void get_sub_dNdYPtdPtdPhi(
         real mtsinh = mt*sinh(rapidity-SF.s7);
         for(int m=0; m<NPHI; m++){
             real4 pmu = (real4)(mtcosh, -pt*d_CPhi[m], -pt*d_SPhi[m], -mtsinh);
-            real feq = 1.0f/( exp((dot(pmu, umu)-muB)/Tfrz) + fermi_boson );
+            real feq = 1.0f/( exp((real)((dot(pmu, umu)-muB)/Tfrz)) + fermi_boson );
 #ifdef VISCOUS_ON
             // TCOEFF = 1.0f/(2T^2 (e+P)) on freeze out hyper sf from compile options
             real p2pi_o_T2ep = TCOEFF*(pmu.s0*pmu.s0*pimn[0] + pmu.s3*pmu.s3*pimn[9] +
