@@ -225,12 +225,12 @@ real dnpir2N (real phi, real costh, real w2, real y, real pt, real phi1, real m1
     cphiR = -jac * (p0 * sinth * cos (phi + phi1) - pt * cos (phi1)) / (sume * ptR);
     sphiR = -jac * (p0 * sinth * sin (phi + phi1) - pt * sin (phi1)) / (sume * ptR);
 
-    if ((fabs (cphiR) > 0.999f))
+    if ((fabs (cphiR) > 1.0f))
     {
         if (cphiR > 0.01f)
-            cphiR = 0.999f;
+            cphiR = 0.99999f;
         if (cphiR < -0.01f)
-            cphiR = -0.999f;
+            cphiR = -0.99999f;
     }
 
     phiR = atan2(sphiR, cphiR);
