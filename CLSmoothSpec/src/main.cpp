@@ -7,15 +7,17 @@ int main(int argc, char** argv)
 {
     std::string pathin;
     int VISCOUS_ON = 0;
-    int DECAY_ON = 1;
+    int DECAY_ON = 0;
     int GPU_ID = 0;
     if (argc == 5) {
         pathin = std::string(argv[1]);
-        if (argv[2] == "true" || argv[2] == "True" || argv[2] == "1") {
+        std::string opt2(argv[2]);
+        if ( opt2 == "true" || opt2 == "1" || opt2 == "True" || opt2 == "TRUE" ) {
             VISCOUS_ON = 1;
         }
-        if (argv[3] == "false" || argv[3] == "False" || argv[3] == "0") {
-            DECAY_ON = 0;
+        std::string opt3(argv[3]);
+        if ( opt3 == "true" || opt3 == "1" || opt3 == "True" || opt3 == "TRUE" ) {
+            DECAY_ON = 1;
         }
         GPU_ID = atoi(argv[4]);
     } else {

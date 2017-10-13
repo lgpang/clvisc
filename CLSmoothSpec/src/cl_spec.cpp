@@ -536,11 +536,9 @@ void Spec::CalcSpec()
             cl_int monval = particles[pid].monval;
 
             // if not decay_on, only calc direct spec for pi, K, proton
-            if (! decay_on_) {
-                if ( !(monval == 211 || monval == 321 || monval == 2212
-                            || monval == 999) ) continue;
+            if (decay_on_==0 && !(monval == 211 || monval == 321 || monval == 2212
+                            || monval == 999)) continue;
                 // 999 is D0
-            }
 
             if ( ! particles[pid].antibaryon_spec_exists ) {
                 if (viscous_on_)  {

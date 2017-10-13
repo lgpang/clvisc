@@ -29,7 +29,9 @@ if cfg.mode == 'smooth':
         os.makedirs(dir_smooth_spec)
     os.chdir(dir_smooth_spec)
 
-    os.system('make')
+    #os.system('rm -r *')
+    #os.system('cmake ..')
+    #os.system('make')
     call(['./spec', event_dir, cfg.viscous_on, cfg.reso_decay, cfg.gpu_id])
     os.chdir(src_dir)
     if cfg.reso_decay == 'true':

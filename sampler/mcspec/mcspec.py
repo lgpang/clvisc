@@ -10,6 +10,7 @@ import os
 import pandas as pd
 from time import time
 import math
+from numba import jit
 
 try:
     # used in python 2.*
@@ -34,9 +35,9 @@ class mcspec(object):
 
         self.fpath = fpath
 
-
+    @jit
     def pt_differential_vn(self, n=2, pid='211', pt_min=0.3, pt_max=2.5, eta_max=2.0):
-        pts = np.linspace(0.3, 2.5, 21)
+        pts = np.linspace(0.3, 2.5, 11)
 
         avg2_list = np.zeros(self.num_of_events)
         avg4_list = np.zeros(self.num_of_events)
@@ -59,7 +60,7 @@ class mcspec(object):
 
             for ipt, pt in enumerate(pts):
                 avg2_prime_list[idx, ipt], avg4_prime_list[idx, ipt] = self.avg_prime(
-                        n, pid, pt_min=pt-0.2, pt_max=pt+0.2, eta_min=-eta_max, eta_max=eta_max)
+                        n, pid, pt_min=pt-0.1, pt_max=pt+0.1, eta_min=-eta_max, eta_max=eta_max)
 
         vn2, vn4 = self.differential_flow(avg2_list, avg4_list,
                                                avg2_prime_list, avg4_prime_list)
@@ -309,9 +310,9 @@ if __name__=='__main__':
     import sys
 
     #fpath = '/lustre/nyx/hyihp/lpang/trento_ini/bin/pbpb2p76/20_30/n2/mean'
-    fpath = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760/20_30/event1/'
+    fpath = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/pbpb2p76_results_ampt/etas0p16_k1p4/20_30/event1/'
 
     if len(sys.argv) == 2:
         fpath = sys.argv[1]
 
-    calc_vn(fpath, over_sampling=5000, make_plot=True)
+    calc_vn(fpath, over_sampling=10000, make_plot=True)

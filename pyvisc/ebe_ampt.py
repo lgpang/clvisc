@@ -13,7 +13,6 @@ import h5py
 
 import os, sys
 cwd, cwf = os.path.split(__file__)
-print('cwd=', cwd)
 
 sys.path.append(os.path.join(cwd, '../pyvisc'))
 from config import cfg, write_config
@@ -132,7 +131,12 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0, system = 'auau200',
         heta = create_longitudinal_profile(cfg)
         visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.4, longitudinal_profile=heta)
     else:
-        visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.2)
+        if etaos >= 0.16:
+            visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.2)
+        elif etaos >= 0.08:
+            visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.4)
+        else:
+            visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.5)
 
     visc.evolve(max_loops=4000, save_hypersf=True, save_bulk=True, save_vorticity=True)
 
@@ -181,18 +185,14 @@ if __name__ == '__main__':
         except:
                 print("Unexpected error:", sys.exc_info()[0])
 
-        cwd = os.getcwd()
-        os.chdir('../sampler/mcspec/')
-        viscous_on = 'true'
-        after_reso = 'true'
-        nsampling = '2000'
-        call(['python', 'sampler.py', fpath_out, viscous_on, after_reso, nsampling])
-        os.chdir(cwd)
-
-        os.chdir('../CLSmoothSpec/build')
-        #os.system('cmake -D VISCOUS_ON=ON ..')
-        #os.system('make')
-        call(['./spec', fpath_out])
-        os.chdir(cwd)
-        after_reso = '0'
-        call(['python', '../spec/main.py', fpath_out, after_reso])
+        viscous_on = "true"
+        if etaos < 0.0001: viscous_on = "false"
+        # get particle spectra from MC sampling and force decay
+        call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+          '--viscous_on', viscous_on, "--reso_decay", "true", "--nsampling", "2000",
+          '--mode', 'mc'])
+    
+         # calc the smooth particle spectra
+        call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+          '--viscous_on', viscous_on, "--reso_decay", "false", 
+          '--mode', 'smooth'])
