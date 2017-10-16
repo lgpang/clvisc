@@ -146,7 +146,7 @@ int main(int argc, char ** argv) {
         static_cast<float>(number_of_events)  << std::endl;
 
     double pion_mass = 0.13957;
-    double baryon_chemical_potential = 0.0;
+    double baryon_chemical_potential = sampler.muB_[211];
     double fermion_boson_factor = -1.0;
     double freezeout_temperature = sampler.freezeout_temperature_;
 
@@ -170,7 +170,7 @@ int main(int argc, char ** argv) {
     std::clog << "ntot for pion+ from udotsigma=" << 
         ntotal_pion_plus_from_nudotsigma << std::endl;
 
-    std::clog << "ntot for pion+ from hirano (no chemical potential)=" << 
+    std::clog << "ntot for pion+ from hirano (no viscous correction)=" << 
         ntotal_pion_plus_from_hirano << std::endl;
 
 }
