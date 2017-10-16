@@ -88,5 +88,5 @@ class PbPb5020(Collision):
 if __name__=='__main__':
     auau200 = AuAu200()
     #auau200.create_ini('0_6', './dat', num_of_events=100, one_shot_ini=True)
-    print auau200.get_smin_smax('0_6')
-    print auau200.get_smin_smax('6_15')
+    print(auau200.get_smin_smax('0_6'))
+    print(auau200.get_smin_smax('6_15'))
