@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <array>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
