@@ -114,7 +114,7 @@ class Eos(object):
     def lattice_ce(self):
         '''lattice qcd EOS from wuppertal budapest group
         2014 with chemical equilibrium EOS'''
-        import wb
+        from . import wb
         self.ed = wb.ed
         self.pr = wb.pr
         self.T = wb.T
