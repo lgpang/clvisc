@@ -88,7 +88,7 @@ class Spec:
         fout_name = self.path + "/dNd{rapidity}".format( \
             rapidity = self.rapidity_kind) + self.strout
 
-        np.savetxt(fout_name, np.array(zip(Y, dNdY)), \
+        np.savetxt(fout_name, np.array(list(zip(Y, dNdY))), \
             header='#rapidity dN/d{rapidity}'.format( \
             rapidity=self.rapidity_kind))
 
@@ -107,7 +107,7 @@ class Spec:
         fout_name = self.path + "/dNd{rapidity}PtdPt_over_2pi{comment}".format(
                 rapidity=self.rapidity_kind, comment=comment) + self.strout
 
-        np.savetxt(fout_name, np.array(zip(PT, dNPtdPt_over2pi)),
+        np.savetxt(fout_name, np.array(list(zip(PT, dNPtdPt_over2pi))),
            header='#PT (1/2pi)dN/d{rapidity}ptdpt'.format(
            rapidity = self.rapidity_kind))
     
@@ -158,11 +158,11 @@ class Spec:
 
         fout_name = self.path + "/vn%s"%comment + self.strout
 
-        np.savetxt(fout_name, np.array(zip(PT, Vn_vs_pt[1,:],
+        np.savetxt(fout_name, np.array(list(zip(PT, Vn_vs_pt[1,:],
                                                Vn_vs_pt[2,:],
                                                Vn_vs_pt[3,:],
                                                Vn_vs_pt[4,:],
                                                Vn_vs_pt[5,:],
-                                               Vn_vs_pt[6,:],)),
+                                               Vn_vs_pt[6,:],))),
                    header='#PT v1 v2 v3 v4 v5 v6')
  

@@ -1,4 +1,5 @@
 #/usr/bin/env python
+#-*- encoding: utf8 -*-
 #author: lgpang
 #email: lgpang@qq.com
 #createTime: Di 05 Apr 2016 17:03:27 CEST
@@ -30,8 +31,13 @@ class mcspec(object):
         self.events = [np.genfromtxt(fstring(event)) for event
                                 in events_str.split('#finished')[:-1]]
 
+        #self.events = [pd.read_csv(fstring(event), sep=' ',
+        #               header=None, dtype=np.float64).values
+        #               for event in events_str.split('#finished')[:-1]]
+
         self.num_of_events = len(self.events)
         print('in mcspec, num of events=', self.num_of_events)
+        print(self.events[9999])
 
         self.fpath = fpath
 
@@ -121,7 +127,7 @@ class mcspec(object):
         v32, v34 = self.differential_flow(avg32_ref_list, avg34_ref_list, avg32_prime_list, avg34_prime_list)
         v42, v44 = self.differential_flow(avg42_ref_list, avg44_ref_list, avg42_prime_list, avg44_prime_list)
 
-        np.savetxt(os.path.join(self.fpath, 'vn24_vs_eta.txt'), zip(eta, v22, v32, v42, v24, v34, v44))
+        np.savetxt(os.path.join(self.fpath, 'vn24_vs_eta.txt'), list(zip(eta, v22, v32, v42, v24, v34, v44)))
 
         if make_plot:
             plt.plot(eta, v22, label='v2{2}')
@@ -261,11 +267,11 @@ class mcspec(object):
         pts, vn2_proton,  vn4_proton = self.pt_differential_vn(n=n, pid='2212')
         pts, vn2_charged, vn4_charged = self.pt_differential_vn(n=n, pid='charged')
 
-        np.savetxt(os.path.join(self.fpath, 'v%s_2_vs_pt.txt'%n), zip(pts,
-                   vn2_pion, vn2_kaon, vn2_proton, vn2_charged))
+        np.savetxt(os.path.join(self.fpath, 'v%s_2_vs_pt.txt'%n), list(zip(pts,
+                   vn2_pion, vn2_kaon, vn2_proton, vn2_charged)))
 
-        np.savetxt(os.path.join(self.fpath, 'v%s_4_vs_pt.txt'%n), zip(pts,
-                   vn4_pion, vn4_kaon, vn4_proton, vn4_charged))
+        np.savetxt(os.path.join(self.fpath, 'v%s_4_vs_pt.txt'%n), list(zip(pts,
+                   vn4_pion, vn4_kaon, vn4_proton, vn4_charged)))
 
         print("v%s finished!"%n)
 
@@ -281,19 +287,16 @@ class mcspec(object):
 
 from subprocess import call, check_output
 
-def calc_vn(fpath, over_sampling=1000, make_plot=False):
+def calc_vn(fpath, over_sampling=1000, make_plot=False, viscous_on='true', decay='true'):
     cwd = os.getcwd()
     os.chdir('../build')
-    #call(['cmake', '..'])
-    #call(['make'])
-    cmd = ['./main', fpath, 'true', 'true', '%s'%over_sampling]
+    call(['cmake', '..'])
+    call(['make'])
+    cmd = ['./main', fpath, viscous_on, decay, '%s'%over_sampling]
 
     proc = check_output(cmd)
 
-    stio = fstring()
-    stio.write(proc)
-
-    mc = mcspec(stio.getvalue(), fpath=fpath)
+    mc = mcspec(proc.decode('utf-8'), fpath=fpath)
 
     mc.vn_vs_eta(make_plot = make_plot)
     mc.plot_vn_pt(n=4)
@@ -315,4 +318,4 @@ if __name__=='__main__':
     if len(sys.argv) == 2:
         fpath = sys.argv[1]
 
-    calc_vn(fpath, over_sampling=10000, make_plot=True)
+    calc_vn(fpath, over_sampling=10000, make_plot=True, viscous_on='false')
