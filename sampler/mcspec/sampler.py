@@ -2,7 +2,6 @@
 #author: lgpang
 #email: lgpang@qq.com
 #createTime: Tue 26 May 2015 17:51:18 CEST
-
 import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sym
@@ -10,6 +9,7 @@ import pandas as pd
 from common_plotting import smash_style
 import os
 from subprocess import call, check_output
+import cmath
 
 def get_dNdY(fpath, dat, pid=211, nsampling=2000, kind='Y'):
     rapidity_col = 4
@@ -62,16 +62,97 @@ def get_ptspec(fpath, dat, pid=211, nsampling=2000, kind='Y', rapidity_window=1.
     np.savetxt(fname, res)
     #return res[:, 0], res[:, 1]
 
+def get_event_planes(fpath, dat, pid=211, nsampling=2000, kind='Y',Ylo=3.3, Yhi=3.9, total_n=6):
+#    phi_p = np.arctan2(dat[:,1],dat[:,2])
+    rapidity_col = 4
+    if kind == 'Eta':
+        rapidity_col = 6
+    particle_type = (dat[:,5]==pid)
+    if pid == 'charged':
+        particle_type = (dat[:, 5]==dat[:, 5])
+
+    Yi = dat[particle_type, rapidity_col]
+    phi_p = np.arctan2(dat[particle_type,2], dat[particle_type,1])
+    pti = np.sqrt(dat[particle_type, 1]**2 + dat[particle_type, 2]**2) 
+
+    pti = pti[(Yi>Ylo)*(Yi<Yhi)]
+    phi_p = phi_p[(Yi>Ylo)*(Yi<Yhi)] 
+    d2N, pt, Phi = np.histogram2d(pti, phi_p, bins=50) 
+    dpt = pt[1:]-pt[:-1] 
+    dphi_p = Phi[1:]-Phi[:-1]
+    pt = 0.5*(pt[1:]+pt[:-1])
+    Phi = 0.5*(Phi[1:]+Phi[:-1]) 
+    
+    d2N=d2N.flatten()  
+    Phi = np.repeat(Phi,50)
+    
+    Vn = np.zeros(total_n+1)
+    event_plane = np.zeros(total_n+1)
+    total_vn = np.zeros(total_n+1, dtype=complex)
+    Norm = np.sum(d2N)
+    print('event_plane_window',Norm,pid)
+    for n in range(1, total_n+1):
+        total_vn[n] = (d2N * np.exp(1j*n*Phi)).sum()/float(Norm)
+        #for k in range(0, 50*50):
+        #    total_vn[n] += d2N[k]*np.exp(1j*n*Phi[k])/float(Norm)
+        Vn[n], event_plane[n]=cmath.polar(total_vn[n])
+        event_plane[n] /= float(n)
+    return event_plane
+
+def get_vn_pt(fpath, dat, pid=211, nsampling=2000, kind='Y',Ylo=-0.35, Yhi=0.35, Y_event_plane=[3.3, 3.9], total_n=6):
+    rapidity_col = 4
+    if kind == 'Eta':
+        rapidity_col = 6
+    particle_type = (dat[:, 5]==pid)
+    if pid == 'charged':
+        particle_type = (dat[:, 5]==dat[:, 5])
+
+    Yi = dat[particle_type, rapidity_col]
+    phi_p = np.arctan2(dat[particle_type,2], dat[particle_type,1])
+    pti = np.sqrt(dat[particle_type, 1]**2 + dat[particle_type, 2]**2)
+    pti = pti[np.abs(Yi)<Yhi]
+    phi_p = phi_p[np.abs(Yi)<Yhi]
+    d2N, pt, Phi = np.histogram2d(pti, phi_p, bins=50)
+    dpt = pt[1:]-pt[:-1]
+    dphi_p = Phi[1:]-Phi[:-1]
+    pt = 0.5*(pt[1:]+pt[:-1])
+    Phi = 0.5*(Phi[1:]+Phi[:-1])
+    
+    Vn_pt = np.zeros(shape=(50, total_n+1))
+    Vn_vec = np.zeros(shape=(50, total_n+1), dtype=complex)
+    angles = np.zeros(shape=(50, total_n+1))
+    event_plane = np.zeros(total_n+1)
+    Norm = 0
+    event_plane = get_event_planes(fpath,dat,pid,nsampling,kind, Ylo=Y_event_plane[0], Yhi=Y_event_plane[1])
+    for i in range(50):
+        norm_factor = np.sum(d2N[i,:])
+        if norm_factor>1e-2:
+            print('norm,pti',norm_factor,pt[i])
+            for n in range(1, 7):
+                Vn_vec[i, n] = (d2N[i]*np.exp(1j*n*(Phi-event_plane[n]))).sum()/float(norm_factor)
+                #  for k in range(0, 50):
+                #        Vn_vec[i, n-1] += d2N[i,k]*np.exp(1j*n*(Phi[k]-event_plane[n-1]))/float(norm_factor)
+                Vn_pt[i, n], angles[i, n]=cmath.polar(Vn_vec[i, n])
+        else:
+            Vn_vec[i,:] = 0
+            Vn_pt[i,:] = 0  
+    fout_name = os.path.join(fpath,'vn_mc_%s.dat'%pid)
+    np.savetxt(fout_name, np.array(list(zip(pt, Vn_pt[:,1],Vn_pt[:,2],Vn_pt[:,3],Vn_pt[:,4],Vn_pt[:,5], Vn_pt[:,6]))))
+
+
+
 def plot(fpath, particle_lists, nsampling):
     Y0, dNdY_charged = get_dNdY(fpath, particle_lists, pid='charged', nsampling=nsampling, kind='Eta')
-    #Y0, dNdY_pion = get_dNdY(fpath, particle_lists, pid=211, nsampling=nsampling, kind='Eta')
-    #Y0, dNdY_kaon = get_dNdY(fpath, particle_lists, pid=321, nsampling=nsampling, kind='Eta')
-    #Y0, dNdY_proton = get_dNdY(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Eta')
-
     get_ptspec(fpath, particle_lists, pid=211,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
     get_ptspec(fpath, particle_lists, pid=321,  nsampling=nsampling, kind='Y', rapidity_window=1.0)
     get_ptspec(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', rapidity_window=1.0)
     get_ptspec(fpath, particle_lists, pid='charged', nsampling=nsampling,  kind='Eta', rapidity_window=1.6)
+
+    get_vn_pt(fpath, particle_lists, pid=211, nsampling=nsampling, kind='Y', Ylo=-0.5, Yhi=0.5)
+    get_vn_pt(fpath, particle_lists, pid=321, nsampling=nsampling, kind='Y', Ylo=-0.5, Yhi=0.5)
+    get_vn_pt(fpath, particle_lists, pid=2212, nsampling=nsampling, kind='Y', Ylo=-0.5, Yhi=0.5)
+    get_vn_pt(fpath, particle_lists, pid='charged', nsampling=nsampling, kind='Y', Ylo=-0.5, Yhi=0.5)
+    
 
 
 
@@ -91,21 +172,17 @@ def main(fpath, viscous_on, force_decay, nsampling):
         from StringIO import StringIO as fstring
     except ImportError:
         # used in python 3.*
-        from io import BytesIO as fstring
+        #from io import BytesIO as fstring
+        from io import StringIO as fstring
 
-    #particle_lists = np.genfromtxt(fstring(proc))
+    fstr = fstring(str(proc, 'utf-8'))
 
-    particle_lists = pd.read_csv(fstring(proc), sep=' ', header=None, dtype=np.float32, comment='#').values
+    particle_lists = pd.read_csv(fstr, sep=' ', header=None,
+            dtype=np.float32, comment='#').values
 
-    print('particle list read in')
-
+    #print('particle list read in')
     #np.savetxt('mc_particle_list.txt', particle_lists)
-
-    print('particle list saved')
-
-    from mcspec import mcspec
-
-    #mcspec(fstring(proc))
+    #print('particle list saved')
 
     os.chdir(cwd)
 
