@@ -277,6 +277,8 @@ void Sampler::read_pdg_table(const std::string & fpath) {
             // store branch_ratios which is used to initialize one
             // discrete distribution function for each resonance
 
+            if(p.width < 1.0E-8)p.stable=1;
+
             for(int k=0; k<p.decays; k++){
                 fin >> dec.pidR >> dec.num_of_daughters
                     >> dec.branch_ratio
@@ -285,8 +287,9 @@ void Sampler::read_pdg_table(const std::string & fpath) {
                     >> dec.daughters[4];
 
                 dec.num_of_daughters = std::abs(dec.num_of_daughters);
-                // don't count if decay to itself
-                if ( dec.num_of_daughters != 1 ) {
+                // don't count if decay to itself or if it is stable
+                // notice that eta is stable, but it has 4 decay channels in pdg05.dat
+                if ((dec.num_of_daughters != 1)&&(!p.stable)) {
                     p.decay_channels.push_back(dec);
                     branch_ratios.push_back(dec.branch_ratio);
                 }
@@ -296,7 +299,6 @@ void Sampler::read_pdg_table(const std::string & fpath) {
 
             p.draw_decay = Random::discrete_dist<double>(branch_ratios);
 
-            if(p.width < 1.0E-8)p.stable=1;
             list_hadrons_.push_back(p);
         }
         fin.close();
