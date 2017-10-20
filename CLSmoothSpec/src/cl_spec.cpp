@@ -283,14 +283,18 @@ void Spec::ReadParticles(char * particle_data_table)
             if( fin.eof() ) break;
             CDecay dec;
 
+            if(p.width < 1.0E-8)p.stable=1;
+
+            /* one special case in pdg05.dat: eta with 4 decay channels,
+             * but its width is smaller than 1.0E-8 GeV */
             for(int k=0; k<p.decays; k++){
                 fin>>dec.pidR>>dec.numpart>>dec.branch>>dec.part[0] \
-                    >>dec.part[1]>> dec.part[2]>> dec.part[3]>> dec.part[4];
+                        >>dec.part[1]>> dec.part[2]>> dec.part[3]>> dec.part[4];
 
-                decay.push_back( dec );
+                if ((!p.stable) && (dec.numpart!=1)) {
+                    decay.push_back(dec);
+                }
             }
-            //if(nump1)p.stable=1;
-            if(p.width < 1.0E-8)p.stable=1;
             particles.push_back(p);
         }
         fin.close();
@@ -685,6 +689,13 @@ void Spec::AddReso(cl_int pidR, cl_int j, cl_int k, \
         std::vector<cl_real> & branch, std::vector<cl_real4> & mass , \
         std::vector<cl_int>  & resoNum,std::vector<cl_real > & h_norm3)
 {
+    /*in pdg05.dat, there are several decay channels for eta, while the
+     * decay width of eta is smaller than 1.0E-8 which is considered as
+     * stable particle. Thus the decays whose parents are stable particles
+     * should be exclued
+     */
+    if (particles[pidR].stable) return;
+
     cl_int4 m = (cl_int4) {   
         newpid[decay.at(j).part[0]],  
             newpid[decay.at(j).part[1]], 

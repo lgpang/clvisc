@@ -168,15 +168,17 @@ def main(fpath, viscous_on, force_decay, nsampling):
 
     proc = check_output(cmd)
 
+    fstr = None
     try:
         # used in python 2.*
         from StringIO import StringIO as fstring
+        fstr = fstring(str(proc))
     except ImportError:
         # used in python 3.*
         #from io import BytesIO as fstring
         from io import StringIO as fstring
+        fstr = fstring(str(proc, 'utf-8'))
 
-    fstr = fstring(str(proc, 'utf-8'))
 
     particle_lists = pd.read_csv(fstr, sep=' ', header=None,
             dtype=np.float32, comment='#').values
