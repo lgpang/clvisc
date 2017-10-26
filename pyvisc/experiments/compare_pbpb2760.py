@@ -80,10 +80,24 @@ def cmp_ptspec(path_to_results='', cent = ['0-5', '5-10', '10-20'], hadron='pion
     plt.savefig('pbpb2760_ptspec_%s.pdf'%hadron)
     plt.show()
 
-def cmp_v2_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_fig=True):
-    from pbpb2760 import V2
-    exp = V2()
-    
+def cmp_vn_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_fig=True, n=2):
+    exp = None
+
+    if n == 2:
+        from pbpb2760 import V2
+        exp = V2()
+    elif n == 3:
+        from pbpb2760 import V3
+        exp = V3()
+    elif n == 4:
+        from pbpb2760 import V4
+        exp = V4()
+    elif n == 5:
+        from pbpb2760 import V5
+        exp = V5()
+    else:
+        print("No such exp data")
+
     for c in cent:
         if c == '0-5':
             label0 = r'$ALICE$'
@@ -94,19 +108,19 @@ def cmp_v2_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_
         plt.errorbar(pt, vn, yerr=(yerr0, yerr1), label=label0, color='r')
         path = os.path.join(path_to_results, c.replace('-', '_'))
         vn_clvisc = ebe_mean(path, kind='vn', hadron='pion')
-        plt.plot(vn_clvisc[:, 0], vn_clvisc[:, 2], label = label1, color = 'k')
+        plt.plot(vn_clvisc[:, 0], vn_clvisc[:, n], label = label1, color = 'k')
 
         plt.text(2, vn[9]+0.01, c, fontsize=25)
 
     plt.xlabel(r'$p_T\ [GeV]$')
-    plt.ylabel(r'$v_2$')
+    plt.ylabel(r'$v_%s$'%n)
     smash_style.set(line_styles=False)
     plt.legend(loc='upper left')
     plt.tight_layout()
     plt.xlim(0, 2.5)
     plt.ylim(0.001, 0.3)
     plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV$', fontsize=30)
-    plt.savefig('pbpb2760_pionv2.pdf')
+    plt.savefig('pbpb2760_pionv%s.pdf'%n)
     plt.show()
 
 
@@ -178,6 +192,7 @@ if __name__=='__main__':
     #cmp_v2_pion(path)
 
 
-    path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/pbpb2p76_results_ampt/"
+    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/pbpb2p76_results_ampt/"
     #cmp_dndeta(path, cent=['0-5'])
-    cmp_v2_pion(path, cent=['0-5'], save_fig=False)
+    path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz100/"
+    cmp_vn_pion(path, cent=['0-5'], save_fig=False, n=2)
