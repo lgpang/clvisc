@@ -85,7 +85,6 @@ class PbPb2760(Vn_vs_eta):
 
         self.data = {}
         self.__parse()
-        print(self.data)
 
     def address(self):
         print("https://hepdata.net/record/ins1456145")
@@ -129,9 +128,9 @@ class PbPb2760(Vn_vs_eta):
         data = self.data[cent][vn_type].values
         eta = data[:, 0]
         vn = data[:, 1]
-        sta_err1 = data[:, 3]
+        sta_err1 = -data[:, 3]
         sta_err2 = data[:, 2]
-        sys_err1 = data[:, 5]
+        sys_err1 = -data[:, 5]
         sys_err2 = data[:, 4]
         return eta, vn, sta_err1, sta_err2, sys_err1, sys_err2
 
@@ -141,5 +140,5 @@ if __name__ == '__main__':
     cents = ['0-5', '5-10', '10-20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80']
     for cent in cents:
         data = vn_vs_eta.get(cent, 'v22')
-        plt.errorbar(data[0], data[1], yerr=(-data[4], data[5]), fmt='o')
+        plt.errorbar(data[0], data[1], yerr=(data[4], data[5]), fmt='o')
     plt.show()
