@@ -80,23 +80,9 @@ def cmp_ptspec(path_to_results='', cent = ['0-5', '5-10', '10-20'], hadron='pion
     plt.savefig('pbpb2760_ptspec_%s.pdf'%hadron)
     plt.show()
 
-def cmp_vn_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_fig=True, n=2):
-    exp = None
-
-    if n == 2:
-        from pbpb2760 import V2
-        exp = V2()
-    elif n == 3:
-        from pbpb2760 import V3
-        exp = V3()
-    elif n == 4:
-        from pbpb2760 import V4
-        exp = V4()
-    elif n == 5:
-        from pbpb2760 import V5
-        exp = V5()
-    else:
-        print("No such exp data")
+def cmp_vn_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_fig=True, n=2, kind='ampt'):
+    from pbpb2760 import Vn
+    exp = Vn(n=n)
 
     for c in cent:
         if c == '0-5':
@@ -120,10 +106,61 @@ def cmp_vn_pion(path_to_results, cent = ['0-5', '5-10', '10-20', '20-30'], save_
     plt.xlim(0, 2.5)
     plt.ylim(0.001, 0.3)
     plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV$', fontsize=30)
-    plt.savefig('pbpb2760_pionv%s.pdf'%n)
+    plt.savefig('figs/pbpb2760_pion_v%s.pdf'%n)
     plt.show()
 
 
+
+def cmp_v2_v3_v4(path_to_results, hadron='pion', cent =['0-5'], save_fig=True, ini='ampt'):
+    from pbpb2760 import Vn
+    v2_exp = Vn(n=2)
+    v3_exp = Vn(n=3)
+    v4_exp = Vn(n=4)
+    v5_exp = Vn(n=5)
+
+    label0 = r'$ALICE$'
+
+    for c in cent:
+        pt2, v2, v2_err0, v2_err1 = v2_exp.get_ptdiff(hadron, c)
+        pt3, v3, v3_err0, v3_err1 = v3_exp.get_ptdiff(hadron, c)
+        pt4, v4, v4_err0, v4_err1 = v4_exp.get_ptdiff(hadron, c)
+        pt5, v5, v5_err0, v5_err1 = v5_exp.get_ptdiff(hadron, c)
+
+        plt.errorbar(pt2, v2, yerr=(v2_err0, v2_err1), label=label0, fmt='ko', ms=10)
+        plt.errorbar(pt3, v3, yerr=(v3_err0, v3_err1), fmt='rs', ms=10)
+        plt.errorbar(pt4, v4, yerr=(v4_err0, v4_err1), fmt='b*', ms=10)
+        plt.errorbar(pt5, v5, yerr=(v5_err0, v5_err1), fmt='md', ms=10)
+        path = os.path.join(path_to_results, c.replace('-', '_'))
+        vn_clvisc = ebe_mean(path, kind='vn', hadron=hadron)
+        colors = ['k', 'r', 'b', 'm']
+        for n in [2, 3, 4, 5]:
+            label1 = None 
+            if n == 2: label1 = r'$CLVisc$'
+            plt.plot(vn_clvisc[:, 0], vn_clvisc[:, n], label = label1, color = colors[n-2])
+
+        plt.text(2.5, v2[10], r"$v_2$", fontsize=40, color='k')
+        plt.text(2.5, v3[10], r"$v_3$", fontsize=40, color='r')
+        plt.text(2.5, v4[10], r"$v_4$", fontsize=40, color='b')
+        plt.text(2.5, v5[10], r"$v_5$", fontsize=40, color='m')
+
+        plt.xlabel(r'$p_T\ [GeV]$')
+        if hadron == 'pion':
+            plt.ylabel(r'$v_n\ \mathrm{for}\ \pi^+$')
+        elif hadron == 'kaon':
+            plt.ylabel(r'$v_n\ \mathrm{for}\ K^+$')
+        elif hadron == 'proton':
+            plt.ylabel(r'$v_n\ \mathrm{for}\ proton$')
+        elif hadron == 'charged':
+            plt.ylabel(r'$v_n\ \mathrm{for}\ h^{\pm}$')
+
+        smash_style.set(line_styles=False)
+        plt.legend(loc='upper left', title=c+r'$\%$')
+        plt.tight_layout()
+        plt.xlim(0, 2.5)
+        plt.ylim(0.001, 1.3 * vn_clvisc[14, 2])
+        plt.title(r'$Pb+Pb\ \sqrt{s_{NN}}=2.76\ TeV$', fontsize=30)
+        plt.savefig('figs/pbpb2760_%s_%s_ini%s_vn.pdf'%(hadron, c.replace('-', '_'), ini))
+        plt.show()
 
 
 def ptspec_identify(path, cent='0_5', data_src=1):
@@ -173,7 +210,7 @@ def ptspec_identify(path, cent='0_5', data_src=1):
     plt.ylim(1.0E-2, 1.0E4)
     plt.tight_layout()
     plt.legend(loc='upper right')
-    plt.savefig('pbpb2760_ptspec_%s_identify.pdf'%cent)
+    plt.savefig('figs/pbpb2760_ptspec_%s_identify.pdf'%cent)
     plt.show()
 
 
@@ -186,13 +223,14 @@ if __name__=='__main__':
     #cmp_ptspec(path, cent=['0-5', '5-10', '10-20', '20-40', '40-60', '60-80'], hadron='pion')
     #cmp_ptspec(path, cent=['0-5', '5-10', '10-20', '20-40', '40-60', '60-80'], hadron='kaon')
     #cmp_ptspec(path, cent=['0-5', '5-10', '10-20', '20-40', '40-60', '60-80'], hadron='proton')
-    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz137/"
-    #cmp_v2_pion(path)
-    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz137/"
-    #cmp_v2_pion(path)
+    path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz137/"
+    #cmp_vn_pion(path, cent=['0-5', '5-10', '10-20', '20-30'], save_fig=False, n=5)
+    #cmp_v2_v3_v4(path, hadron='pion', cent=['0-5', '5-10', '10-20', '20-30'], ini='trento')
+    #cmp_v2_v3_v4(path, hadron='kaon', cent=['0-5', '5-10', '10-20', '20-30'], ini='trento')
+    cmp_v2_v3_v4(path, hadron='proton', cent=['0-5', '5-10', '10-20', '20-30'], ini='trento')
 
-
-    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/pbpb2p76_results_ampt/"
+    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/pbpb2p76_results_ampt/etas0p16/"
     #cmp_dndeta(path, cent=['0-5'])
-    path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz100/"
-    cmp_vn_pion(path, cent=['0-5'], save_fig=False, n=2)
+    #path = "/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results_pbpb2760_tfrz100/"
+    #cmp_vn_pion(path, cent=['0-5', '5-10', '10-20', '20-30'], save_fig=False, n=2)
+    #cmp_v2_v3_v4(path, hadron='pion', cent=['0-5', '5-10', '10-20', '20-30', '30-40', '40-50'], ini='ampt')
