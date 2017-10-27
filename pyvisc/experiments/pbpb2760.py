@@ -179,14 +179,36 @@ class dNdPt(object):
 ############# START  PT differential and pt integrated vn ############
 
 class Vn(object):
-    def __init__(self):
+    def __init__(self, n=2):
         self.pt_diff = {}
         self.pt_intg = {}
+        self.harmonic_order = n
         self.__parse()
 
     def __parse(self):
-        pass
-   
+        cent = ['0-1', '0-5', '5-10', '10-20', '20-30', '30-40', '40-50']
+        start_idx = 49 + 21 * (self.harmonic_order - 2)
+        table_pt_diff = {'pion':{c:'Table%s.csv'%(start_idx+idx) for idx, c in enumerate(cent)},
+                         'kaon':{c:'Table%s.csv'%(start_idx+7+idx) for idx, c in enumerate(cent)},
+                         'proton':{c:'Table%s.csv'%(start_idx+14+idx) for idx, c in enumerate(cent)}}
+
+        intg_start = 217 + 3 * (self.harmonic_order - 2)
+        table_pt_intg = {'pion':'Table%s.csv'%(intg_start),
+                         'kaon':'Table%s.csv'%(intg_start+1),
+                         'proton':'Table%s.csv'%(intg_start+2)}
+
+        base_path = os.path.join(os.getcwd(), 'data/pbpb2760_identified_v2_csv/')
+        for hadron_type in table_pt_diff:
+            vn_cent = {}
+            for cent in table_pt_diff[hadron_type]:
+                path = os.path.join(base_path, table_pt_diff[hadron_type][cent])
+                vn_cent[cent] = pd.read_table(path, sep=',', comment='#')
+            self.pt_diff[hadron_type] = vn_cent
+
+        for hadron_type in table_pt_intg:
+            path = os.path.join(base_path, table_pt_intg[hadron_type])
+            self.pt_intg[hadron_type] = pd.read_table(path, sep=',', comment='#')
+
     def address(self):
         print("https://hepdata.net/record/ins900651")
         # pt diff v2 of charged h, proton from ep with deta>2
@@ -229,36 +251,6 @@ class Vn(object):
         plt.errorbar(cent, intg, yerr=(err0, err1))
         plt.show()
 
-
-
-class V2(Vn):
-    def __init__(self):
-        self.pt_diff = {}
-        self.pt_intg = {}
-        self.__parse()
-
-    def __parse(self):
-        cent = ['0-1', '0-5', '5-10', '10-20', '20-30', '30-40', '40-50']
-        table_pt_diff = {'pion':{c:'Table%s.csv'%(49+idx) for idx, c in enumerate(cent)},
-                         'kaon':{c:'Table%s.csv'%(56+idx) for idx, c in enumerate(cent)},
-                         'proton':{c:'Table%s.csv'%(63+idx) for idx, c in enumerate(cent)}}
-
-        table_pt_intg = {'pion':'Table217.csv',
-                         'kaon':'Table218.csv',
-                         'proton':'Table219.csv'}
-
-        base_path = os.path.join(os.getcwd(), 'data/pbpb2760_identified_v2_csv/')
-        for hadron_type in table_pt_diff:
-            vn_cent = {}
-            for cent in table_pt_diff[hadron_type]:
-                path = os.path.join(base_path, table_pt_diff[hadron_type][cent])
-                vn_cent[cent] = pd.read_table(path, sep=',', comment='#')
-            self.pt_diff[hadron_type] = vn_cent
-
-        for hadron_type in table_pt_intg:
-            path = os.path.join(base_path, table_pt_intg[hadron_type])
-            self.pt_intg[hadron_type] = pd.read_table(path, sep=',', comment='#')
-
     def get_ptdiff(self, hadron='pion', cent='0-5'):
         '''return pt, v2, v2_err_low, v2_err_high '''
         dat = self.pt_diff[hadron][cent].values
@@ -275,55 +267,6 @@ class V2(Vn):
         plt.show()
 
 
-class V3(Vn):
-    def __init__(self):
-        self.pt_diff = {}
-        self.pt_intg = {}
-        self.__parse()
-
-    def __parse(self):
-        table_pt_intg = {'pion':'Table220.csv',
-                         'kaon':'Table221.csv',
-                         'proton':'Table222.csv'}
-
-        base_path = os.path.join(os.getcwd(), 'data/pbpb2760_identified_v2_csv/')
-        for hadron_type in table_pt_intg:
-            path = os.path.join(base_path, table_pt_intg[hadron_type])
-            self.pt_intg[hadron_type] = pd.read_table(path, sep=',', comment='#')
-
-
-class V4(Vn):
-    def __init__(self):
-        self.pt_diff = {}
-        self.pt_intg = {}
-        self.__parse()
-
-    def __parse(self):
-        table_pt_intg = {'pion':'Table223.csv',
-                         'kaon':'Table224.csv',
-                         'proton':'Table225.csv'}
-
-        base_path = os.path.join(os.getcwd(), 'data/pbpb2760_identified_v2_csv/')
-        for hadron_type in table_pt_intg:
-            path = os.path.join(base_path, table_pt_intg[hadron_type])
-            self.pt_intg[hadron_type] = pd.read_table(path, sep=',', comment='#')
-
-
-class V5(Vn):
-    def __init__(self):
-        self.pt_diff = {}
-        self.pt_intg = {}
-        self.__parse()
-
-    def __parse(self):
-        table_pt_intg = {'pion':'Table226.csv',
-                         'kaon':'Table227.csv',
-                         'proton':'Table228.csv'}
-
-        base_path = os.path.join(os.getcwd(), 'data/pbpb2760_identified_v2_csv/')
-        for hadron_type in table_pt_intg:
-            path = os.path.join(base_path, table_pt_intg[hadron_type])
-            self.pt_intg[hadron_type] = pd.read_table(path, sep=',', comment='#')
 
 
 if __name__ == '__main__':
@@ -333,6 +276,6 @@ if __name__ == '__main__':
     print(dndeta.y['0-5'])
     dndpt = dNdPt()
     #dndeta.plot()
-    v2 = V2()
-    v2.cite()
-    v2.plot_ptdiff_vs_cent()
+    v3 = Vn(n=3)
+    v3.cite()
+    v3.plot_ptdiff_vs_cent()
