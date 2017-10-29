@@ -78,7 +78,18 @@ class dNdEta(object):
 class dNdPt(object):
     def __init__(self):
         url = "https://hepdata.net/record/ins1377750?format=json"
-        info = HepData(url).json_data
+        saved_fname = "data/pbpb2760_dndpt.json"
+        if not os.path.exists(saved_fname):
+            self.json_data = HepData(url).json_data
+            with open(saved_fname, 'w') as fout:
+                json.dump(self.json_data, fout, sort_keys=True,
+                          indent=2)
+        else:
+            self.json_data = json_from_file(saved_fname)
+
+
+        #info = HepData(url).json_data
+        info = self.json_data
         self.json = {}
         #### pion = pion+ + pion-, kaon = kaon+ + kaon-, proton = p+ + p-
         self.json['pion'] = HepData(info['data_tables'][0]['data']['json']).json_data
