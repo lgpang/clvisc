@@ -37,11 +37,13 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     real rapidity = d_Y[k];
     real pt = d_Pt[l];
     real mt = sqrt(mass*mass + pt*pt); 
-    
-    //real dNdYPtdPtdPhi[NPHI] = {0.0f}; 
-    real dNdYPtdPtdPhi[NPHI];
+    real sfactor_to_fix_precision = 1.0E7;
+
+    double dNdYPtdPtdPhi[NPHI];
+    double c[NPHI];
     for ( int m = 0; m < NPHI; m++ ) {
-        dNdYPtdPtdPhi[m] = 0.0f;
+        dNdYPtdPtdPhi[m] = 0.0;
+        c[m] = 0.0;
     }
     
     while ( I < SizeSF ) {
@@ -62,7 +64,7 @@ __kernel void get_sub_dNdYPtdPtdPhi(
         real mtsinh = mt*sinh(rapidity-SF.s7);
         for(int m=0; m<NPHI; m++){
             real4 pmu = (real4)(mtcosh, -pt*d_CPhi[m], -pt*d_SPhi[m], -mtsinh);
-            real feq = 1.0f/( exp((real)((dot(pmu, umu)-muB)/Tfrz)) + fermi_boson );
+            double feq = 1.0f/( exp((real)((dot(pmu, umu)-muB)/Tfrz)) + fermi_boson );
 #ifdef VISCOUS_ON
             // TCOEFF = 1.0f/(2T^2 (e+P)) on freeze out hyper sf from compile options
             real p2pi_o_T2ep = TCOEFF*(pmu.s0*pmu.s0*pimn[0] + pmu.s3*pmu.s3*pimn[9] +
@@ -70,7 +72,7 @@ __kernel void get_sub_dNdYPtdPtdPhi(
                                (pmu.s1*pmu.s1*pimn[4] + 2*pmu.s1*pmu.s2*pimn[5] + pmu.s2*pmu.s2*pimn[7]) +
                                2.0f*pmu.s3*(pmu.s1*pimn[3] + pmu.s2*pimn[6]));
 
-            real df = feq*(1.0f - fermi_boson*feq)*p2pi_o_T2ep;
+            double df = feq*(1.0f - fermi_boson*feq)*p2pi_o_T2ep;
 
             // if |df| > 1, set df = sign(df) * df; this is learned from Chun Shen, VishNew
             // does not work when df < -feq.
@@ -79,7 +81,13 @@ __kernel void get_sub_dNdYPtdPtdPhi(
 
             feq += fabs(df) > feq ? sign(df)*feq*0.999f : df;
 #endif
-            dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq;
+            // KHan sum
+            real res = dof * dot(pmu, dsigma) * feq * sfactor_to_fix_precision;
+            real y = res - c[m];
+            real t = dNdYPtdPtdPhi[m] + y;
+            c[m] = (t - dNdYPtdPtdPhi[m]) - y;
+            dNdYPtdPtdPhi[m] = t;
+            //dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq * sfactor_to_fix_precision;
         }
         
         /** in units of GeV.fm^3 */
@@ -99,7 +107,7 @@ __kernel void get_sub_dNdYPtdPtdPhi(
         }
     
         if(tid == 0) d_SubSpec[k*NPT*NPHI*NBlocks + l*NPHI*NBlocks \
-               + m*NBlocks + get_group_id(0) ] = subspec[0];
+               + m*NBlocks + get_group_id(0) ] = subspec[0] / sfactor_to_fix_precision;
     }
 }
 

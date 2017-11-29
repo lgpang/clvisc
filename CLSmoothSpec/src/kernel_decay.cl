@@ -239,26 +239,7 @@ real dnpir2N (real phi, real costh, real w2, real y, real pt, real phi1, real m1
 
     double dnr = Edndp3( &yR, &ptR, &phiR, reso_num, d_Spec);
 
-    // jac = mr * sume*sume /D
-    //real result = dnr * jac * jac / (2.0 * sume * sume) ;
-    //real result = dnr * min(1.0E30, mr*mr*sume*sume/(D*D) * 0.5);
-
-    double jac_coef = mr*mr*sume*sume/(D*D)*0.5f;
-
-
-    if ( isfinite(jac_coef) && !isnan(jac_coef) ) jac_coef = min(1000.0, jac_coef);
-    else jac_coef = 0.0;
-
-    //if ( jac_coef > 1000.0 && dnr > 0.1 ) {
-    //   printf( "yr, ptr, phir=%f, %f, %f\n", yR, ptR, phiR );
-    //   printf( "dnr = %f\n", dnr );
-    //   printf( "jac = %f\n", jac_coef);
-    //   printf( "D = %f\n", D );
-    //   printf( "cosPhiR = %f\n", cphiR );
-    //   printf( "pidR = %d\n", reso_num );
-    //}
-
-    real result = isfinite(dnr) ? dnr*jac_coef : 0.0;
+    real result = dnr * jac * jac / (2.0 * sume * sume) ;
 
     if ( !isfinite(result) || isnan(result) || ptR > 10.0 ) {
        result = 0.0;

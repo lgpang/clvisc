@@ -139,9 +139,6 @@ class Spec
             std::vector<cl_real> &branch, std::vector<cl_real4> &mass , \
             std::vector<cl_int>  &resoNum,std::vector<cl_real > &norm3);
 
-    void get_dNdEtaPtdPtdPhi(cl_real mass, cl_real dNdYPtdPtdPhi[NY][NPT][NPHI], \
-            cl_real dNdEtaPtdPtdPhi[NY][NPT][NPHI]);
-
     public:
 
     cl_real Tfrz;
@@ -192,6 +189,9 @@ class Spec
     void InitGrid(const cl_int & Nrapidity, const cl_real& Ylo, const cl_real & Yhi);
 
     void CalcSpec();   /*!< Calc dNdYPtdPtdPhi for each particle */
+
+    void get_dNdEtaPtdPtdPhi(cl_real mass, cl_real dNdYPtdPtdPhi[NY][NPT][NPHI], \
+            cl_real dNdEtaPtdPtdPhi[NY][NPT][NPHI]);
 
     void ReadSpec();              /*!< Read dNdYPtdPtdPhi for each particle */
 

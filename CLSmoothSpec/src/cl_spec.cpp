@@ -56,7 +56,7 @@ Spec::Spec(const std::string & pathin, int viscous_on, int decay_on, int gpu_id)
     std::stringstream chemical_potential_datafile;
     chemical_potential_datafile<<pathin<<"/chemical_potential.dat";
     ReadMuB(chemical_potential_datafile.str());
-
+    InitGrid(41, -8, 8);
     // ReadParticles must be after ReadMuB()
     char particleDataTable[256] = "../Resource/pdg05.dat";
     ReadParticles( particleDataTable );
@@ -296,6 +296,7 @@ void Spec::ReadParticles(char * particle_data_table)
                 }
             }
             particles.push_back(p);
+            h_HadronInfo.push_back((cl_real4){p.mass, p.gspin, p.baryon?1.0f:-1.0f, muB[p.monval]});
         }
         fin.close();
     } else{
@@ -310,7 +311,6 @@ void Spec::ReadParticles(char * particle_data_table)
         /** If unstable, pt range 0-8; if stable, pt range 0-4 */
         //cl_real resizePtRange = particles[i].stable ? 1.0 : 1.0 ;
         cl_real chem = muB[ particles[i].monval ];
-        h_HadronInfo.push_back( (cl_real4){particles[i].mass, particles[i].gspin, particles[i].baryon?1.0f:-1.0f, chem} );
 
         if (particles[i].baryon) {
             antiB.monval = -particles[i].monval;
@@ -329,8 +329,8 @@ void Spec::ReadParticles(char * particle_data_table)
             antiB.stable=particles[i].stable;
             antiB.antibaryon_spec_exists = 1;
             particles.push_back(antiB);
-
             h_HadronInfo.push_back( (cl_real4){antiB.mass, antiB.gspin, antiB.baryon?1.0f:-1.0f, chem} );
+            std::cout << antiB.mass << " " << antiB.gspin << " " << antiB.baryon << " " << chem << std::endl;
         }
     }
 
@@ -343,15 +343,6 @@ void Spec::ReadParticles(char * particle_data_table)
     std::cout<<"newpid of pion = "<<newpid[ 211 ]<<std::endl;
     std::cout<<"newpid of proton = "<<newpid[ 2212 ]<<std::endl;
     std::cout<<"newpid of -13334 = "<<newpid[ -13334 ]<<std::endl;
-
-    //    for( int i = 0; i< decay.size(); i++ ){
-    //        std::cout<<"decay: "<<decay.at(i).pidR<<"->"<<decay.at(i).part[0] <<"+" \
-    //            <<decay.at(i).part[1] <<"+" \
-    //            <<decay.at(i).part[2] <<"+" \
-    //            <<decay.at(i).part[3] <<"\n" ;
-    //
-    //    }
-
 }
 
 
@@ -430,7 +421,7 @@ void Spec::initializeCL()
         kernel_decay3 = cl::Kernel( programs.at(1), "decay_3body" );
         kernel_sumdecay = cl::Kernel( programs.at(1), "sumResoDecay" );
 
-        InitGrid( NY, -8.0, 8.0 );
+        //InitGrid( NY, -8.0, 8.0 );
 
         h_Spec.resize( NY*NPT*NPHI );
 
@@ -574,12 +565,11 @@ void Spec::CalcSpec()
 #ifdef  LOEWE_CSC
                 for(int id_Y_Pt_Phi=0; id_Y_Pt_Phi<NY*NPT; id_Y_Pt_Phi++){
                     cl::Event event;
-
-                   if (viscous_on_) {
-                        kernel_subspec.setArg(9, id_Y_Pt_Phi);
-                   } else {
-                        kernel_subspec.setArg(8, id_Y_Pt_Phi);
-                   }
+                    if (viscous_on_) {
+                         kernel_subspec.setArg(9, id_Y_Pt_Phi);
+                    } else {
+                         kernel_subspec.setArg(8, id_Y_Pt_Phi);
+                    }
                     queue.enqueueNDRangeKernel(kernel_subspec, cl::NullRange, \
                             globalSize, localSize, NULL, &event);
                     event.wait();
@@ -587,7 +577,7 @@ void Spec::CalcSpec()
                 }
 #else
                 cl::Event event;
-                queue.enqueueNDRangeKernel( kernel_subspec, cl::NullRange, \
+                queue.enqueueNDRangeKernel(kernel_subspec, cl::NullRange, \
                         globalSize, localSize, NULL, &event);
                 event.wait();
                 excution_time_step1 += excutionTime(event);
@@ -626,8 +616,7 @@ void Spec::CalcSpec()
                 event2.wait();
             }
 
-            // Only output pion, kaon and proton before resonance decay
-            if ( monval == 211 || monval == 321 || monval == 2212 || monval == 999) {
+            if (monval == 211 || monval == 321 || monval == 2212 || monval == 999) {
                 queue.enqueueReadBuffer(d_Spec, CL_TRUE, pid*NY*NPT*NPHI*sizeof(cl_real),
                         NY*NPT*NPHI*sizeof(cl_real), h_Spec.data() );
                 for ( int i = 0; i < NY; i++ ) 
@@ -723,6 +712,9 @@ void Spec::AddReso(cl_int pidR, cl_int j, cl_int k, \
                 m2 -= 0.5  * particles[m.s[1]].width;
             }
             mass.push_back( (cl_real4){mr, m1, m2, 0.0} );
+            std::cout << "===== " << particles[pidR].name << "  ->  "\
+                      << particles[m.s[0]].name \
+                      << "  +  " << particles[m.s[1]].name << std::endl;
             break;
         case 3:
             m3 = particles[ m.s[2] ].mass;  
@@ -732,6 +724,10 @@ void Spec::AddReso(cl_int pidR, cl_int j, cl_int k, \
             d = (m2 - m3) * (m2 - m3);
             h_norm3.push_back( norm3(mr, a, b, c, d) );
             mass.push_back( (cl_real4){mr, m1, m2, m3} );
+            std::cout << "===== " << particles[pidR].name << "  ->  " << particles[m.s[0]].name \
+                      << "  +  " << particles[m.s[1]].name \
+                      << "  +  " << particles[m.s[2]].name \
+                      << std::endl;
             break;
         case 4:
             m3 = particles[ m.s[2] ].mass;  
@@ -743,6 +739,11 @@ void Spec::AddReso(cl_int pidR, cl_int j, cl_int k, \
             d = (m2 - m3) * (m2 - m3);
             h_norm3.push_back( norm3(mr, a, b, c, d) );
             mass.push_back( (cl_real4){mr, m1, m2, m3} );
+            std::cout << "===== " << particles[pidR].name << "  ->  " << particles[m.s[0]].name \
+                      << "  +  " << particles[m.s[1]].name \
+                      << "  +  " << particles[m.s[2]].name \
+                      << "  +  " << particles[m.s[3]].name \
+                      << std::endl;
             break;
         default:
             std::cout<<"#"<<abs(decay.at(j).numpart)<<" body decay is not implemented yet\n";
@@ -764,11 +765,11 @@ void Spec::getDecayInfo( cl_int pid, cl_int nbody, \
     cl_int pidR, pidAR;
     switch( particles[pid].baryon ){
         case 1:
-            for( int j=0; j<decay.size(); j++ )
-            {
+            for( int j=0; j<decay.size(); j++ ) {
                 dec = decay.at(j);
                 for( int k=0; k<abs(dec.numpart); k++ ){
                     if( (abs(dec.numpart) == nbody) && (newpid[dec.part[k]]==pid) ){
+                        std::cout << "For *->baryon decays: ";
                         AddReso( newpid[dec.pidR], j, k, branch, mass, resoNum, h_norm3 );
                     }
                 }
@@ -776,19 +777,18 @@ void Spec::getDecayInfo( cl_int pid, cl_int nbody, \
             break;
         case -1:
             /** There is no antibaryon decay in decay table, use baryon decay info*/
-            for( int j=0; j<decay.size(); j++ )
-            {
+            for( int j=0; j<decay.size(); j++ ) {
                 dec = decay.at(j);
                 for( int k=0; k<abs(dec.numpart); k++ ){
                     if( (abs(dec.numpart) == nbody) && ( newpid[-dec.part[k]]==pid ) ){
+                        std::cout << "For *->anti-baryon decays: ";
                         AddReso( newpid[-dec.pidR], j, k, branch, mass, resoNum, h_norm3 );
                     }
                 }
             }
             break;
         case 0:
-            for( int j=0; j<decay.size(); j++ )
-            {
+            for( int j=0; j<decay.size(); j++ ) {
                 dec = decay.at(j);
                 pidR =  newpid[ dec.pidR];
                 for( int k=0; k<abs(dec.numpart); k++ ){
@@ -797,20 +797,23 @@ void Spec::getDecayInfo( cl_int pid, cl_int nbody, \
                         if( (particles[pid].charge==0) && (particles[pid].strange==0) )
                         {
                             if( (abs(dec.numpart) == nbody) && ( newpid[dec.part[k]]==pid ) ){
+                                std::cout << "For (anti)baryon->(charge=0,s=0) meson decays: ";
                                 AddReso( pidR, j, k, branch, mass, resoNum , h_norm3);
                                 AddReso( pidAR, j, k, branch, mass, resoNum , h_norm3);
                             }
-                        }
-                        else{
+                        } else{
                             if( (abs(dec.numpart) == nbody) && ( newpid[dec.part[k]]==pid ) ){
+                                std::cout << "For baryon->(charge!=0 or s!=0) meson decays: ";
                                 AddReso( pidR, j, k, branch, mass, resoNum , h_norm3);
                             }
                             if( (abs(dec.numpart) == nbody) && ( newpid[-dec.part[k]]==pid ) ){
+                                std::cout << "For anti-baryon->(charge!=0 or s!=0) meson decays: ";
                                 AddReso( pidAR, j, k, branch, mass, resoNum , h_norm3);
                             }
                         }
                     } else{
                         if( (abs(dec.numpart) == nbody) && ( newpid[dec.part[k]]==pid ) ){
+                            std::cout << "For meson->meson decays: ";
                             AddReso( pidR, j, k, branch, mass, resoNum , h_norm3);
                         }
                     }
@@ -865,9 +868,10 @@ void Spec::ResoDecay()
             h_resoNum.clear();
             h_mass.clear();
             h_branch.clear();
+            std::cout << "Start *->" << particles[pid].name << " decays" << std::endl;
+
             getDecayInfo( pid, 2, h_branch, h_mass, h_resoNum, h_norm3 );
             nchannels = h_resoNum.size() ;
-
             if( nchannels > 0 ){
                 d_resoNum = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, nchannels*sizeof(cl_int), h_resoNum.data() ); //global memory
                 d_mass = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, nchannels*sizeof(cl_real4), h_mass.data() ); //global memory
@@ -885,7 +889,7 @@ void Spec::ResoDecay()
                         cl::NDRange(nchannels * BSZ), cl::NDRange(BSZ), NULL, &event);
                 event.wait();
 
-                std::cout<<"#"<<pid<<"2body decay costs: "<<excutionTime( event )<<std::endl;
+                std::cout<<"#2body decay costs: "<<excutionTime( event )<<std::endl;
                 decayTimeGpu += excutionTime( event ) ; 
 
                 kernel_sumdecay.setArg( 0, d_Decay );
@@ -899,7 +903,6 @@ void Spec::ResoDecay()
                 event1.wait();
             }
 
-            std::cout<<pid<<"# 2 body decay finished \n";
 
 
             h_resoNum.clear();
@@ -909,7 +912,7 @@ void Spec::ResoDecay()
             getDecayInfo( pid, 3, h_branch, h_mass, h_resoNum, h_norm3 );
             getDecayInfo( pid, 4, h_branch, h_mass, h_resoNum, h_norm3 );
             nchannels = h_resoNum.size() ;
-            if( nchannels > 0 ){
+            if( nchannels > 0 ) {
                 d_resoNum = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, nchannels*sizeof(cl_int), h_resoNum.data() ); //global memory
                 d_mass = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, nchannels*sizeof(cl_real4), h_mass.data() ); //global memory
                 d_branch = cl::Buffer( context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, nchannels*sizeof(cl_real), h_branch.data() ); //global memory
@@ -928,7 +931,7 @@ void Spec::ResoDecay()
                         cl::NDRange(nchannels * BSZ), cl::NDRange(BSZ), NULL, &event);
                 event.wait();
 
-                std::cout<<"#"<<pid<<"3body decay costs: "<<excutionTime( event )<<std::endl;
+                std::cout<<"#3body decay costs: "<<excutionTime( event )<<std::endl;
                 decayTimeGpu += excutionTime( event ) ; 
 
                 kernel_sumdecay.setArg( 0, d_Decay );
@@ -937,16 +940,14 @@ void Spec::ResoDecay()
                 kernel_sumdecay.setArg( 3, pid );
 
                 cl::Event event1;
-                queue.enqueueNDRangeKernel( kernel_sumdecay, cl::NullRange, \
+                queue.enqueueNDRangeKernel(kernel_sumdecay, cl::NullRange, \
                         cl::NDRange(NY*NPT*NPHI), cl::NullRange, NULL, &event1);
                 event1.wait();
-
             }
 
-            std::cout<<pid<<" 3 body decay finished \n";
 
-            if ( particles.at( pid ).stable ){
-                queue.enqueueReadBuffer( d_Spec, CL_TRUE, pid*NY*NPT*NPHI*sizeof(cl_real), NY*NPT*NPHI*sizeof(cl_real), h_Spec.data() );
+            if ( particles.at(pid).stable ){
+                queue.enqueueReadBuffer(d_Spec, CL_TRUE, pid*NY*NPT*NPHI*sizeof(cl_real), NY*NPT*NPHI*sizeof(cl_real), h_Spec.data());
                 cl_int monval = particles[pid].monval;
                 for ( int i = 0; i < NY; i++ ) 
                     for ( int j = 0; j < NPT; j++ ) 
