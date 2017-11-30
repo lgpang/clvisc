@@ -435,7 +435,6 @@ namespace {
         particle_dist_.resize(0);
         for ( auto & particle_type : list_hadrons_ ) {
             double baryon_chemical_potential = particle_type.mu_B;
-            //double baryon_chemical_potential = 0.0;
             // determine fermi-dirac or bose-einstein distribution
             double baryon_meson_factor = -1.0;
             if ( particle_type.baryon != 0 ) {
@@ -567,14 +566,14 @@ namespace {
                                         freezeout_temperature_, baryon_chemical_potential,
                                         fermion_boson_factor);
                             weight_visc *= (1.0 + (1.0 - f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
-                            weight_visc /= (1.0 + (1.0 - f0)*p0_star*p0_star*ele.pimn_max*one_over_2TsqrEplusP_);
+                            weight_visc /= (1.0 + std::abs(1.0 - f0)*p0_star*p0_star*ele.pimn_max*one_over_2TsqrEplusP_);
                         } else {
                             fermion_boson_factor = -1.0;
                             f0 = juttner_distribution_func(pmag, mass, \
                                         freezeout_temperature_, baryon_chemical_potential,
                                         fermion_boson_factor);
                             weight_visc *= (1.0 + (1.0 + f0)*pmu_pnu_pimn*one_over_2TsqrEplusP_);
-                            weight_visc /= (1.0 + (1.0 + f0)*p0_star*p0_star*
+                            weight_visc /= (1.0 + std::abs(1.0 + f0)*p0_star*p0_star*
                                     ele.pimn_max*one_over_2TsqrEplusP_);
                         }
                     }
