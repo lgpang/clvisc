@@ -13,9 +13,9 @@ Edmax =  30.0
 SQRTS = 200.0
 
 ## for Au (number of nucleons)
-A = 197
+NumOfNucleons = 197
 ## for Pb
-#A = 208                
+#NumOfNucleons = 208                
 # with which the woodsaxon integrate = 197
 NucleonDensity = 0.17 
 ## radius of the Au nucleus

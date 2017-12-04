@@ -502,7 +502,7 @@ def main():
     cfg.DZ = 0.08
     cfg.ImpactParameter = 7.54
 
-    cfg.A = 208
+    cfg.NumOfNucleons = 208
     cfg.Ra = 6.62
     cfg.Edmax = 30
     cfg.Eta = 0.546
@@ -547,8 +547,17 @@ def main():
     print('finished. Total time: {dtime}'.format(dtime = t1-t0), file=sys.stdout)
 
     from subprocess import call
-    call(['python', './spec.py', cfg.fPathOut])
 
+    # get particle spectra from MC sampling and force decay
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "true", "--reso_decay", "true", "--nsampling", "2000",
+      '--mode', 'mc'])
+
+     # calc the smooth particle spectra
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "true", "--reso_decay", "true", 
+      '--mode', 'smooth'])
+ 
 
 if __name__ == '__main__':
     main()

@@ -27,7 +27,7 @@ def write_config(configs, comments=''):
         Config.set('path', 'fPathOut', configs.fPathOut)
         Config.add_section('glauber')
         Config.set('glauber', 'Edmax', str(configs.Edmax))
-        Config.set('glauber', 'A', str(configs.A))
+        Config.set('glauber', 'NumOfNucleons', str(configs.NumOfNucleons))
         Config.set('glauber', 'SQRTS', str(configs.SQRTS))
         Config.set('glauber', 'NucleonDensity', str(configs.NucleonDensity))
         Config.set('glauber', 'Ra', str(configs.Ra))
@@ -87,7 +87,7 @@ def read_config():
     config['Edmax'] = (_parser.getfloat( 'glauber', 'Edmax'),
             'maximum energy density for most central collisions')
 
-    config['A'] = (_parser.getfloat( 'glauber', 'A'),
+    config['NumOfNucleons'] = (_parser.getfloat( 'glauber', 'NumOfNucleons'),
             'Number of nucleons, A=197 for Au; A=208 for Pb')
 
     config['SQRTS'] = (_parser.getfloat( 'glauber', 'SQRTS'),

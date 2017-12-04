@@ -38,12 +38,12 @@ def glueball(Tmax = 0.6, outdir = '../results/event0', IEOS=3):
     cfg.DX = 0.08
     cfg.DY = 0.08
 
-    #cfg.A = 208
+    #cfg.NumOfNucleons = 208
     #cfg.Ra = 6.62
     #cfg.Eta = 0.546
     #cfg.Si0 = 6.4
 
-    cfg.A = 197
+    cfg.NumOfNucleons = 197
     cfg.Ra = 6.4
     cfg.Eta = 0.546
     cfg.Si0 = 4.0
@@ -125,7 +125,7 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
     cfg.DX = 0.08
     cfg.DY = 0.08
     cfg.ntskip = 50
-    cfg.A = 1
+    cfg.NumOfNucleons = 1
     cfg.Ra = 0.8
     cfg.Eta = 0.6
     cfg.Si0 = 6.4

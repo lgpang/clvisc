@@ -73,7 +73,7 @@ class Glauber(object):
     def __loadAndBuildCLPrg(self, ctx, cfg):
         #load and build *.cl programs with compile self.gpu_defines
         glauber_defines = list(self.gpu_defines)
-        glauber_defines.append('-D {key}={value:f}f'.format(key='NumOfNucleons', value=cfg.A))
+        glauber_defines.append('-D {key}={value:f}f'.format(key='NumOfNucleons', value=cfg.NumOfNucleons))
         glauber_defines.append('-D {key}={value:f}f'.format(key='SQRTS', value=cfg.SQRTS))
         glauber_defines.append('-D {key}={value:f}f'.format(key='Ro0', value=cfg.NucleonDensity))
         glauber_defines.append('-D {key}={value:f}f'.format(key='R', value=cfg.Ra))

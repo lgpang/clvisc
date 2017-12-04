@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='Input parameters for hydrodynamic 
 #### system setups
 parser.add_argument('--riemann_test', nargs='?', const=1, type=bool, default=False, help='true to switch on riemann test for expansion to vacuum problem')
 parser.add_argument('--gubser_visc_test', nargs='?', const=1, type=bool, default=False, help='true to switch to 2nd order gubser visc test')
-parser.add_argument('--pimn_omega_coupling', nargs='?', const=1, type=bool, default=False, help='true to switch on pi^{mu nu} and vorticity coupling term')
+parser.add_argument('--pimn_omega_coupling', nargs='?', const=1, type=bool, default=False, help='true to switch on pi{mu nu} and vorticity coupling term')
 parser.add_argument('--omega_omega_coupling', nargs='?', const=1, type=bool, default=False, help='true to switch on vorticity and vorticity coupling term')
 parser.add_argument('--use_float32', nargs='?', const=1, type=bool, default=True, help='true for float and false for double precision')
 parser.add_argument('--save_to_hdf5', nargs='?', const=1, type=bool, default=True, help='true to save bulkinfo to hdf5 file, otherwise save to .txt file')
@@ -37,7 +37,7 @@ parser.add_argument('--fPathOut', default='../results/auau200_cent0_5', help='Th
 parser.add_argument('--fPathIni', help='The absolute path for initial conditions')
 #### if choice == 'Glauber', set parameters for optical Glauber model
 parser.add_argument('--Edmax', type=float, default=55.0, help='maximum energy density for most central collisions')
-parser.add_argument('--A', type=float, default=197.0,  help='Number of nucleons, A=197 for Au; A=208 for Pb')
+parser.add_argument('--NumOfNucleons', type=float, default=197.0,  help='Number of nucleons, A=197 for Au; A=208 for Pb')
 parser.add_argument('--SQRTS', type=float, default=200,  help='Beam energy in units of GeV/n; e.g. Au+Au 200 GeV SQRTS=200; Pb+Pb 2760 GeV, SQRTS=2760')
 parser.add_argument('--NucleonDensity', type=float, default=0.17, help='With which the woods-saxon integration = 197 for A=197')
 parser.add_argument('--Ra', type=float, default=6.38, help='Radius of the nucleus, Ra=6.38 for Au and 6.62 for Pb')
@@ -45,9 +45,9 @@ parser.add_argument('--Eta', type=float, default=0.535, help='Woods-Saxon tail p
 parser.add_argument('--Si0', type=float, default=4.0, help='Cross section for A+A collisions; 4.0 fm^2 for Au+Au 200 GeV and 6.4 fm^2 for Pb+Pb 30TeV')
 parser.add_argument('--CentralityType', default='ImpactParameter', choices=['CentralityRange', 'ImpactParameter'],
                     help='Choose centrality range or impact parameter to determine the centrality in optical Glauber model')
-parser.add_argument('--ImpactParameter', type=float, default=2.4, help='average impact parameter for one centrality bin. 2.4 for 0-5% Au+Au collisions')
+parser.add_argument('--ImpactParameter', type=float, default=2.4, help='average impact parameter for one centrality bin. 2.4 for 0-5 Au+Au collisions')
 parser.add_argument('--CentralityRange', default='0_5', help='Using CentralityRange to determine centralities in optical Glauber model')
-parser.add_argument('--Hwn', type=float, default=0.95, help='dNdY \propto Hwn*Npart + (1-Nwn)*Nbinary')
+parser.add_argument('--Hwn', type=float, default=0.95, help='dNdY propto Hwn*Npart + (1-Nwn)*Nbinary')
 parser.add_argument('--Eta_flat', type=float, default=2.95, help='The width of the plateau along etas at mid rapidity')
 parser.add_argument('--Eta_gw', type=float, default=0.5, help='the gaussian fall off width at large etas where fabs(etas)>Eta_flat/2')
 
@@ -64,7 +64,7 @@ parser.add_argument('--nxskip', type=int, default=3, help='Do output every nxski
 parser.add_argument('--nyskip', type=int, default=3, help='Do output every nyskip cells along y')
 parser.add_argument('--nzskip', type=int, default=3, help='Do output every nzskip cells along eta_s')
 parser.add_argument('--TAU0', type=float, default=0.4, help='Initial equilibrium time when hydro starts')
-parser.add_argument('--IEOS', default=2, choices=[0, 1, 2, 3, 5], help='''Equation of state, 0: ideal gas p=e/3; 1: s95p_PCE lattice QCD EoS 2: WB2014 lattice QCD EoS.
+parser.add_argument('--IEOS', default=1, choices=[0, 1, 2, 3, 5], help='''Equation of state, 0: ideal gas p=e/3; 1: s95p_PCE lattice QCD EoS 2: WB2014 lattice QCD EoS.
 3: Pure SU3 glue EoS. 5: EOSQ = with first order phase transition''')
 parser.add_argument('--TFRZ', type=float, default=0.137, help='Freeze out temperature')
 #### parametrization for temperature dependent eta/s
