@@ -7,6 +7,8 @@ from subprocess import call
 import pandas as pd
 import os
 import numpy as np
+import reader
+from rotate import rotate
 
 __cwd__, __cwf__ = os.path.split(__file__)
 
@@ -33,7 +35,7 @@ class Collision(object):
 
     def create_ini(self, cent, output_path,
                    grid_max=15.0, grid_step=0.1, num_of_events=1,
-                   one_shot_ini=False):
+                   one_shot_ini=False, align_for_oneshot=False):
         smin, smax = self.get_smin_smax(cent)
         call(['trento', self.config['projectile'],
               self.config['target'],
@@ -49,11 +51,19 @@ class Collision(object):
             ngrid = int(2 * grid_max / grid_step)
             sxy = np.zeros((ngrid, ngrid), dtype=np.float32)
             events = os.listdir(output_path)
-            num_of_events = len(events)
+            print(events)
+            num_of_events = 0
             for event in events:
-                dat = np.loadtxt(os.path.join(output_path, event)).reshape(ngrid, ngrid)
-                sxy += dat / float(num_of_events)
-            np.savetxt(os.path.join(output_path, "one_shot_ini.dat"), sxy, header=cent)
+                try:
+                    fname = os.path.join(output_path, event)
+                    dat = np.loadtxt(fname).reshape(ngrid, ngrid)
+                    opt = reader.get_comments(fname)
+                    sd_new = rotate(dat, opt['ixcm'], opt['iycm'], opt['phi_2'])
+                    sxy += sd_new 
+                    num_of_events += 1
+                except:
+                    print(fname, 'is not a trento event')
+            np.savetxt(os.path.join(output_path, "one_shot_ini.dat"), sxy/num_of_events, header=cent)
 
 
 class AuAu200(Collision):
@@ -84,9 +94,15 @@ class PbPb5020(Collision):
                   'centrality_file':'pbpb5020_cent.csv'}
         super(PbPb5020, self).__init__(config)
 
- 
+class XeXe5440(Collision):
+    def __init__(self):
+        config = {'projectile':'Xe',
+                  'target':'Xe',
+                  'cross_section':7.1,
+                  'centrality_file':'xexe5440_cent.csv'}
+        super(XeXe5440, self).__init__(config)
+
+
 if __name__=='__main__':
-    auau200 = AuAu200()
-    #auau200.create_ini('0_6', './dat', num_of_events=100, one_shot_ini=True)
-    print(auau200.get_smin_smax('0_6'))
-    print(auau200.get_smin_smax('6_15'))
+    xexe = XeXe5440()
+    xexe.create_ini('0_6', './dat', num_of_events=100, one_shot_ini=True)
