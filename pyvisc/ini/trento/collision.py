@@ -58,7 +58,7 @@ class Collision(object):
                     fname = os.path.join(output_path, event)
                     dat = np.loadtxt(fname).reshape(ngrid, ngrid)
                     opt = reader.get_comments(fname)
-                    sd_new = rotate(dat, opt['ixcm'], opt['iycm'], opt['phi_2'])
+                    sd_new = rotate(dat, opt['ixcm'], opt['iycm'], opt['phi_2'], ngrid, ngrid)
                     sxy += sd_new 
                     num_of_events += 1
                 except:
