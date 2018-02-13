@@ -85,6 +85,7 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
             collision = PbPb2760()
             scale_factor = 128.0
         elif system == 'pbpb5020':
+            cfg.Eta_flat = 2.2
             collision = PbPb5020()
             scale_factor = 151.0
 
