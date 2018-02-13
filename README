@@ -1,3 +1,26 @@
+= CLVisc: a (3+1)D viscous hydrodynamic program parallelized on GPU using OpenCL =
+
+The program is used to simulate the evolution of strongly coupled quark gluon plasma produced in relativistic heavy ion collisions.
+Please cite the following paper if you used CLVisc for publications or reused part of its code,
+
+Pseudorapidity distribution and decorrelation of anisotropic flow within CLVisc hydrodynamics
+Authors: Long-gang Pang, Hannah Petersen, Xin-Nian Wang
+
+    Copyright (C) 2018, Long-Gang Pang
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    
 ==Installation==
 1. Install OpenCL
    (1) For MacBook Pro, OpenCL is supported by default, skip this step.
