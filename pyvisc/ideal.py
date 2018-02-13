@@ -341,7 +341,7 @@ def main():
     from config import cfg, write_config
     #import pandas as pd
     print('start ...')
-    cfg.IEOS = 2
+    cfg.IEOS = 1
     cfg.NX = 201
     cfg.NY = 201
     cfg.NZ = 105
