@@ -29,6 +29,7 @@ Authors: Long-gang Pang, Hannah Petersen, Xin-Nian Wang
    (4) For super cluster with GPUs, ask the IT-help people for the OpenCL/Cuda support.
 
 2. Download and install the latest Anaconda from https://www.continuum.io/downloads
+   Important: please choose Python2.7 (although most of the code work well with Python3.*)
   
 3. Install PyOpenCL
    `conda install -c conda-forge pyopencl`
