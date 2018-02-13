@@ -22,6 +22,11 @@ Authors: Long-gang Pang, Hannah Petersen, Xin-Nian Wang
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
     
 ==Installation==
+
+First of all, get CLVisc using: 
+
+   git clone https://gitlab.com/snowhitiger/PyVisc.git
+
 1. Install OpenCL
    (1) For MacBook Pro, OpenCL is supported by default, skip this step.
    (2) For Linux using Nvidia GPU, install CUDA -- Shipped with OpenCL. url: https://developer.nvidia.com/cuda-downloads
