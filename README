@@ -3,8 +3,16 @@
 The program is used to simulate the evolution of strongly coupled quark gluon plasma produced in relativistic heavy ion collisions.
 Please cite the following paper if you used CLVisc for publications or reused part of its code,
 
-Pseudorapidity distribution and decorrelation of anisotropic flow within CLVisc hydrodynamics
-Authors: Long-gang Pang, Hannah Petersen, Xin-Nian Wang
+@article{Pang:2018zzo,
+      author         = "Pang, Long-Gang and Petersen, Hannah and Wang, Xin-Nian",
+      title          = "{Pseudorapidity distribution and decorrelation of
+                        anisotropic flow within CLVisc hydrodynamics}",
+      year           = "2018",
+      eprint         = "1802.04449",
+      archivePrefix  = "arXiv",
+      primaryClass   = "nucl-th",
+      SLACcitation   = "%%CITATION = ARXIV:1802.04449;%%"
+}
 
     Copyright (C) 2018, Long-Gang Pang
 
