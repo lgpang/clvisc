@@ -40,6 +40,9 @@ class CLIdeal(object):
         if not os.path.exists(path):
             os.makedirs(path)
 
+        # choose proper real, real4, real8 sizes
+        self.determine_float_size(self.cfg)
+
         from backend_opencl import OpenCLBackend
         self.backend = OpenCLBackend(self.cfg, gpu_id)
 
@@ -113,7 +116,24 @@ class CLIdeal(object):
         self.d_num_of_sf = cl.Buffer(self.ctx, mf.READ_WRITE | mf.COPY_HOST_PTR, hostbuf=h_num_of_sf);
 
         self.history = []
- 
+
+    def determine_float_size(self, cfg):
+        cfg.sz_int = np.dtype('int32').itemsize   #==sizeof(int) in c
+        if cfg.use_float32 == True :
+            cfg.real = np.float32
+            cfg.real4 = array.vec.float4
+            cfg.real8 = array.vec.float8
+            cfg.sz_real = np.dtype('float32').itemsize   #==sizeof(float) in c
+            cfg.sz_real4 = array.vec.float4.itemsize
+            cfg.sz_real8 = array.vec.float8.itemsize
+        else :
+            cfg.real = np.float64
+            cfg.real4 = array.vec.double4
+            cfg.real8 = array.vec.double8
+            cfg.sz_real = np.dtype('float64').itemsize   #==sizeof(double) in c
+            cfg.sz_real4= array.vec.double4.itemsize
+            cfg.sz_real8= array.vec.double8.itemsize
+
     def load_ini(self, dat):
         '''load initial condition stored in np array whose 4 columns
            are (Ed, vx, vy, vz) and  num_of_rows = NX*NY*NZ'''
@@ -341,7 +361,7 @@ def main():
     from config import cfg, write_config
     #import pandas as pd
     print('start ...')
-    cfg.IEOS = 2
+    cfg.IEOS = 1
     cfg.NX = 201
     cfg.NY = 201
     cfg.NZ = 105
