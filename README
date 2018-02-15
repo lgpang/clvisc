@@ -43,6 +43,8 @@ First of all, get CLVisc using:
 
 2. Download and install the latest Anaconda from https://www.continuum.io/downloads
    Important: please choose Python2.7 (although most of the code work well with Python3.*)
+   Notice: in case you use Python2.7 from other sources, please also install matplotlib, h5py, pandas, sympy.
+   These 4 packages are delivered with Anaconda by default.
   
 3. Install PyOpenCL
    `conda install -c conda-forge pyopencl`
@@ -76,7 +78,24 @@ First of all, get CLVisc using:
     make
     make install
 
-    (2) In PyVisc/pyvisc/ run
+    (2) Compile the MC sampling spectra calculation subroutines
+    cd sampler/
+    mkdir build
+    cd build
+    cmake ..
+    make
+
+    (3) Compile the Smooth spectra calcualation subroutines
+    cd CLSmoothSpec/
+    mkdir build
+    cd build
+    cmake ..
+    make 
+    Notice: this step will fail with MacOS version > 10.8 because apple depreciated some OpenCL functions.
+    Please use this subroutine on a GPU cluster/Linux machine.
+    This program will be updated in the future to consider the MacOS updates.
+    
+    (4) In PyVisc/pyvisc/, modify the output path in ebe_trento.py and  run
     #python ebe_trento.py collision_sys centrality gpu_id num_of_events
      
     python ebe_trento.py auau200 0_5 0 100
@@ -107,6 +126,7 @@ python ideal.py
 
 2. cd pyvisc
 python visc.py
+Notice: the visc.py has huge GPU memory demands and can only be run on GPUs whose memory > 5GB.
 
 3. cd python
 modify ebe_trento.py to run event-by-event hydrodynamics with Trento initial condition
