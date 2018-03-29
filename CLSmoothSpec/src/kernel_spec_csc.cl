@@ -37,13 +37,11 @@ __kernel void get_sub_dNdYPtdPtdPhi(
     real rapidity = d_Y[k];
     real pt = d_Pt[l];
     real mt = sqrt(mass*mass + pt*pt); 
-    real sfactor_to_fix_precision = 1.0E7;
 
-    double dNdYPtdPtdPhi[NPHI];
-    double c[NPHI];
+    real dNdYPtdPtdPhi[NPHI];
+    
     for ( int m = 0; m < NPHI; m++ ) {
         dNdYPtdPtdPhi[m] = 0.0;
-        c[m] = 0.0;
     }
     
     while ( I < SizeSF ) {
@@ -74,20 +72,9 @@ __kernel void get_sub_dNdYPtdPtdPhi(
 
             double df = feq*(1.0f - fermi_boson*feq)*p2pi_o_T2ep;
 
-            // if |df| > 1, set df = sign(df) * df; this is learned from Chun Shen, VishNew
-            // does not work when df < -feq.
-            //real df_norm = min(1.0f, 1.0f/(fabs(df)));
-            //feq += df * df_norm;
-
             feq += fabs(df) > feq ? sign(df)*feq*0.999f : df;
 #endif
-            // KHan sum
-            real res = dof * dot(pmu, dsigma) * feq * sfactor_to_fix_precision;
-            real y = res - c[m];
-            real t = dNdYPtdPtdPhi[m] + y;
-            c[m] = (t - dNdYPtdPtdPhi[m]) - y;
-            dNdYPtdPtdPhi[m] = t;
-            //dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq * sfactor_to_fix_precision;
+            dNdYPtdPtdPhi[m] += dof * dot(pmu, dsigma) * feq;
         }
         
         /** in units of GeV.fm^3 */
@@ -107,7 +94,7 @@ __kernel void get_sub_dNdYPtdPtdPhi(
         }
     
         if(tid == 0) d_SubSpec[k*NPT*NPHI*NBlocks + l*NPHI*NBlocks \
-               + m*NBlocks + get_group_id(0) ] = subspec[0] / sfactor_to_fix_precision;
+               + m*NBlocks + get_group_id(0) ] = subspec[0];
     }
 }
 
