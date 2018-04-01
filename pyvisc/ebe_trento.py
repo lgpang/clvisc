@@ -58,8 +58,7 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
     cfg.TAU0 = 0.6
     cfg.fPathOut = fout
 
-    #cfg.TFRZ = 0.137
-    cfg.TFRZ = 0.100
+    cfg.TFRZ = 0.128
 
     cfg.ETAOS_XMIN = 0.154
 
@@ -136,24 +135,18 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
-    cwd = os.getcwd()
-    os.chdir('../sampler/mcspec/')
-    viscous_on = 'true'
-    after_reso = 'true'
-    nsampling = '2000'
-    call(['python', 'sampler.py', fout, viscous_on, after_reso, nsampling])
-    os.chdir(cwd)
+    from subprocess import call
 
-    #from create_table import create_table_for_jet
-    #create_table_for_jet(fout, visc.ideal.eos)
-    os.chdir('../CLSmoothSpec/build')
-    #os.system('cmake -D VISCOUS_ON=ON ..')
-    #os.system('make')
-    call(['./spec', fpath])
-    os.chdir(cwd)
-    after_reso = '0'
-    call(['python', '../spec/main.py', fpath, after_reso])
+    # get particle spectra from MC sampling and force decay
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "false", "--reso_decay", "true", "--nsampling", "2000",
+      '--mode', 'mc'])
 
+     # calc the smooth particle spectra
+    call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
+      '--viscous_on', "false", "--reso_decay", "true", 
+      '--mode', 'smooth'])
+ 
 def main(paht, cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
     fpath_out = os.path.abspath(path)
     for i in xrange(gpu_id*jobs_per_gpu, (gpu_id+1)*jobs_per_gpu):
@@ -166,7 +159,7 @@ def main(paht, cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
 if __name__ == '__main__':
     import sys
     #path_base = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/'
-    if len(sys.argv) == 4:
+    if len(sys.argv) == 5:
         path_base = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/'
         coll_sys = sys.argv[1]
         cent = sys.argv[2]
