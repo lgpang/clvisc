@@ -1,0 +1,39 @@
+Logging:
+  default: INFO
+
+General:
+    # Modus decision
+    Modus: List
+
+    # temporal grid spacing
+    Delta_Time:    0.1
+
+    # end time of simulation
+    End_Time:      1000.3
+
+    # initial random seed (auto-generated if negative)
+    Randomseed:    -1
+
+    # number of test particles
+    Testparticles: 1
+
+    # number of events
+    Nevents:       {num_over_sampling}
+
+    # width of gaussians representing particles, fm
+    Gaussian_Sigma: 1.0
+
+Output:
+    # how much time before recording measurables
+    Output_Interval:  1.0
+    Particles:
+        Format:          ["Oscar2013"]
+        Only_Final:      True
+
+Modi:
+    List:
+         File_Directory: "{hydro_event_path}"
+         File_Prefix: "mc_particle_list"
+         # starting number of event_id in event-by-event simulation
+         Shift_Id: 0
+         Start_Time: 0
