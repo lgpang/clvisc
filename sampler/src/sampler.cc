@@ -137,7 +137,7 @@ void Sampler::read_hypersurface(const std::string & fpath) {
 
     auto hyper_surface_elements = line_parser(hyper_surface);
 
-    //auto sf_txyz_elements = line_parser(sf_txyz);
+    auto sf_txyz_elements = line_parser(sf_txyz);
 
     double ds0, ds1, ds2, ds3, vx, vy, vetas, t, x, y, z, etas;
 
@@ -149,10 +149,10 @@ void Sampler::read_hypersurface(const std::string & fpath) {
         lineinput >> ds0 >> ds1 >> ds2 >> ds3 >> vx >> vy >> vetas \
             >> etas;
 
-        //auto str_txyz = sf_txyz_elements[line_number].text;
+        auto str_txyz = sf_txyz_elements[line_number].text;
         line_number++;
-        //std::istringstream coordinates(str_txyz);
-        //coordinates >> t >> x >> y >> z;
+        std::istringstream coordinates(str_txyz);
+        coordinates >> t >> x >> y >> z;
         if ( lineinput.fail() ) {
             fail_frz_element ++;
             throw LoadFailure(build_error_string(
@@ -165,7 +165,8 @@ void Sampler::read_hypersurface(const std::string & fpath) {
             vi.velocity = ThreeVector(vx, vy, vetas);
             vi.etas = etas;
             vi.position = FourVector(t, x, y, z);
-            elements_.emplace_back(std::move(vi));
+            //elements_.emplace_back(std::move(vi));
+            elements_.push_back(vi);
         }
     }
 
