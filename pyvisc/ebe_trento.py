@@ -147,7 +147,7 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
       '--viscous_on', "false", "--reso_decay", "true", 
       '--mode', 'smooth'])
  
-def main(paht, cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
+def main(path, cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
     fpath_out = os.path.abspath(path)
     for i in xrange(gpu_id*jobs_per_gpu, (gpu_id+1)*jobs_per_gpu):
         fout = os.path.join(fpath_out, 'event%s'%i)
