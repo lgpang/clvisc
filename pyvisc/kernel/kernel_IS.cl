@@ -723,12 +723,16 @@ __kernel void update_pimn(
 
     real pre = P(e_v2.s0, eos_table);
     real T00 = (e_v2.s0 + pre)*u_new.s0*u_new.s0 - pre;
+    //real T00 = (e_v2.s0 + pre)*u_new.s0*u_new.s0;
+    //real T00 = sqrt(e_v2.s0*e_v2.s0 + 3.0f*pre*pre);
+
+    d_goodcell[I] = 1.0f;
     if ( max_pimn_abs > T00 ) {
         for ( int mn = 0; mn <10; mn++ ) {
             d_pinew[10*I + mn] = 0.0f;
-            d_goodcell[I] = 0.0f;
         }
-    }        
+        d_goodcell[I] = 0.0f;
+    }
 }
 
 

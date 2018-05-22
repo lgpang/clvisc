@@ -135,16 +135,15 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0))
 
-    from subprocess import call
 
     # get particle spectra from MC sampling and force decay
     call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
-      '--viscous_on', "false", "--reso_decay", "true", "--nsampling", "2000",
+      '--viscous_on', "true", "--reso_decay", "true", "--nsampling", "2000",
       '--mode', 'mc'])
 
      # calc the smooth particle spectra
     call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
-      '--viscous_on', "false", "--reso_decay", "true", 
+      '--viscous_on', "true", "--reso_decay", "false", 
       '--mode', 'smooth'])
  
 def main(path, cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
@@ -158,7 +157,6 @@ def main(path, cent='0_5', gpu_id=0, jobs_per_gpu=25, system='pbpb2760'):
 
 if __name__ == '__main__':
     import sys
-    #path_base = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/'
     if len(sys.argv) == 5:
         path_base = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/results/'
         coll_sys = sys.argv[1]

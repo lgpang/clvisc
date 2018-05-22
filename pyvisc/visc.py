@@ -183,15 +183,33 @@ class CLVisc(object):
     def check_pizz(self):
         '''initialize pi^{mu nu} tensor'''
         NZ = self.cfg.NZ
-
         self.kernel_checkpi.pizz_o_ep(self.queue, (NZ,), None,
                 self.d_pizz_o_ep, self.d_pi[1], self.ideal.d_ev[1],
                 self.eos_table).wait()
-
         pizz_o_ep = np.zeros(NZ, dtype=np.float32)
         cl.enqueue_copy(self.queue, pizz_o_ep, self.d_pizz_o_ep).wait()
         print('<pizz/(e+P)> =', pizz_o_ep[NZ//2])
 
+
+    def check_bad_cell(self):
+        '''if max(|pi^{mu nu}|) > T00, the cell is marked as bad_cell.
+        This function readout bad_cells from GPU, compare the temperature of the bad cells
+        with freeze out temperature '''
+        NX, NY, NZ = self.cfg.NX, self.cfg.NY, self.cfg.NZ
+        cl.enqueue_copy(self.queue, self.h_goodcell, self.d_goodcell).wait()
+        efrz = self.ideal.efrz
+        # transfer data from self.ideal.d_ev[1] to self.ideal.h_ev1
+        self.ideal.ev_to_host()
+        ed_mid_rapidity = self.ideal.h_ev1[:, 0].reshape(NX, NY, NZ)[:, :, NZ//2]
+        frz_sf = (ed_mid_rapidity > efrz).astype(float)*4.0
+        good_cells = 3*(self.h_goodcell.reshape(NX, NY, NZ)[:, :, NZ//2] - 1)
+        cell_masks = frz_sf + good_cells
+        comments = '''4 for e>efrz and good cell;
+                    1 for e > efrz and bad cell;
+                    0 for e < efrz and good cell;
+                    -3 for e<efrz and bad cell'''
+        outpath = os.path.join(self.cfg.fPathOut, 'bad_cell_masks_tau%s.txt'%self.ideal.tau)
+        np.savetxt(outpath, cell_masks, header=comments)
 
 
     def visc_stepUpdate(self, step, jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0}):
@@ -402,7 +420,8 @@ class CLVisc(object):
     #@profile
     def evolve(self, max_loops=1000, save_hypersf=True, save_bulk=False,
                plot_bulk=True, save_pi=True, force_run_to_maxloop = False, save_vorticity=False,
-               jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0.0}):
+               jet_eloss_src={'switch_on':False, 'start_pos_index':0, 'direction':0.0},
+               debug=False):
         '''The main loop of hydrodynamic evolution
         default parameters: save_hypersf, don't save bulk info
         store bulk info by switch on plot_bulk;
@@ -476,6 +495,10 @@ class CLVisc(object):
             if loop % self.cfg.ntskip == 0 and save_vorticity:
                 self.get_vorticity(save_data=False)
 
+            # save the bad cells at debug stage
+            if debug and loop % self.cfg.ntskip == 0:
+                self.check_bad_cell()
+
             loop = loop + 1
             t1 = time()
             print('one step: {dtime}'.format(dtime = t1-t0 ))
@@ -538,10 +561,9 @@ def main():
     visc = CLVisc(cfg, gpu_id=0)
 
     visc.optical_glauber_ini()
-    #visc.evolve(max_loops=2000, save_bulk=True, force_run_to_maxloop=False,
-    #            save_vorticity=False)
+
     visc.evolve(max_loops=2000, save_hypersf=True, save_bulk=False,
-            force_run_to_maxloop=False, save_vorticity=False)
+            force_run_to_maxloop=False, save_vorticity=False, debug=False)
 
     t1 = time()
     print('finished. Total time: {dtime}'.format(dtime = t1-t0), file=sys.stdout)
@@ -555,7 +577,7 @@ def main():
 
      # calc the smooth particle spectra
     call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
-      '--viscous_on', "true", "--reso_decay", "true", 
+      '--viscous_on', "true", "--reso_decay", "false", 
       '--mode', 'smooth'])
  
 

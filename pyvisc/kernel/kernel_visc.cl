@@ -369,7 +369,6 @@ __kernel void update_ev(
 	    T02 *= SCALE_COEF * T00 / M;
 	    T03 *= SCALE_COEF * T00 / M;
         M = SCALE_COEF * T00;
-        //M = 0.0f;
     }
 
     real ed_find;
