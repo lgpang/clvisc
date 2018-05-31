@@ -146,7 +146,7 @@ inline Point AdaptiveRejectionSampler::create_inter(Line l0, Line l2) {
   p.y = y;
   p.expy = expy;
 
-  if ( isnan(x) ) {
+  if ( std::isnan(x) ) {
     std::cerr << "calc intersection:\n";
     std::cerr << "l0=" << l0;
     std::cerr << "l2=" << l2;
@@ -272,13 +272,13 @@ void AdaptiveRejectionSampler::adaptive_update(
   auto p2 = std::next(it, j+2);
   l[0] = create_line(*p0, *p1);
 
-  if ( isinf(l[0].m) ) {
+  if ( std::isinf(l[0].m) ) {
     std::cerr << "l0, j=" << j;
     std::cerr << "\n p0=" << *p0;
     std::cerr << "\n p1=" << *p1;
   }
 
-  if ( isinf(l[1].m) ) {
+  if ( std::isinf(l[1].m) ) {
     std::cerr << "l1, j=" << j;
   }
 
@@ -370,7 +370,7 @@ inline double AdaptiveRejectionSampler::sample_x(int j) {
         (1.0f-r)*upper_bounds_.at(j).left_point.x;
   }
 
-  if ( isnan(x) ) {
+  if ( std::isnan(x) ) {
     std::cerr << "m=" << m << "r=" << r << std::endl;
     std::cerr << "upper_bounds_.at(j).right_point.x = " << upper_bounds_.at(j).right_point.x << std::endl;
     std::cerr << "upper_bounds_.at(j).left_point.x  = " << upper_bounds_.at(j).left_point.x << std::endl;
