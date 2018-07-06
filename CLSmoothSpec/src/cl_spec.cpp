@@ -214,7 +214,7 @@ void Spec::ReadHyperSF( const std::string & dataFile )
         while( fin.good() ){
             fin>>dA0>>dA1>>dA2>>dA3>>vx>>vy>>vh>>etas;
             if( fin.eof() )break;  // eof() repeat the last line
-            if ( isnan(dA0) || isnan(dA1) || isnan(dA2) || isnan(dA3) ) {
+            if ( std::isnan(dA0) || std::isnan(dA1) || std::isnan(dA2) || std::isnan(dA3) ) {
                 dA0 = 0.0; dA1 = 0.0; dA2 = 0.0; dA3=0.0;
                 vx = 0.0; vy = 0.0; vh = 0.0; etas = 0.0;
                 std::cout << "nan in hypersf data file!" << std::endl;
@@ -247,7 +247,7 @@ void Spec::ReadPimnSF(const std::string & piFile)
             }
             if( fin2.eof() )break;  // eof() repeat the last line
             for ( int i=0; i < 10; i++ ) {
-                if ( isnan(pimn[i]) ) pimn[i] = 0.0;
+                if ( std::isnan(pimn[i]) ) pimn[i] = 0.0;
                 h_pi.push_back(pimn[i]); 
             }
         }
