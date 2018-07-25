@@ -2,11 +2,9 @@
 #author: lgpang
 #email: lgpang@qq.com
 #createTime: Tue 26 May 2015 17:51:18 CEST
-import matplotlib.pyplot as plt
 import numpy as np
 import sympy as sym
 import pandas as pd
-from common_plotting import smash_style
 import os
 from subprocess import call, check_output
 import cmath
