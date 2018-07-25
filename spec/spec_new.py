@@ -134,7 +134,7 @@ class Spec:
         Vn = np.zeros(7)
         self.event_plane = np.zeros(7)
         norm = phi_integral(spec_along_phi)
-        for n in xrange(1, 7):
+        for n in range(1, 7):
             Vn[n], self.event_plane[n] = cmath.polar(phi_integral(
                         spec_along_phi*np.exp(1j*n*PHI))/norm)
             self.event_plane[n] /= float(n)
@@ -151,7 +151,7 @@ class Spec:
         for i in range(NPT):
             spec_along_phi = dNdPtdPhi2D[i,:]
             norm_factor = phi_integral(spec_along_phi)
-            for n in xrange(1, 7):
+            for n in range(1, 7):
                 Vn_vs_pt[n, i], angles[n, i] = cmath.polar(phi_integral(
                     spec_along_phi*np.exp(1j*n*(PHI-self.event_plane[n])))
                     /norm_factor)
