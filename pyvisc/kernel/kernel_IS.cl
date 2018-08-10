@@ -5,47 +5,6 @@ constant real gmn[4][4] = {{1.0f, 0.0f, 0.0f, 0.0f},
                            {0.0f, 0.0f,-1.0f, 0.0f},
                            {0.0f, 0.0f, 0.0f,-1.0f}};
 
-// use pimn and ev at  i-2, i-1, i, i+1, i+2 to calc src term from flux
-// pr_mh = pr_{i-1/2} and pr_ph = pr_{i+1/2}
-// these mh, ph terms are calcualted 1 time and used 10 times by pimn
-real kt1d_real(
-       real Q_im2, real Q_im1, real Q_i, real Q_ip1, real Q_ip2,
-       real v_mh, real v_ph, real lam_mh, real lam_ph,
-       real tau, int along)
-{
-   real DA0, DA1;
-   DA0 = minmod(0.5f*(Q_ip1-Q_im1),
-           minmod(THETA*(Q_ip1-Q_i), THETA*(Q_i-Q_im1)));
-
-   DA1 = minmod(0.5f*(Q_ip2-Q_i),
-         minmod(THETA*(Q_ip2-Q_ip1), THETA*(Q_ip1-Q_i)));
-
-   real  AL = Q_i   + 0.5f * DA0;
-   real  AR = Q_ip1 - 0.5f * DA1;
-
-   // Flux Jp = (Q + pr*g^{tau mu})*v^x - pr*g^{x mu}
-   real Jp = AR * v_ph;
-   real Jm = AL * v_ph;
-
-   // first part of kt1d; the final results = src[i]-src[i-1]
-   real src = 0.5f*(Jp+Jm) - 0.5f*lam_ph*(AR-AL);
-
-   DA1 = DA0;  // reuse the previous calculate value
-   DA0 = minmod(0.5f*(Q_i-Q_im2),
-           minmod(THETA*(Q_i-Q_im1), THETA*(Q_im1-Q_im2)));
-
-   AL = Q_im1 + 0.5f * DA0;
-   AR = Q_i - 0.5f * DA1;
-
-   Jp = AR*v_mh;
-   Jm = AL*v_mh;
-
-   // second part of kt1d; final results = src[i] - src[i-1]
-   src -= 0.5f*(Jp+Jm) - 0.5f*lam_mh*(AR-AL);
-
-   return src;
-}
-
 
 // initialize d_pi1 and d_udiff between u_ideal* and u_visc
 __kernel void visc_initialize(
@@ -360,6 +319,7 @@ __kernel void visc_src_alongz(__global real * d_Src,
 
 
 
+#ifdef GUBSER_VISC_TEST
 /** \pi^{< mu}_{lam} * pi^{nu> lam} self coupling term **/
 inline real PiPi(int lam, int mu, int nu, __private real pimn[10],
                  __private real u[4])
@@ -384,11 +344,14 @@ inline real PiPi(int lam, int mu, int nu, __private real pimn[10],
 
   return firstTerm + secondTerm;
 }
+#endif
 
 /** calc Omega^{mu nu} which is equal to:
     1/2 Delta^{mu}_{alpha} Delta^{nu}_{beta} (nabla^alpha u^beta - nabla^beta u^alpha)
     = 1/2 Delta^{mu}_{alpha} Delta^{nu}{beta} omega_{alpha beta}
 **/
+
+#ifdef PIMUNU_OMEGA_COUPLING
 inline real OmegaMuNu(int mu, int nu,
                      __private real omega[6],
                      __private real u[4])
@@ -412,6 +375,7 @@ inline real OmegaMuNu(int mu, int nu,
 
   return  0.5f * dot(Delta4[mu], temp);
 }
+#endif 
 
 /** \pi^{< mu}_{lam} * omega^{nu> lam} coupling term
     = Delta^{mu nu}_{alpha beta} A^{alpha}_{lambda} B^{beta lambda}
@@ -421,6 +385,8 @@ inline real OmegaMuNu(int mu, int nu,
     where B = omega^{mu nu} = nabla^{mu} u^{nu} - nabla^{nu} u^{mu},
     omega is anti-symmetric, only 6 independent components
 **/
+
+#ifdef PIMUNU_OMEGA_COUPLING
 inline real pi_omega(int lam, int mu, int nu,
                      __private real pimn[10],
                      __private real omega[6],
@@ -446,6 +412,8 @@ inline real pi_omega(int lam, int mu, int nu,
       B = (real4)(omega[1], -omega[3],   0.0f, omega[5]);
   } else if (lam == 3) {
       B = (real4)(omega[2], -omega[4],   -omega[5], 0.0f);
+  } else {
+      B = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
   }
 
   real4 umu = (real4)(u[0], u[1], u[2], u[3]);
@@ -467,6 +435,7 @@ inline real pi_omega(int lam, int mu, int nu,
 
   return firstTerm + secondTerm;
 }
+#endif
 
 /** \omega^{< mu}_{lam} * omega^{nu> lam} coupling term
     = Delta^{mu nu}_{alpha beta} A^{alpha}_{lambda} B^{beta lambda}
@@ -476,6 +445,7 @@ inline real pi_omega(int lam, int mu, int nu,
     where B = omega^{mu nu} = nabla^{mu} u^{nu} - nabla^{nu} u^{mu},
     omega is anti-symmetric, only 6 independent components
 **/
+#ifdef OMEGA_OMEGA_COUPLING
 inline real omega_omega(int lam, int mu, int nu,
                      __private real omega[6],
                      __private real u[4])
@@ -496,6 +466,8 @@ inline real omega_omega(int lam, int mu, int nu,
       B = (real4)(omega[1], -omega[3],   0.0f, omega[5]);
   } else if (lam == 3) {
       B = (real4)(omega[2], -omega[4],   -omega[5], 0.0f);
+  } else {
+      B = (real4)(0.0f, 0.0f, 0.0f, 0.0f);
   }
 
   real4 umu = (real4)(u[0], u[1], u[2], u[3]);
@@ -513,6 +485,7 @@ inline real omega_omega(int lam, int mu, int nu,
 
   return firstTerm + secondTerm;
 }
+#endif
 
 
 /** update d_pinew with d_pi1, d_pistep and d_Src
