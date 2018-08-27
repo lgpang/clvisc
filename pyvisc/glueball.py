@@ -13,23 +13,20 @@ from config import cfg, write_config
 import numpy as np
 import matplotlib.pyplot as plt
 
-def glueball(Tmax = 0.6, outdir = '../results/event0', IEOS=3):
+def glueball(Tmax = 0.6, outdir = '../results/event0', eos_type='pure_gauge'):
     print('start ...')
     t0 = time()
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
-    cfg.IEOS = IEOS 
-    eos = Eos(cfg.IEOS)
+    cfg.eos_type = eos_type 
+    eos = Eos(cfg.eos_type)
     # update the configuration
     #cfg.Edmax = eos.f_ed(Tmax)
     #cfg.Edmax = 166.0
     cfg.Edmax = 55.0
 
     cfg.fPathOut = outdir
-
-    # set IEOS = 2 for (2+1)-flavor QCD EOS
-    # set IEOS = 3 for GlueBall EOS
 
     cfg.NX = 501
     cfg.NY = 501
@@ -56,7 +53,7 @@ def glueball(Tmax = 0.6, outdir = '../results/event0', IEOS=3):
 
     cfg.save_to_hdf5 = False
 
-    if IEOS == 3:
+    if eos_type == 'pure_gauge':
         cfg.TFRZ = 0.2
 
     #cfg.Edmax = 600.0
@@ -100,24 +97,20 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
-    # set IEOS = 2 for (2+1)-flavor QCD EOS
-    # set IEOS = 3 for GlueBall EOS
     if eostype == 'SU3':
-        cfg.IEOS = 3
+        cfg.eos_type = 'pure_gauge'
     elif eostype == 'QCD':
-        cfg.IEOS = 4
+        cfg.eos_type = 'lattice_wb'
     elif eostype == 'EOSI':
-        cfg.IEOS = 0
+        cfg.eos_type == 'ideal_gas'
 
-    eos = Eos(cfg.IEOS)
+    eos = Eos(cfg.eos_type)
     # update the configuration
     #cfg.Edmax = eos.f_ed(Tmax)
     cfg.Edmax = 50.0
 
     cfg.fPathOut = outdir
 
-    # set IEOS = 2 for (2+1)-flavor QCD EOS
-    # set IEOS = 3 for GlueBall EOS
     cfg.NX = 301
     cfg.NY = 301
     cfg.NZ = 1
@@ -160,10 +153,8 @@ def ppcollision(eostype='SU3', outdir = '../results/event0'):
 
 
 if __name__=='__main__':
-    #glueball(0.60, '../results/Glueball_T0p6/', IEOS=3)
-    #glueball(0.60, '../results/Lattice2p1_T0p6/', IEOS=2)
-    glueball(outdir='../results/Glueball_Edmax55/', IEOS=3)
-    glueball(outdir='../results/Lattice2p1_Edmax55/', IEOS=2)
+    glueball(outdir='../results/Glueball_Edmax55/', eos_type='pure_gauge')
+    glueball(outdir='../results/Lattice2p1_Edmax55/', eos_type='lattice_wb')
 
     #glueball(0.50, '../results/IdealGas_T0p5/')
     #glueball(0.40, '../results/IdealGas_T0p4/')

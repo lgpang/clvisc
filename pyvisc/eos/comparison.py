@@ -49,7 +49,7 @@ if __name__ == '__main__':
     #wb_vs_pce('T')
 
     from eos import Eos
-    pce150 = Eos(1)
+    pce150 = Eos('lattice_pce150')
     ed = pce150.f_ed(0.150)
     pr = pce150.f_P(ed)
     print('ed=', ed, 'pr=', pr, 'at T=0.137 GeV')

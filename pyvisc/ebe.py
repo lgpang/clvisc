@@ -54,7 +54,7 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
     cfg.nyskip = 2
     cfg.nzskip = 2
 
-    cfg.IEOS = 1
+    cfg.eos_type = 'lattice_pce150'
     cfg.TAU0 = 0.6
     cfg.fPathOut = fout
 

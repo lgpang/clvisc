@@ -54,7 +54,8 @@ def read_p4x4(cent='30_35', idx=0,
 
 def event_by_event(fout, cent='30_35', idx=0, etaos=0.0, system = 'auau200',
                    fname_ini='/lustre/nyx/hyihp/lpang/hdf5_data/auau39.h5', gpu_id = 3,
-                   switch_off_longitudinal_fluctuations = False, force_bjorken = False, IEOS=1):
+                   switch_off_longitudinal_fluctuations = False, force_bjorken = False,
+                   eos_type="lattice_pce150"):
     ''' Run event_by_event hydro, with initial condition from smearing on the particle list'''
     if not os.path.exists(fout):
         os.mkdir(fout)
@@ -80,9 +81,7 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0, system = 'auau200',
     #cfg.DY = 0.1
     #cfg.DZ = 0.2
 
-    ## IEOS = 1 for default
-    #cfg.IEOS = 1
-    cfg.IEOS = IEOS
+    cfg.eos_type = eos_type
 
     #cfg.TFRZ = 0.110
     #cfg.TFRZ = 0.105
@@ -122,10 +121,10 @@ def event_by_event(fout, cent='30_35', idx=0, etaos=0.0, system = 'auau200',
     write_config(cfg, comments)
 
     if force_bjorken:
-        if cfg.IEOS == 1:
+        if cfg.eos_type == "lattice_pce150":
             # KFACTOR=1.4 for etaos = 0.08; KFACTOR = 1.2 for etaos=0.16
             visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=1.2, force_bjorken=True)
-        elif cfg.IEOS == 5:
+        elif cfg.eos_type == "first_order":
             visc.smear_from_p4x4(parton_list, SIGR=0.6, SIGZ=0.6, KFACTOR=0.8, force_bjorken=True)
     elif switch_off_longitudinal_fluctuations:
         heta = create_longitudinal_profile(cfg)
@@ -159,7 +158,8 @@ if __name__ == '__main__':
     gpuid = int(sys.argv[4])
     start_id = int(sys.argv[5])
     end_id = int(sys.argv[6])
-    IEOS = int(sys.argv[7])
+    #IEOS = int(sys.argv[7])
+    eos_type = sys.argv[7]
 
     path = '/lustre/nyx/hyihp/lpang/trento_ebe_hydro/%s_results_ampt/etas%s/%s/'%(collision_system,
               etaos, cent)
@@ -181,7 +181,7 @@ if __name__ == '__main__':
 
         try:
             event_by_event(fpath_out, cent, idx, etaos=etaos, system=collision_system,
-                       fname_ini=fname_ini, gpu_id=gpuid, IEOS=IEOS)
+                       fname_ini=fname_ini, gpu_id=gpuid, eos_type=eos_type)
         except:
                 print("Unexpected error:", sys.exc_info()[0])
 

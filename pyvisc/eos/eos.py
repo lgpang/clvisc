@@ -21,19 +21,18 @@ class Eos(object):
     '''create eos table for hydrodynamic simulation;
     the (ed, pr, T, s) is stored in image2d buffer
     for fast linear interpolation'''
-    def __init__(self, IEOS=0):
-        if IEOS == 0:
+    def __init__(self, eos_type='ideal_gas'):
+        if eos_type == 'ideal_gas':
             self.ideal_gas()
-        elif IEOS == 1:
-            self.lattice_pce()
-        elif IEOS == 2:
+        elif eos_type == 'lattice_pce165':
+            self.lattice_pce165()
+        elif eos_type == 'lattice_pce150':
+            self.lattice_pce150()
+        elif eos_type == 'lattice_wb':
             self.lattice_ce()
-        elif IEOS == 3:
+        elif eos_type == 'pure_gauge':
             self.pure_su3()
-        elif IEOS == 4:
-            '''use equal temperature interval dT'''
-            self.lattice_ce_mod()
-        elif IEOS == 5:
+        elif eos_type == 'first_order':
             self.eosq()
 
 
@@ -98,10 +97,24 @@ class Eos(object):
         popt, pcov = curve_fit(exp_func, ed_mask, cs2_mask)
         self.cs2[mask] = exp_func(ed_mask, *popt)
 
-    def lattice_pce(self):
+    def lattice_pce165(self):
         import os
         cwd, cwf = os.path.split(__file__)
-        pce = np.loadtxt(os.path.join(cwd, 'eos_table/PCE_PST.dat'))
+        pce = np.loadtxt(os.path.join(cwd, 'eos_table/s95p-PCE165-v0/EOS_PST.dat'))
+        self.ed = np.insert(0.5*(pce[1:, 0] + pce[:-1, 0]), 0, 0.0)
+        self.pr = np.insert(0.5*(pce[1:, 1] + pce[:-1, 1]), 0, 0.0)
+        self.s = np.insert(0.5*(pce[1:, 2] + pce[:-1, 2]), 0, 0.0)
+        self.T = np.insert(0.5*(pce[1:, 3] + pce[:-1, 3]), 0, 0.0)
+        self.ed_start = 0.0
+        self.ed_step = 0.002
+        self.num_of_ed = 155500
+        self.eos_func_from_interp1d()
+
+
+    def lattice_pce150(self):
+        import os
+        cwd, cwf = os.path.split(__file__)
+        pce = np.loadtxt(os.path.join(cwd, 'eos_table/s95p-PCE-v1/EOS_PST.dat'))
         self.ed = np.insert(0.5*(pce[1:, 0] + pce[:-1, 0]), 0, 0.0)
         self.pr = np.insert(0.5*(pce[1:, 1] + pce[:-1, 1]), 0, 0.0)
         self.s = np.insert(0.5*(pce[1:, 2] + pce[:-1, 2]), 0, 0.0)
@@ -219,7 +232,7 @@ class Eos(object):
    
 if __name__ == '__main__':
     def test_plot_cs2():
-        eos = Eos(5)
+        eos = Eos('lattice_pce150')
         #print eos.f_ed(0.63)
         #print eos.f_ed(0.137)
         import matplotlib.pyplot as plt

@@ -58,28 +58,26 @@ class CLIdeal(object):
         # self.eos_table must be before __loadAndBuildCLPrg() to pass
         # table information to definitions
         if handcrafted_eos is None:
-            self.eos = Eos(self.cfg.IEOS)
+            self.eos = Eos(self.cfg.eos_type)
         else:
             self.eos = handcrafted_eos
 
-        # the default muB on hypersf is 0, unless IEOS=1, 'PCE165'
-        chemical_potential_on_hypersf(self.cfg.TFRZ, path,
-                                      eos_type='ZeroChemcialPotential')
+        chemical_potential_on_hypersf(self.cfg.TFRZ, path, eos_type=self.cfg.eos_type)
 
         if handcrafted_eos is not None:
             self.eos_table = self.eos.create_table(self.ctx,
                     self.compile_options)
-        elif self.cfg.IEOS == 1:
+        elif self.cfg.eos_type == 'lattice_pce165':
             self.eos_table = self.eos.create_table(self.ctx,
                     self.compile_options, nrow=100, ncol=1555)
-            chemical_potential_on_hypersf(self.cfg.TFRZ, path,
-                                          eos_type='PCE165')
-        elif self.cfg.IEOS == 4:
+        elif self.cfg.eos_type == 'lattice_pce150':
+            self.eos_table = self.eos.create_table(self.ctx,
+                    self.compile_options, nrow=100, ncol=1555)
+        elif self.cfg.eos_type == 'lattice_wb':
             self.eos_table = self.eos.create_table(self.ctx,
                     self.compile_options, nrow=4, ncol=1001)
         else:
-            self.eos_table = self.eos.create_table(self.ctx,
-                    self.compile_options)
+            self.eos_table = self.eos.create_table(self.ctx, self.compile_options)
 
         self.efrz = self.eos.f_ed(self.cfg.TFRZ)
 
@@ -163,13 +161,7 @@ class CLIdeal(object):
         if self.cfg.riemann_test:
             gpu_defines.append('-D RIEMANN_TEST')
 
-
-        if self.cfg.IEOS == 4:
-            '''delta ed is not constant; delta T is constant;
-            using binary search for energy density '''
-            gpu_defines.append( '-D EOS_BINARY_SEARCH' ) # WB2014
-        else:
-            gpu_defines.append( '-D EOS_TABLE' ) # WB2014
+        gpu_defines.append( '-D EOS_TABLE' )
 
         #set the include path for the header file
         gpu_defines.append('-I '+os.path.join(self.cwd, 'kernel/'))
@@ -361,7 +353,7 @@ def main():
     from config import cfg, write_config
     #import pandas as pd
     print('start ...')
-    cfg.IEOS = 1
+    cfg.eos_type = 'lattice_pce165'
     cfg.NX = 201
     cfg.NY = 201
     cfg.NZ = 105
@@ -406,12 +398,12 @@ def main():
 
     # get particle spectra from MC sampling and force decay
     call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
-      '--viscous_on', "false", "--reso_decay", "true", "--nsampling", "2000",
+      '--viscous_on', "false", "--reso_decay", "false", "--nsampling", "2000",
       '--mode', 'mc'])
 
      # calc the smooth particle spectra
     call(['python', 'spec.py', '--event_dir', cfg.fPathOut,
-      '--viscous_on', "false", "--reso_decay", "true", 
+      '--viscous_on', "false", "--reso_decay", "false", 
       '--mode', 'smooth'])
  
 if __name__ == '__main__':

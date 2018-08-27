@@ -7,7 +7,7 @@ sys.path.append(os.path.join(cwd, '..'))
 
 from eos.eos import Eos
 
-eos = Eos(IEOS=3)
+eos = Eos(eos_type="pure_gauge")
 
 eos.test_eos(3.0)
 

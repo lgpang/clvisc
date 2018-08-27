@@ -536,7 +536,7 @@ def main():
     cfg.Eta_gw = 0.6
 
 
-    cfg.IEOS = 1
+    cfg.eos_type = 'lattice_pce150'
     cfg.ntskip = 60
     cfg.nxskip = 4
     cfg.nyskip = 4

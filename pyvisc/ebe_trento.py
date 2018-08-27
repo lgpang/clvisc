@@ -54,7 +54,7 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
     cfg.nyskip = 2
     cfg.nzskip = 2
 
-    cfg.IEOS = 1
+    cfg.eos_type = 'lattice_pce150'
     cfg.TAU0 = 0.6
     cfg.fPathOut = fout
 
@@ -95,12 +95,15 @@ def ebehydro(fpath, cent='0_5', etaos=0.12, gpu_id=0, system='pbpb2760', oneshot
     if os.path.exists(fini):
         call(['rm', '-r', fini])
 
-    collision.create_ini(cent, fini, num_of_events=1,
+    if oneshot:
+        collision.create_ini(cent, fini, num_of_events=,
                          grid_max=grid_max, grid_step=cfg.DX,
                          one_shot_ini=oneshot)
-    if oneshot:
         s = np.loadtxt(os.path.join(fini, 'one_shot_ini.dat'))
     else:
+        collision.create_ini(cent, fini, num_of_events=1,
+                         grid_max=grid_max, grid_step=cfg.DX,
+                         one_shot_ini=oneshot)
         s = np.loadtxt(os.path.join(fini, '0.dat'))
     smax = s.max()
     s_scale = s * scale_factor

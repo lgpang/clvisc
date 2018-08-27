@@ -22,17 +22,17 @@ import os
 
 
 class ChemicalPotential(object):
-    def __init__(self, efrz, version='PCE165'):
+    def __init__(self, efrz, eos_type='lattice_pce150'):
         '''generate chemical potential file for freeze out usage'''
         self.efrz = efrz
 
-        self.version = version
+        self.eos_type = eos_type
 
         cwd, cwf = os.path.split(__file__)
 
         self.path = os.path.join(cwd, 'eos_table/s95p-PCE165-v0/')
 
-        if version == 'PCE150':
+        if eos_type == 'lattice_pce150':
             self.path = os.path.join(cwd, 'eos_table/s95p-PCE-v1/')
 
         mu_for_stable = self.get_chemical_potential_for_stable(efrz)
@@ -59,9 +59,8 @@ class ChemicalPotential(object):
     def get_chemical_potential_for_stable(self, efrz):
         ''' interpolate to get the chemical potential for stable particles
             at freeze out energy density '''
-        #fname = "eos_table/s95p-PCE-v1/s95p-PCE-v1_pichem1.dat"
         fname = os.path.join(self.path, "s95p-PCE165-v0_pichem1.dat")
-        if self.version == 'PCE150':
+        if self.eos_type == 'lattice_pce150':
             fname = os.path.join(self.path, "s95p-PCE-v1_pichem1.dat")
 
         mu_for_stable = None
@@ -100,7 +99,7 @@ class ChemicalPotential(object):
         mu_for_all = {}
 
         set_to_zero = True
-        if self.version == 'PCE165' or self.version == 'PCE150':
+        if self.eos_type == 'lattice_pce165' or self.eos_type == 'lattice_pce150':
             set_to_zero = False
 
         for i in range(len(pid_for_stable)):
@@ -143,17 +142,20 @@ class ChemicalPotential(object):
     
  
 
-def create_table(Tfrz = 0.137, output_path='.', eos_type='PCE165'):
+def create_table(Tfrz = 0.137, output_path='.', eos_type='lattice_pce150'):
     '''save the chemical potential for different EOS
-    eos_type='PCE165', and 'PCE150', save
-    eos_type='EOSQ', 'EOSI', save 0.0 for all the resonance'''
+    eos_type='lattice_pce165', and 'lattice_pce150', save effective mu
+    eos_type='ideal_gas', 'first_order', 'pure_gauge', 'lattice_wb'
+    save 0.0 for all the resonance'''
     import sys
     from eos import Eos
     from subprocess import call
 
-    eos = Eos(1)
+    eos = Eos(eos_type)
+
     efrz = eos.f_ed(Tfrz)
-    chem = ChemicalPotential(efrz, version=eos_type)
+
+    chem = ChemicalPotential(efrz, eos_type=eos_type)
 
     chem.get_chemical_potential_for_resonance(output_path)
 
@@ -168,6 +170,5 @@ def create_table(Tfrz = 0.137, output_path='.', eos_type='PCE165'):
 
 
 if __name__ == '__main__':
-    #create_table(Tfrz=0.137, output_path='.', eos_type='EOSQ')
-    chem = ChemicalPotential(0.22, version='PCE165')
+    chem = ChemicalPotential(0.22, eos_type='lattice_pce150')
     print(chem.get_chemical_potential_for_stable(0.22))

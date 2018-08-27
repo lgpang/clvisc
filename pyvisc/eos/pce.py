@@ -53,7 +53,7 @@ class lattice_qcd(object):
 
 
 CE = lattice_qcd('CE')
-PCE = lattice_qcd('PCE165')
+PCE = lattice_qcd('PCE150')
 
 #CE.plot()
 #PCE.plot()
@@ -61,7 +61,7 @@ PCE = lattice_qcd('PCE165')
 from eos import Eos
 
 # the eos used in VishNu is exactly s95p-PCE-v1 with chemical freeze out temperature 150 MeV
-vishnu = Eos(1)
+vishnu = Eos('lattice_pce150')
 
 ed = PCE.eps_dat[:, 0]
 T = PCE.T_dat[:, 0]

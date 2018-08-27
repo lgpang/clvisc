@@ -53,7 +53,7 @@ def write_config(configs, comments=''):
 
         Config.add_section('intrinsic')
         Config.set('intrinsic', 'TAU0', str(configs.TAU0))
-        Config.set('intrinsic', 'IEOS', str(configs.IEOS))
+        Config.set('intrinsic', 'eos_type', str(configs.eos_type))
         Config.set('intrinsic', 'TFRZ', str(configs.TFRZ))
         Config.set('intrinsic', 'ETAOS_XMIN', str(configs.ETAOS_XMIN))
         Config.set('intrinsic', 'ETAOS_YMIN', str(configs.ETAOS_YMIN))
@@ -155,9 +155,9 @@ def read_config():
     config['TAU0'] = (_parser.getfloat('intrinsic', 'TAU0'),
             'time when hydro starts')
 
-    config['IEOS']  = (_parser.getint('intrinsic', 'IEOS'), 
-            'EOS selection, 0 for ideal gas, 1 for s95p-pce,\
-             2 for wuppertal budapest 2014 ce, 3 for glueball eos')
+    config['eos_type']  = (_parser.get('intrinsic', 'eos_type'), 
+            'choices = ["ideal_gas", "first_order", "lattice_wb",\
+                    "lattice_pce150", "lattice_pce165", "pure_gauge"]')
 
     config['TFRZ'] = (_parser.getfloat('intrinsic', 'TFRZ'), 
             'Freeze out temperature, default=0.137')

@@ -35,8 +35,8 @@ class EosCraft(Eos):
         '''modified eosq, whose pressure as a function of ed
         is given by s95p-pce for ed<0.5 and ed>1.9 (region out
         of mixed phase) and the mixed phase is by eosq'''
-        eosq = Eos(5)
-        eosl = Eos(1)
+        eosq = Eos('first_order')
+        eosl = Eos('lattice_pce165')
         ed = np.linspace(0.0, 2000.0, 200000, endpoint=True)
         # modify pressure vs ed in eosq
         self.pr = np.zeros_like(ed)
@@ -64,8 +64,8 @@ class EosCraft(Eos):
         '''modified eosl, whose pressure as a function of ed
         is given by s95p-pce for crossover region and by eosq
         for other energy densities'''
-        eosq = Eos(5)
-        eosl = Eos(1)
+        eosq = Eos('first_order')
+        eosl = Eos('lattice_pce165')
         ed = np.linspace(0.0, 300.0, 200000, endpoint=True)
         # modify pressure vs ed in eosq
         self.pr = np.zeros_like(ed)
@@ -99,13 +99,3 @@ if __name__ == '__main__':
     test.test_eos(0.6)
     test.test_eos(2.0)
     test.test_eos(10.0)
-
-    #eosl = Eos(1)
-    #eosq = Eos(5)
-    #plt.plot(eosl.ed, eosl.pr)
-    #plt.plot(eosq.ed, eosq.pr)
-    #plt.xlim(0, 10)
-    #plt.ylim(0, 4)
-    #plt.show()
-
-

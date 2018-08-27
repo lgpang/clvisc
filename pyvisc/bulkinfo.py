@@ -54,7 +54,7 @@ class BulkInfo(object):
         self.time = []
         self.edmax = []
         self.__loadAndBuildCLPrg()
-        self.eos = Eos(cfg.IEOS)
+        self.eos = Eos(cfg.eos_type)
 
         self.x = np.linspace(-floor(NX/2)*cfg.DX, floor(NX/2)*cfg.DX, NX, endpoint=True)
         self.y = np.linspace(-floor(NY/2)*cfg.DY, floor(NY/2)*cfg.DY, NY, endpoint=True)

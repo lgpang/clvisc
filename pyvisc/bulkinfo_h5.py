@@ -51,7 +51,7 @@ class BulkInfo(object):
         h5_path = os.path.join(cfg.fPathOut, 'bulkinfo.h5')
         self.f_hdf5 = h5py.File(h5_path, 'w')
 
-        self.eos = Eos(cfg.IEOS)
+        self.eos = Eos(cfg.eos_type)
 
         self.__load_and_build_cl_prg()
 
