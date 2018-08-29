@@ -736,10 +736,8 @@ __kernel void update_pimn(
 }
 
 
-/** get the u^mu difference between u_{visc} and u_{ideal*}
-where u_{ideal*} is the prediction from ideal hydro for pi^{mu nu}
-update; while u_{visc} is the results after the full viscous evolution,
-the correction will be used in the next prediction step */
+/** get the u^mu difference between u_{n} and u_{n-1}
+ * the d_udiff will be used in the next prediction step */
 __kernel void get_udiff(
     __global real4 * d_udiff,
     __global real4 * d_ev0,
