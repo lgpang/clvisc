@@ -29,6 +29,12 @@ inline real etaos(real temperature) {
 real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1, real4 ev_ip2,
            real tau, int along, read_only image2d_t eos_table);
 
+// kt1d_real for each component of shear_pi and bulk_pi;
+real kt1d_real(
+       real Q_im2, real Q_im1, real Q_i, real Q_ip1, real Q_ip2,
+       real v_mh, real v_ph, real lam_mh, real lam_ph,
+       real tau, int along);
+
 // g^{tau mu}, g^{x mu}, g^{y mu}, g^{eta mu} without tau*tau
 constant real4 gm[4] = 
 {(real4)(1.0f, 0.0f, 0.0f, 0.0f),
@@ -234,5 +240,49 @@ real4 kt1d(real4 ev_im2, real4 ev_im1, real4 ev_i, real4 ev_ip1,
 
    return src;
 }
+
+
+
+// use pimn and ev at  i-2, i-1, i, i+1, i+2 to calc src term from flux
+// pr_mh = pr_{i-1/2} and pr_ph = pr_{i+1/2}
+// these mh, ph terms are calcualted 1 time and used 10 times by pimn
+real kt1d_real(
+       real Q_im2, real Q_im1, real Q_i, real Q_ip1, real Q_ip2,
+       real v_mh, real v_ph, real lam_mh, real lam_ph,
+       real tau, int along)
+{
+   real DA0, DA1;
+   DA0 = minmod(0.5f*(Q_ip1-Q_im1),
+           minmod(THETA*(Q_ip1-Q_i), THETA*(Q_i-Q_im1)));
+
+   DA1 = minmod(0.5f*(Q_ip2-Q_i),
+         minmod(THETA*(Q_ip2-Q_ip1), THETA*(Q_ip1-Q_i)));
+
+   real  AL = Q_i   + 0.5f * DA0;
+   real  AR = Q_ip1 - 0.5f * DA1;
+
+   // Flux Jp = (Q + pr*g^{tau mu})*v^x - pr*g^{x mu}
+   real Jp = AR * v_ph;
+   real Jm = AL * v_ph;
+
+   // first part of kt1d; the final results = src[i]-src[i-1]
+   real src = 0.5f*(Jp+Jm) - 0.5f*lam_ph*(AR-AL);
+
+   DA1 = DA0;  // reuse the previous calculate value
+   DA0 = minmod(0.5f*(Q_i-Q_im2),
+           minmod(THETA*(Q_i-Q_im1), THETA*(Q_im1-Q_im2)));
+
+   AL = Q_im1 + 0.5f * DA0;
+   AR = Q_i - 0.5f * DA1;
+
+   Jp = AR*v_mh;
+   Jm = AL*v_mh;
+
+   // second part of kt1d; final results = src[i] - src[i-1]
+   src -= 0.5f*(Jp+Jm) - 0.5f*lam_mh*(AR-AL);
+
+   return src;
+}
+
 
 #endif
